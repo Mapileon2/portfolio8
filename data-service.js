@@ -1,7 +1,6 @@
-const low = require('lowdb');
-const FileSync = require('lowdb/adapters/FileSync');
 const path = require('path');
 const fs = require('fs');
+const { admin, firestore, rtdb } = require('./firebase-admin');
 
 // Ensure data directory exists
 const dataDir = path.join(__dirname, 'data');
@@ -9,25 +8,12 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir);
 }
 
-// Initialize databases for different collections
-const projectsAdapter = new FileSync(path.join(dataDir, 'projects.json'));
-const caseStudiesAdapter = new FileSync(path.join(dataDir, 'case-studies.json'));
-const sectionsAdapter = new FileSync(path.join(dataDir, 'sections.json'));
-const carouselImagesAdapter = new FileSync(path.join(dataDir, 'carousel-images.json'));
-const usersAdapter = new FileSync(path.join(dataDir, 'users.json'));
-
-const projectsDb = low(projectsAdapter);
-const caseStudiesDb = low(caseStudiesAdapter);
-const sectionsDb = low(sectionsAdapter);
-const carouselImagesDb = low(carouselImagesAdapter);
-const usersDb = low(usersAdapter);
-
-// Set defaults if JSON files are empty
-projectsDb.defaults({ projects: [] }).write();
-caseStudiesDb.defaults({ caseStudies: [] }).write();
-sectionsDb.defaults({ sections: {} }).write();
-carouselImagesDb.defaults({ images: [] }).write();
-usersDb.defaults({ users: [], admins: [] }).write();
+// Initialize Firebase collections
+const projectsCollection = 'projects';
+const caseStudiesCollection = 'caseStudies';
+const sectionsCollection = 'sections';
+const carouselImagesCollection = 'carouselImages';
+const usersCollection = 'users';
 
 // Helper function to generate unique IDs
 function generateId() {
@@ -56,379 +42,694 @@ function updateTimestamps(data, userId) {
 
 // Projects operations
 const projects = {
-  getAll: () => {
-    return projectsDb.get('projects')
-      .sortBy('createdAt')
-      .reverse()
-      .value();
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(projectsCollection).orderBy('createdAt', 'desc').get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting projects:', error);
+      return [];
+    }
   },
   
-  getById: (id) => {
-    return projectsDb.get('projects')
-      .find({ id })
-      .value();
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(projectsCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting project ${id}:`, error);
+      return null;
+    }
   },
   
-  create: (projectData, userId) => {
-    const id = generateId();
-    const project = addTimestamps({ ...projectData, id }, userId);
-    
-    projectsDb.get('projects')
-      .push(project)
-      .write();
+  create: async (projectData, userId) => {
+    try {
+      const id = generateId();
+      const project = addTimestamps({ ...projectData }, userId);
       
-    return project;
+      await firestore.collection(projectsCollection).doc(id).set(project);
+      
+      return { id, ...project };
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw error;
+    }
   },
   
-  update: (id, updates, userId) => {
-    const project = projectsDb.get('projects')
-      .find({ id })
-      .value();
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(projectsCollection).doc(id);
+      const doc = await docRef.get();
       
-    if (!project) return null;
-    
-    const updatedProject = {
-      ...project,
-      ...updates,
-      ...updateTimestamps({}, userId)
-    };
-    
-    projectsDb.get('projects')
-      .find({ id })
-      .assign(updatedProject)
-      .write();
+      if (!doc.exists) return null;
       
-    return updatedProject;
+      const updatedProject = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedProject);
+      
+      return { id, ...doc.data(), ...updatedProject };
+    } catch (error) {
+      console.error(`Error updating project ${id}:`, error);
+      throw error;
+    }
   },
   
-  delete: (id) => {
-    return projectsDb.get('projects')
-      .remove({ id })
-      .write();
+  delete: async (id) => {
+    try {
+      await firestore.collection(projectsCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting project ${id}:`, error);
+      throw error;
+    }
   }
 };
 
 // Case Studies operations
 const caseStudies = {
-  getAll: () => {
-    return caseStudiesDb.get('caseStudies')
-      .value();
-  },
-  
-  getById: (id) => {
-    return caseStudiesDb.get('caseStudies')
-      .find({ id })
-      .value();
-  },
-  
-  create: (caseStudyData, userId) => {
-    const id = generateId();
-    const caseStudy = addTimestamps({ ...caseStudyData, id }, userId);
-    
-    caseStudiesDb.get('caseStudies')
-      .push(caseStudy)
-      .write();
-      
-    // If linked to a project, update the project
-    if (caseStudy.projectId) {
-      projects.update(caseStudy.projectId, {
-        hasCaseStudy: true,
-        caseStudyId: id
-      }, userId);
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(caseStudiesCollection).get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting case studies:', error);
+      return [];
     }
-      
-    return caseStudy;
   },
   
-  update: (id, updates, userId) => {
-    const caseStudy = caseStudiesDb.get('caseStudies')
-      .find({ id })
-      .value();
-      
-    if (!caseStudy) return null;
-    
-    const updatedCaseStudy = {
-      ...caseStudy,
-      ...updates,
-      ...updateTimestamps({}, userId)
-    };
-    
-    caseStudiesDb.get('caseStudies')
-      .find({ id })
-      .assign(updatedCaseStudy)
-      .write();
-      
-    return updatedCaseStudy;
-  },
-  
-  delete: (id, userId) => {
-    const caseStudy = caseStudiesDb.get('caseStudies')
-      .find({ id })
-      .value();
-      
-    if (caseStudy && caseStudy.projectId) {
-      projects.update(caseStudy.projectId, {
-        hasCaseStudy: false,
-        caseStudyId: null
-      }, userId);
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(caseStudiesCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting case study ${id}:`, error);
+      return null;
     }
-    
-    return caseStudiesDb.get('caseStudies')
-      .remove({ id })
-      .write();
+  },
+  
+  create: async (caseStudyData, userId) => {
+    try {
+      const id = generateId();
+      const caseStudy = addTimestamps({ ...caseStudyData }, userId);
+      
+      await firestore.collection(caseStudiesCollection).doc(id).set(caseStudy);
+      
+      // If linked to a project, update the project
+      if (caseStudy.projectId) {
+        await projects.update(caseStudy.projectId, {
+          hasCaseStudy: true,
+          caseStudyId: id
+        }, userId);
+      }
+      
+      return { id, ...caseStudy };
+    } catch (error) {
+      console.error('Error creating case study:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(caseStudiesCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (!doc.exists) return null;
+      
+      const updatedCaseStudy = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedCaseStudy);
+      
+      return { id, ...doc.data(), ...updatedCaseStudy };
+    } catch (error) {
+      console.error(`Error updating case study ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  delete: async (id, userId) => {
+    try {
+      const docRef = firestore.collection(caseStudiesCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (doc.exists) {
+        const caseStudy = doc.data();
+        if (caseStudy && caseStudy.projectId) {
+          await projects.update(caseStudy.projectId, {
+            hasCaseStudy: false,
+            caseStudyId: null
+          }, userId);
+        }
+      }
+      
+      await docRef.delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting case study ${id}:`, error);
+      throw error;
+    }
   }
 };
 
 // Sections operations
 const sections = {
-  getAll: () => {
-    return sectionsDb.get('sections').value();
+  getAll: async () => {
+    try {
+      const doc = await firestore.collection('website').doc('sections').get();
+      return doc.exists ? doc.data() : {};
+    } catch (error) {
+      console.error('Error getting sections:', error);
+      return {};
+    }
   },
   
-  update: (sectionData, userId) => {
-    const updatedSections = {
-      ...sectionsDb.get('sections').value(),
-      ...sectionData,
-      updatedAt: new Date().toISOString(),
-      updatedBy: userId || 'system'
-    };
-    
-    sectionsDb.set('sections', updatedSections).write();
-    return updatedSections;
+  update: async (sectionData, userId) => {
+    try {
+      const docRef = firestore.collection('website').doc('sections');
+      const doc = await docRef.get();
+      
+      const updatedSections = {
+        ...(doc.exists ? doc.data() : {}),
+        ...sectionData,
+        updatedAt: new Date().toISOString(),
+        updatedBy: userId || 'system'
+      };
+      
+      await docRef.set(updatedSections);
+      return updatedSections;
+    } catch (error) {
+      console.error('Error updating sections:', error);
+      throw error;
+    }
   }
 };
 
 // Carousel Images operations
 const carouselImages = {
-  getAll: () => {
-    return carouselImagesDb.get('images')
-      .sortBy('order')
-      .value();
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(carouselImagesCollection).orderBy('order').get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting carousel images:', error);
+      return [];
+    }
   },
   
-  create: (imageData, userId) => {
-    const id = generateId();
-    const image = addTimestamps({ ...imageData, id }, userId);
-    
-    carouselImagesDb.get('images')
-      .push(image)
-      .write();
+  create: async (imageData, userId) => {
+    try {
+      const id = generateId();
+      const image = addTimestamps({ ...imageData }, userId);
       
-    return image;
+      await firestore.collection(carouselImagesCollection).doc(id).set(image);
+      
+      return { id, ...image };
+    } catch (error) {
+      console.error('Error creating carousel image:', error);
+      throw error;
+    }
   },
   
-  update: (id, updates, userId) => {
-    const image = carouselImagesDb.get('images')
-      .find({ id })
-      .value();
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(carouselImagesCollection).doc(id);
+      const doc = await docRef.get();
       
-    if (!image) return null;
-    
-    const updatedImage = {
-      ...image,
-      ...updates,
-      ...updateTimestamps({}, userId)
-    };
-    
-    carouselImagesDb.get('images')
-      .find({ id })
-      .assign(updatedImage)
-      .write();
+      if (!doc.exists) return null;
       
-    return updatedImage;
+      const updatedImage = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedImage);
+      
+      return { id, ...doc.data(), ...updatedImage };
+    } catch (error) {
+      console.error(`Error updating carousel image ${id}:`, error);
+      throw error;
+    }
   },
   
-  delete: (id) => {
-    return carouselImagesDb.get('images')
-      .remove({ id })
-      .write();
+  delete: async (id) => {
+    try {
+      await firestore.collection(carouselImagesCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting carousel image ${id}:`, error);
+      throw error;
+    }
   }
 };
 
 // Users operations
 const users = {
-  getAll: () => {
-    return usersDb.get('users').value();
-  },
-  
-  getById: (id) => {
-    return usersDb.get('users')
-      .find({ id })
-      .value();
-  },
-  
-  getByEmail: (email) => {
-    return usersDb.get('users')
-      .find({ email })
-      .value();
-  },
-  
-  create: (userData) => {
-    const id = generateId();
-    const user = addTimestamps({ ...userData, id });
-    
-    usersDb.get('users')
-      .push(user)
-      .write();
-      
-    return user;
-  },
-  
-  update: (id, updates) => {
-    const user = usersDb.get('users')
-      .find({ id })
-      .value();
-      
-    if (!user) return null;
-    
-    const updatedUser = {
-      ...user,
-      ...updates,
-      ...updateTimestamps({})
-    };
-    
-    usersDb.get('users')
-      .find({ id })
-      .assign(updatedUser)
-      .write();
-      
-    return updatedUser;
-  },
-  
-  delete: (id) => {
-    return usersDb.get('users')
-      .remove({ id })
-      .write();
-  },
-  
-  getAdmins: () => {
-    return usersDb.get('admins').value();
-  },
-  
-  addAdmin: (email) => {
-    if (!usersDb.get('admins').includes(email).value()) {
-      usersDb.get('admins').push(email).write();
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(usersCollection).get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting users:', error);
+      return [];
     }
-    return usersDb.get('admins').value();
   },
   
-  removeAdmin: (email) => {
-    usersDb.get('admins').remove(e => e === email).write();
-    return usersDb.get('admins').value();
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(usersCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting user ${id}:`, error);
+      return null;
+    }
+  },
+  
+  getByEmail: async (email) => {
+    try {
+      const snapshot = await firestore.collection(usersCollection)
+        .where('email', '==', email)
+        .limit(1)
+        .get();
+      
+      if (snapshot.empty) return null;
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting user by email ${email}:`, error);
+      return null;
+    }
+  },
+  
+  create: async (userData) => {
+    try {
+      const id = generateId();
+      const user = addTimestamps({ ...userData });
+      
+      await firestore.collection(usersCollection).doc(id).set(user);
+      
+      return { id, ...user };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id, updates) => {
+    try {
+      const docRef = firestore.collection(usersCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (!doc.exists) return null;
+      
+      const updatedUser = {
+        ...updates,
+        ...updateTimestamps({})
+      };
+      
+      await docRef.update(updatedUser);
+      
+      return { id, ...doc.data(), ...updatedUser };
+    } catch (error) {
+      console.error(`Error updating user ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  delete: async (id) => {
+    try {
+      await firestore.collection(usersCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting user ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  getAdmins: async () => {
+    try {
+      const doc = await firestore.collection('website').doc('admins').get();
+      return doc.exists ? doc.data().emails || [] : [];
+    } catch (error) {
+      console.error('Error getting admins:', error);
+      return [];
+    }
+  },
+  
+  addAdmin: async (email) => {
+    try {
+      const docRef = firestore.collection('website').doc('admins');
+      const doc = await docRef.get();
+      
+      let admins = [];
+      if (doc.exists) {
+        admins = doc.data().emails || [];
+      }
+      
+      if (!admins.includes(email)) {
+        admins.push(email);
+        await docRef.set({ emails: admins });
+      }
+      
+      return admins;
+    } catch (error) {
+      console.error(`Error adding admin ${email}:`, error);
+      throw error;
+    }
+  },
+  
+  removeAdmin: async (email) => {
+    try {
+      const docRef = firestore.collection('website').doc('admins');
+      const doc = await docRef.get();
+      
+      let admins = [];
+      if (doc.exists) {
+        admins = doc.data().emails || [];
+      }
+      
+      const updatedAdmins = admins.filter(e => e !== email);
+      await docRef.set({ emails: updatedAdmins });
+      
+      return updatedAdmins;
+    } catch (error) {
+      console.error(`Error removing admin ${email}:`, error);
+      throw error;
+    }
   }
 };
 
-// Add new adapters for additional collections
-const skillsAdapter = new FileSync(path.join(dataDir, 'skills.json'));
-const testimonialsAdapter = new FileSync(path.join(dataDir, 'testimonials.json'));
-const contactAdapter = new FileSync(path.join(dataDir, 'contact.json'));
-const aboutAdapter = new FileSync(path.join(dataDir, 'about.json'));
-const timelineAdapter = new FileSync(path.join(dataDir, 'timeline.json'));
-const settingsAdapter = new FileSync(path.join(dataDir, 'settings.json'));
-
-// Initialize new DB instances
-const skillsDb = low(skillsAdapter);
-const testimonialsDb = low(testimonialsAdapter);
-const contactDb = low(contactAdapter);
-const aboutDb = low(aboutAdapter);
-const timelineDb = low(timelineAdapter);
-const settingsDb = low(settingsAdapter);
-
-// Set defaults
-skillsDb.defaults({ skills: [] }).write();
-testimonialsDb.defaults({ testimonials: [] }).write();
-contactDb.defaults({ contact: {} }).write();
-aboutDb.defaults({ about: {} }).write();
-timelineDb.defaults({ timeline: [] }).write();
-settingsDb.defaults({ settings: {} }).write();
+// Remove lowdb initialization code for additional collections
+// Initialize Firebase collections instead
+const skillsCollection = 'skills';
+const testimonialsCollection = 'testimonials';
+const timelineCollection = 'timeline';
 
 // Skills operations
 const skills = {
-  getAll: () => skillsDb.get('skills').value(),
-  getById: id => skillsDb.get('skills').find({ id }).value(),
-  create: (data, userId) => {
-    const id = generateId();
-    const record = addTimestamps({ ...data, id }, userId);
-    skillsDb.get('skills').push(record).write();
-    return record;
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(skillsCollection).get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting skills:', error);
+      return [];
+    }
   },
-  update: (id, updates, userId) => {
-    const existing = skillsDb.get('skills').find({ id }).value();
-    if (!existing) return null;
-    const updated = { ...existing, ...updates, ...updateTimestamps({}, userId) };
-    skillsDb.get('skills').find({ id }).assign(updated).write();
-    return updated;
+  
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(skillsCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting skill ${id}:`, error);
+      return null;
+    }
   },
-  delete: id => skillsDb.get('skills').remove({ id }).write()
+  
+  create: async (data, userId) => {
+    try {
+      const id = generateId();
+      const record = addTimestamps(data, userId);
+      
+      await firestore.collection(skillsCollection).doc(id).set(record);
+      
+      return { id, ...record };
+    } catch (error) {
+      console.error('Error creating skill:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(skillsCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (!doc.exists) return null;
+      
+      const updatedRecord = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedRecord);
+      
+      return { id, ...doc.data(), ...updatedRecord };
+    } catch (error) {
+      console.error(`Error updating skill ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  delete: async (id) => {
+    try {
+      await firestore.collection(skillsCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting skill ${id}:`, error);
+      throw error;
+    }
+  }
 };
 
 // Testimonials operations
 const testimonials = {
-  getAll: () => testimonialsDb.get('testimonials').value(),
-  getById: id => testimonialsDb.get('testimonials').find({ id }).value(),
-  create: (data, userId) => {
-    const id = generateId();
-    const record = addTimestamps({ ...data, id }, userId);
-    testimonialsDb.get('testimonials').push(record).write();
-    return record;
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(testimonialsCollection).get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting testimonials:', error);
+      return [];
+    }
   },
-  update: (id, updates, userId) => {
-    const existing = testimonialsDb.get('testimonials').find({ id }).value();
-    if (!existing) return null;
-    const updated = { ...existing, ...updates, ...updateTimestamps({}, userId) };
-    testimonialsDb.get('testimonials').find({ id }).assign(updated).write();
-    return updated;
+  
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(testimonialsCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting testimonial ${id}:`, error);
+      return null;
+    }
   },
-  delete: id => testimonialsDb.get('testimonials').remove({ id }).write()
+  
+  create: async (data, userId) => {
+    try {
+      const id = generateId();
+      const record = addTimestamps(data, userId);
+      
+      await firestore.collection(testimonialsCollection).doc(id).set(record);
+      
+      return { id, ...record };
+    } catch (error) {
+      console.error('Error creating testimonial:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(testimonialsCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (!doc.exists) return null;
+      
+      const updatedRecord = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedRecord);
+      
+      return { id, ...doc.data(), ...updatedRecord };
+    } catch (error) {
+      console.error(`Error updating testimonial ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  delete: async (id) => {
+    try {
+      await firestore.collection(testimonialsCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting testimonial ${id}:`, error);
+      throw error;
+    }
+  }
 };
 
 // Contact operations (single document)
 const contact = {
-  get: () => contactDb.get('contact').value(),
-  update: (data, userId) => {
-    const updated = { ...data, ...updateTimestamps({}, userId) };
-    contactDb.set('contact', updated).write();
-    return updated;
+  get: async () => {
+    try {
+      const doc = await firestore.collection('website').doc('contact').get();
+      return doc.exists ? doc.data() : {};
+    } catch (error) {
+      console.error('Error getting contact info:', error);
+      return {};
+    }
+  },
+  
+  update: async (data, userId) => {
+    try {
+      const updated = { ...data, ...updateTimestamps({}, userId) };
+      await firestore.collection('website').doc('contact').set(updated);
+      return updated;
+    } catch (error) {
+      console.error('Error updating contact info:', error);
+      throw error;
+    }
   }
 };
 
 // About operations (single document)
 const about = {
-  get: () => aboutDb.get('about').value(),
-  update: (data, userId) => {
-    const updated = { ...data, ...updateTimestamps({}, userId) };
-    aboutDb.set('about', updated).write();
-    return updated;
+  get: async () => {
+    try {
+      const doc = await firestore.collection('website').doc('about').get();
+      return doc.exists ? doc.data() : {};
+    } catch (error) {
+      console.error('Error getting about info:', error);
+      return {};
+    }
+  },
+  
+  update: async (data, userId) => {
+    try {
+      const updated = { ...data, ...updateTimestamps({}, userId) };
+      await firestore.collection('website').doc('about').set(updated);
+      return updated;
+    } catch (error) {
+      console.error('Error updating about info:', error);
+      throw error;
+    }
   }
 };
 
 // Timeline operations
 const timeline = {
-  getAll: () => timelineDb.get('timeline').sortBy('year').reverse().value(),
-  getById: id => timelineDb.get('timeline').find({ id }).value(),
-  create: (data, userId) => {
-    const id = generateId();
-    const record = addTimestamps({ ...data, id }, userId);
-    timelineDb.get('timeline').push(record).write();
-    return record;
+  getAll: async () => {
+    try {
+      const snapshot = await firestore.collection(timelineCollection).orderBy('year', 'desc').get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting timeline items:', error);
+      return [];
+    }
   },
-  update: (id, updates, userId) => {
-    const existing = timelineDb.get('timeline').find({ id }).value();
-    if (!existing) return null;
-    const updated = { ...existing, ...updates, ...updateTimestamps({}, userId) };
-    timelineDb.get('timeline').find({ id }).assign(updated).write();
-    return updated;
+  
+  getById: async (id) => {
+    try {
+      const doc = await firestore.collection(timelineCollection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error(`Error getting timeline item ${id}:`, error);
+      return null;
+    }
   },
-  delete: id => timelineDb.get('timeline').remove({ id }).write()
+  
+  create: async (data, userId) => {
+    try {
+      const id = generateId();
+      const record = addTimestamps(data, userId);
+      
+      await firestore.collection(timelineCollection).doc(id).set(record);
+      
+      return { id, ...record };
+    } catch (error) {
+      console.error('Error creating timeline item:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id, updates, userId) => {
+    try {
+      const docRef = firestore.collection(timelineCollection).doc(id);
+      const doc = await docRef.get();
+      
+      if (!doc.exists) return null;
+      
+      const updatedRecord = {
+        ...updates,
+        ...updateTimestamps({}, userId)
+      };
+      
+      await docRef.update(updatedRecord);
+      
+      return { id, ...doc.data(), ...updatedRecord };
+    } catch (error) {
+      console.error(`Error updating timeline item ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  delete: async (id) => {
+    try {
+      await firestore.collection(timelineCollection).doc(id).delete();
+      return true;
+    } catch (error) {
+      console.error(`Error deleting timeline item ${id}:`, error);
+      throw error;
+    }
+  }
 };
 
 // Site settings operations (single document)
 const settings = {
-  get: () => settingsDb.get('settings').value(),
-  update: (data, userId) => {
-    const updated = { ...data, ...updateTimestamps({}, userId) };
-    settingsDb.set('settings', updated).write();
-    return updated;
+  get: async () => {
+    try {
+      const doc = await firestore.collection('website').doc('settings').get();
+      return doc.exists ? doc.data() : {};
+    } catch (error) {
+      console.error('Error getting site settings:', error);
+      return {};
+    }
+  },
+  
+  update: async (data, userId) => {
+    try {
+      const updated = { ...data, ...updateTimestamps({}, userId) };
+      await firestore.collection('website').doc('settings').set(updated);
+      return updated;
+    } catch (error) {
+      console.error('Error updating site settings:', error);
+      throw error;
+    }
   }
 };
 
