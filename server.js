@@ -13,6 +13,8 @@ const dataService = require('./data-service');
 const imageService = require('./image-service');
 const { auth, rtdb } = require('./firebase-admin');
 const config = require('./deploy-config');
+const setupCors = require('./cors-fix');
+const setupSectionsAPI = require('./sections-api');
 
 const app = express();
 const PORT = config.mainServer.port;
@@ -37,6 +39,12 @@ const upload = multer({ storage });
 app.use(cors(config.corsOptions));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Setup enhanced CORS for Vercel deployment
+setupCors(app);
+
+// Initialize sections API endpoints
+setupSectionsAPI(app, rtdb);
 
 // Add cache control for static assets in production
 if (config.mainServer.environment === 'production' && config.cache.enabled) {
