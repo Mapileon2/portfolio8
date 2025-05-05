@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK with proper loading order -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  
+  <!-- Firebase API fallback for hosting environment -->
+  <script src="/js/firebase-data-fallback.js"></script>
+  
+  <style>
+    body { background: #f7fafc; }
+    .admin-container { max-width: 1200px; margin: 40px auto; }
+    .card { margin-bottom: 2rem; }
+    .logout { float: right; }
+    .image-preview { max-width: 200px; max-height: 200px; margin-top: 10px; display: none; }
+    .rich-text-editor { min-height: 150px; border: 1px solid #ced4da; border-radius: 0.25rem; }
+    .section-editor, .feature-editor { background-color: #f8f9fa; }
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .loader-message {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .loading-progress {
+      margin-top: 10px;
+      width: 250px;
+    }
+    .loading-timer {
+      margin-top: 5px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .login-status {
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .connection-error {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 9000;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loader" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="loader-message" id="loader-message">Loading admin panel...</div>
+    <div class="progress loading-progress">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="loading-progress-bar"></div>
+    </div>
+    <div class="loading-timer" id="loading-timer">0s</div>
+  </div>
+
+  <!-- Connection Error -->
+  <div class="connection-error" id="connection-error">
+    <strong>Connection Issue Detected!</strong>
+    <p class="mb-0">There seems to be a problem connecting to the API. Using local data instead.</p>
+    <button class="btn btn-sm btn-outline-danger mt-2" onclick="document.getElementById('connection-error').style.display='none';">Dismiss</button>
+  </div>
+
+  <div class="admin-container">
+    <h1 class="mb-4">Portfolio Admin Panel <button id="logout-btn" class="btn btn-secondary btn-sm logout" style="display: none;">Logout</button></h1>
+    
+    <!-- Login Section (hidden) -->
+    <div id="login-section" style="display:none;">
+      <form id="login-form" class="card card-body mb-4" style="max-width: 400px; margin: 0 auto;">
+        <h4 class="mb-3">Admin Login</h4>
+        <div class="login-status text-success" id="login-success" style="display: none;"></div>
+        <div class="login-status text-danger" id="login-error" style="display: none;"></div>
+        <div class="mb-3">
+          <input type="email" class="form-control" id="username" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" id="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100" id="login-button">Login</button>
+        <div class="mt-3 text-center">
+          <small class="text-muted">Use admin@example.com / admin123 for quick access</small>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Admin Section (always visible) -->
+    <div id="admin-section" style="display:block;">
+      <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" id="about-tab" data-bs-toggle="tab" data-bs-target="#about" type="button" role="tab">About</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="skills-tab" data-bs-toggle="tab" data-bs-target="#skills" type="button" role="tab">Skills</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">Timeline</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button" role="tab">Projects</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="testimonials-tab" data-bs-toggle="tab" data-bs-target="#testimonials" type="button" role="tab">Testimonials</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">Contact</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="case-studies-tab" data-bs-toggle="tab" data-bs-target="#case-studies" type="button" role="tab">Case Studies</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="sections-tab" data-bs-toggle="tab" data-bs-target="#sections" type="button" role="tab">Sections</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">Settings</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="carousel-tab" data-bs-toggle="tab" data-bs-target="#carousel" type="button" role="tab">Magical Journeys</button></li>
+      </ul>
+      
+      <div class="tab-content">
+        <!-- About Section -->
+        <div class="tab-pane fade show active" id="about" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>About Section</h4>
+            </div>
+            <div class="card-body">
+              <form id="about-form">
+                <div class="mb-3">
+                  <label for="about-title-input" class="form-label">Title</label>
+                  <input type="text" class="form-control" id="about-title-input" placeholder="Once upon a time...">
+                </div>
+                <div class="mb-3">
+                  <label for="about-paragraph1" class="form-label">First Paragraph</label>
+                  <textarea class="form-control" id="about-paragraph1" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="about-paragraph2" class="form-label">Second Paragraph</label>
+                  <textarea class="form-control" id="about-paragraph2" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="about-image" class="form-label">Profile Image</label>
+                  <input type="file" class="form-control" id="about-image" accept="image/*">
+                  <img id="about-image-preview" class="image-preview">
+                </div>
+                
+                <h5 class="mt-4 mb-3">Features</h5>
+                <div id="about-features">
+                  <!-- Feature editors will be added here -->
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-3">Save About Section</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Skills Section -->
+        <div class="tab-pane fade" id="skills" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Skills</h4>
+            </div>
+            <div class="card-body">
+              <form id="skill-form" class="row g-3 mb-3">
+                <input type="hidden" id="skill-id">
+                <div class="col-md-3">
+                  <input type="text" class="form-control" id="skill-name" placeholder="Skill Name" required>
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control" id="skill-category" placeholder="Category" required>
+                </div>
+                <div class="col-md-2">
+                  <input type="number" class="form-control" id="skill-percentage" placeholder="Percentage" min="0" max="100" required>
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control" id="skill-icon" placeholder="Icon Class (fa-chess-queen)">
+                </div>
+                <div class="col-md-1">
+                  <button type="submit" class="btn btn-success w-100">Save</button>
+                </div>
+              </form>
+              <table class="table table-striped" id="skills-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Percentage</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Timeline Section -->
+        <div class="tab-pane fade" id="timeline" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Timeline / Journey</h4>
+            </div>
+            <div class="card-body">
+              <form id="timeline-form">
+                <input type="hidden" id="timeline-id">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="timeline-title-input" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="timeline-title-input" placeholder="Job Title" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="timeline-company" class="form-label">Company</label>
+                    <input type="text" class="form-control" id="timeline-company" placeholder="Company Name" required>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="timeline-period" class="form-label">Period</label>
+                    <input type="text" class="form-control" id="timeline-period" placeholder="2018-2021" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="timeline-year" class="form-label">Year (for sorting)</label>
+                    <input type="number" class="form-control" id="timeline-year" placeholder="2021" required>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="timeline-description" class="form-label">Description</label>
+                  <textarea class="form-control" id="timeline-description" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="timeline-image" class="form-label">Company Logo</label>
+                  <input type="file" class="form-control" id="timeline-image" accept="image/*">
+                  <img id="timeline-image-preview" class="image-preview">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Timeline Item</button>
+              </form>
+              
+              <h5 class="mt-4 mb-3">Timeline Items</h5>
+              <table class="table table-striped" id="timeline-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Period</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Projects Section -->
+        <div class="tab-pane fade" id="projects" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Projects</h4>
+            </div>
+            <div class="card-body">
+              <form id="project-form">
+                <input type="hidden" id="project-id">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="project-title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="project-title" placeholder="Project Title" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="project-tags" class="form-label">Tags (comma separated)</label>
+                    <input type="text" class="form-control" id="project-tags" placeholder="Lead PM, UX/PM">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="project-description" class="form-label">Description</label>
+                  <textarea class="form-control" id="project-description" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="project-result" class="form-label">Result</label>
+                  <input type="text" class="form-control" id="project-result" placeholder="40% faster onboarding">
+                </div>
+                <div class="mb-3">
+                  <label for="project-image" class="form-label">Project Image</label>
+                  <input type="file" class="form-control" id="project-image" accept="image/*">
+                  <img id="project-image-preview" class="image-preview">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Project</button>
+              </form>
+              
+              <h5 class="mt-4 mb-3">Projects</h5>
+              <table class="table table-striped" id="projects-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testimonials Section -->
+        <div class="tab-pane fade" id="testimonials" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Testimonials</h4>
+            </div>
+            <div class="card-body">
+              <form id="testimonial-form">
+                <input type="hidden" id="testimonial-id">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="testimonial-author" class="form-label">Author</label>
+                    <input type="text" class="form-control" id="testimonial-author" placeholder="Author Name" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="testimonial-title" class="form-label">Title / Position</label>
+                    <input type="text" class="form-control" id="testimonial-title" placeholder="Engineering Manager">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="testimonial-content" class="form-label">Testimonial</label>
+                  <textarea class="form-control" id="testimonial-content" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="testimonial-rating" class="form-label">Rating (1-5)</label>
+                  <input type="number" class="form-control" id="testimonial-rating" min="1" max="5" value="5">
+                </div>
+                <div class="mb-3">
+                  <label for="testimonial-photo" class="form-label">Author Photo</label>
+                  <input type="file" class="form-control" id="testimonial-photo" accept="image/*">
+                  <img id="testimonial-photo-preview" class="image-preview">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Testimonial</button>
+              </form>
+              
+              <h5 class="mt-4 mb-3">Testimonials</h5>
+              <table class="table table-striped" id="testimonials-table">
+                <thead>
+                  <tr>
+                    <th>Author</th>
+                    <th>Title</th>
+                    <th>Content</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contact Section -->
+        <div class="tab-pane fade" id="contact" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Contact Info</h4>
+            </div>
+            <div class="card-body">
+              <form id="contact-form">
+                <div class="mb-3">
+                  <label for="contact-email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="contact-email" required>
+                </div>
+                <div class="mb-3">
+                  <label for="contact-phone" class="form-label">Phone</label>
+                  <input type="text" class="form-control" id="contact-phone">
+                </div>
+                <div class="mb-3">
+                  <label for="contact-address" class="form-label">Address</label>
+                  <input type="text" class="form-control" id="contact-address">
+                </div>
+                
+                <h5 class="mt-4 mb-3">Social Links</h5>
+                <div class="mb-3">
+                  <label for="contact-linkedin" class="form-label">LinkedIn URL</label>
+                  <input type="url" class="form-control" id="contact-linkedin">
+                </div>
+                <div class="mb-3">
+                  <label for="contact-twitter" class="form-label">Twitter URL</label>
+                  <input type="url" class="form-control" id="contact-twitter">
+                </div>
+                <div class="mb-3">
+                  <label for="contact-github" class="form-label">GitHub URL</label>
+                  <input type="url" class="form-control" id="contact-github">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Contact Info</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Case Studies Section -->
+        <div class="tab-pane fade" id="case-studies" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Case Studies</h4>
+            </div>
+            <div class="card-body">
+              <form id="case-study-form">
+                <input type="hidden" id="case-study-id">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="case-study-title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="case-study-title" placeholder="Case Study Title" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="case-study-subtitle" class="form-label">Subtitle</label>
+                    <input type="text" class="form-control" id="case-study-subtitle" placeholder="A brief subtitle">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="case-study-summary" class="form-label">Summary</label>
+                  <textarea class="form-control" id="case-study-summary" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="case-study-image" class="form-label">Hero Image</label>
+                  <input type="file" class="form-control" id="case-study-image" accept="image/*">
+                  <img id="case-study-image-preview" class="image-preview">
+                </div>
+                
+                <h5 class="mt-4 mb-3">Sections 
+                  <button type="button" id="add-section-btn" class="btn btn-sm btn-primary">Add Section</button>
+                </h5>
+                <div id="case-study-sections">
+                  <!-- Section editors will be added here -->
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-3">Save Case Study</button>
+              </form>
+              
+              <h5 class="mt-4 mb-3">Case Studies</h5>
+              <table class="table table-striped" id="case-studies-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subtitle</th>
+                    <th>Summary</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sections Editor -->
+        <div class="tab-pane fade" id="sections" role="tabpanel">
+          <div class="card">
+            <div class="card-header"><h4>Content Sections</h4></div>
+            <div class="card-body">
+              <form id="sections-form">
+                <div id="sections-editors"></div>
+                <button type="submit" class="btn btn-primary mt-3">Save Sections</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Site Settings Section -->
+        <div class="tab-pane fade" id="settings" role="tabpanel">
+          <div class="card">
+            <div class="card-header">
+              <h4>Site Settings</h4>
+            </div>
+            <div class="card-body">
+              <form id="settings-form">
+                <div class="mb-3">
+                  <label for="settings-site-title" class="form-label">Site Title</label>
+                  <input type="text" class="form-control" id="settings-site-title" placeholder="Ghibli-Inspired Product Portfolio">
+                </div>
+                <div class="mb-3">
+                  <label for="settings-logo-text" class="form-label">Logo Text</label>
+                  <input type="text" class="form-control" id="settings-logo-text" placeholder="★ Product Journey">
+                </div>
+                
+                <h5 class="mt-4 mb-3">Hero Section</h5>
+                <div class="mb-3">
+                  <label for="settings-hero-title" class="form-label">Hero Title (HTML allowed)</label>
+                  <textarea class="form-control" id="settings-hero-title" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="settings-hero-subtitle" class="form-label">Hero Subtitle</label>
+                  <input type="text" class="form-control" id="settings-hero-subtitle">
+                </div>
+                <div class="mb-3">
+                  <label for="settings-hero-button" class="form-label">Button Text</label>
+                  <input type="text" class="form-control" id="settings-hero-button" placeholder="Begin the Journey">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Magical Journeys Carousel Management -->
+        <div class="tab-pane fade" id="carousel" role="tabpanel">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold ghibli-font text-blue-700 dark:text-blue-300">Magical Journeys Carousel</h2>
+            <button id="addCarouselImageBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center">
+              <i class="fas fa-plus mr-2"></i> Add New Image
+            </button>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+            <h3 class="text-xl font-bold mb-4 dark:text-gray-200">Current Carousel Images</h3>
+            <div id="carouselImagesLoading" class="py-20 text-center">
+              <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+              <p class="mt-4 text-gray-600 dark:text-gray-400">Loading carousel images...</p>
+            </div>
+            <div id="carouselImagesEmpty" class="py-16 text-center hidden">
+              <i class="fas fa-image text-6xl text-gray-300 mb-4"></i>
+              <p class="text-xl text-gray-500 dark:text-gray-400">No images have been added yet</p>
+              <p class="text-gray-500 dark:text-gray-400 mt-2">Click "Add New Image" to get started</p>
+            </div>
+            <div id="carouselImagesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+          </div>
+          <div id="carouselImageForm" class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800 hidden">
+            <!-- Add/Edit Image Form content remains unchanged -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap and other scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  
+  <!-- Authentication and API Script -->
+  <script>
+    // Show loader initially
+    document.getElementById('loader').style.display = 'flex';
+    
+    // API Base URL
+    window.API_BASE = '/api';
+    
+    // Add loading progress indicators for UI feedback
+    window.updateLoadingProgress = function(percent, message) {
+      const progressBar = document.getElementById('loading-progress-bar');
+      const loaderMessage = document.getElementById('loader-message');
+      
+      if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+      }
+      
+      if (loaderMessage && message) {
+        loaderMessage.textContent = message;
+      }
+    };
+    
+    // Quick status check without loading all data
+    fetch(`${window.API_BASE}/status`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("API connection successful:", data);
+        
+        // Hide loader after simple connection check
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('connection-error').style.display = 'none';
+        
+        // Let admin.js handle login state and data loading
+      })
+      .catch(err => {
+        console.error("API connection test failed:", err);
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('connection-error').style.display = 'block';
+      });
+  </script>
+  
+  <!-- Main admin.js file -->
+  <script src="js/admin.js"></script>
+</body>
+</html> 

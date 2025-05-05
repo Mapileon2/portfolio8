@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Rich Text Editor -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.0.1/classic/ckeditor.js"></script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f8ff;
+            color: #2a4365;
+        }
+        .ghibli-font {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .dark-mode {
+            background-color: #1a365d;
+            color: #e2e8f0;
+        }
+        .dark-mode .bg-white {
+            background-color: #1e293b;
+        }
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark-mode .text-gray-700, .dark-mode .text-gray-600 {
+            color: #94a3b8;
+        }
+        .dark-mode input, .dark-mode textarea, .dark-mode select {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+        .section-preview {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .section-preview.active {
+            max-height: 1000px;
+        }
+        /* Notification popup styles */
+        .notification-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 350px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .notification-popup.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .notification-success {
+            background-color: #d1fae5;
+            border-left: 5px solid #10b981;
+            color: #065f46;
+        }
+        .notification-error {
+            background-color: #fee2e2;
+            border-left: 5px solid #ef4444;
+            color: #b91c1c;
+        }
+        .dark-mode .notification-success {
+            background-color: #064e3b;
+            color: #d1fae5;
+        }
+        .dark-mode .notification-error {
+            background-color: #7f1d1d;
+            color: #fee2e2;
+        }
+        /* Debug console styles */
+        .debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0;
+            max-height: 200px;
+            background-color: rgba(0,0,0,0.8);
+            color: #10b981;
+            overflow-y: auto;
+            transition: height 0.3s ease;
+            font-family: monospace;
+            z-index: 1000;
+            padding: 0 10px;
+        }
+        .debug-console.show {
+            height: 200px;
+            padding: 10px;
+        }
+        .debug-console pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="min-h-screen transition-colors duration-300">
+    <!-- Add the notification popup container -->
+    <div id="notificationPopup" class="notification-popup">
+        <div class="flex items-start">
+            <div id="notificationIcon" class="mr-3 text-lg"></div>
+            <div>
+                <h3 id="notificationTitle" class="font-bold"></h3>
+                <p id="notificationMessage"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Debug console (hidden by default) -->
+    <div id="debugConsole" class="debug-console">
+        <pre id="debugContent"></pre>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-16 z-50">
+        <button id="darkModeToggle" class="bg-yellow-200 hover:bg-yellow-300 text-gray-800 rounded-full p-2 shadow-lg">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="w-full bg-white bg-opacity-90 shadow-sm z-40 dark:bg-gray-800 dark:bg-opacity-90">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="ghibli-font text-2xl text-blue-600 dark:text-blue-300">
+                    <a href="index.html"><span class="text-yellow-500">★</span> Case Study Editor</a>
+                </div>
+                <div class="flex space-x-8">
+                    <a href="admin.html" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Back to Admin</a>
+                    <a href="index.html" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">View Portfolio</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-12 pt-20">
+        <div class="max-w-5xl mx-auto">
+            <div class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                <h1 class="text-3xl font-bold ghibli-font text-blue-700 dark:text-blue-300 mb-6">Case Study Editor</h1>
+                <p class="mb-6 text-gray-600 dark:text-gray-400">Enable or disable sections and customize your case study content.</p>
+                
+                <div id="projectInfoSection" class="mb-8">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Case Study Selection</h2>
+                    <div class="mb-6">
+                        <label for="projectSelector" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Select Case Study</label>
+                        <select id="projectSelector" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">-- Select Case Study --</option>
+                            <!-- Projects will be loaded here -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="sectionControls" class="mb-8">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Enable/Disable Sections</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="heroSection" class="section-toggle mr-2" checked data-section="hero">
+                            <label for="heroSection" class="text-gray-700 dark:text-gray-300">Hero/Introduction</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="overviewSection" class="section-toggle mr-2" checked data-section="overview">
+                            <label for="overviewSection" class="text-gray-700 dark:text-gray-300">Overview</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="problemSection" class="section-toggle mr-2" checked data-section="problem">
+                            <label for="problemSection" class="text-gray-700 dark:text-gray-300">Problem Statement</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="processSection" class="section-toggle mr-2" checked data-section="process">
+                            <label for="processSection" class="text-gray-700 dark:text-gray-300">Research & Process</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showcaseSection" class="section-toggle mr-2" checked data-section="showcase">
+                            <label for="showcaseSection" class="text-gray-700 dark:text-gray-300">Solution Showcase</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="reflectionSection" class="section-toggle mr-2" checked data-section="reflection">
+                            <label for="reflectionSection" class="text-gray-700 dark:text-gray-300">Reflection</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="gallerySectionToggle" class="section-toggle mr-2" data-section="gallery">
+                            <label for="gallerySectionToggle" class="text-gray-700 dark:text-gray-300">Image Gallery</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="documentSectionToggle" class="section-toggle mr-2" data-section="document">
+                            <label for="documentSectionToggle" class="text-gray-700 dark:text-gray-300">Document / Slides</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="videoSectionToggle" class="section-toggle mr-2" data-section="video">
+                            <label for="videoSectionToggle" class="text-gray-700 dark:text-gray-300">Demo Video</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="linksSectionToggle" class="section-toggle mr-2" data-section="links">
+                            <label for="linksSectionToggle" class="text-gray-700 dark:text-gray-300">Additional Links</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="caseStudyForm">
+                    <!-- Hero Section -->
+                    <div id="heroContent" class="section-container mb-8">
+                        <div class="bg-blue-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-blue-700 dark:text-blue-300">Hero/Introduction</h2>
+                                <button type="button" class="preview-toggle bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded-lg text-sm dark:bg-blue-900 dark:text-blue-300" data-section="hero">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Hero Title</label>
+                                <input type="text" name="heroTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Hero Subtitle</label>
+                                <input type="text" name="heroSubtitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Introduction Text</label>
+                                <textarea name="heroText" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="section-preview" id="hero-preview">
+                                <div class="border-t border-blue-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h1 id="preview-heroTitle" class="text-2xl font-bold text-blue-600 dark:text-blue-300 mb-2"></h1>
+                                        <h2 id="preview-heroSubtitle" class="text-xl text-blue-500 dark:text-blue-400 mb-3"></h2>
+                                        <p id="preview-heroText" class="text-gray-700 dark:text-gray-400"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Overview Section -->
+                    <div id="overviewContent" class="section-container mb-8">
+                        <div class="bg-green-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-green-700 dark:text-green-300">Overview</h2>
+                                <button type="button" class="preview-toggle bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded-lg text-sm dark:bg-green-900 dark:text-green-300" data-section="overview">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Overview Title</label>
+                                <input type="text" name="overviewTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Overview Summary</label>
+                                <textarea name="overviewSummary" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Key Metrics (one per line)</label>
+                                <textarea name="overviewMetrics" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Metric Name: Value"></textarea>
+                            </div>
+                            <div class="section-preview" id="overview-preview">
+                                <div class="border-t border-green-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-overviewTitle" class="text-2xl font-bold text-green-600 dark:text-green-300 mb-2"></h2>
+                                        <p id="preview-overviewSummary" class="text-gray-700 dark:text-gray-400 mb-4"></p>
+                                        <div id="preview-overviewMetrics" class="grid grid-cols-2 gap-2">
+                                            <!-- Metrics will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- More Section Templates Follow (Problem, Process, Showcase, Reflection) -->
+                    <!-- Adding just Problem Statement for brevity -->
+                    <div id="problemContent" class="section-container mb-8">
+                        <div class="bg-red-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-red-700 dark:text-red-300">Problem Statement</h2>
+                                <button type="button" class="preview-toggle bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-lg text-sm dark:bg-red-900 dark:text-red-300" data-section="problem">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Problem Title</label>
+                                <input type="text" name="problemTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Problem Description</label>
+                                <textarea name="problemDescription" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="section-preview" id="problem-preview">
+                                <div class="border-t border-red-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-problemTitle" class="text-2xl font-bold text-red-600 dark:text-red-300 mb-2"></h2>
+                                        <p id="preview-problemDescription" class="text-gray-700 dark:text-gray-400"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Process/Research Section -->
+                    <div id="processContent" class="section-container mb-8">
+                        <div class="bg-green-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-green-700 dark:text-green-300">Research & Process</h2>
+                                <button type="button" class="preview-toggle bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded-lg text-sm dark:bg-green-900 dark:text-green-300" data-section="process">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Process Title</label>
+                                <input type="text" name="processTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Process Description</label>
+                                <textarea name="processDescription" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Process Steps (one per line)</label>
+                                <textarea name="processSteps" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Step 1: Research users"></textarea>
+                            </div>
+                            <div class="section-preview" id="process-preview">
+                                <div class="border-t border-green-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-processTitle" class="text-2xl font-bold text-green-600 dark:text-green-300 mb-2"></h2>
+                                        <p id="preview-processDescription" class="text-gray-700 dark:text-gray-400 mb-4"></p>
+                                        <div id="preview-processSteps" class="space-y-2">
+                                            <!-- Steps will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Showcase Section -->
+                    <div id="showcaseContent" class="section-container mb-8">
+                        <div class="bg-purple-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-purple-700 dark:text-purple-300">Solution Showcase</h2>
+                                <button type="button" class="preview-toggle bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-1 rounded-lg text-sm dark:bg-purple-900 dark:text-purple-300" data-section="showcase">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Showcase Title</label>
+                                <input type="text" name="showcaseTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Showcase Description</label>
+                                <textarea name="showcaseDescription" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Key Features (one per line)</label>
+                                <textarea name="showcaseFeatures" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Feature 1: Interactive dashboard"></textarea>
+                            </div>
+                            <div class="section-preview" id="showcase-preview">
+                                <div class="border-t border-purple-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-showcaseTitle" class="text-2xl font-bold text-purple-600 dark:text-purple-300 mb-2"></h2>
+                                        <p id="preview-showcaseDescription" class="text-gray-700 dark:text-gray-400 mb-4"></p>
+                                        <div id="preview-showcaseFeatures" class="grid grid-cols-1 gap-2">
+                                            <!-- Features will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Reflection Section -->
+                    <div id="reflectionContent" class="section-container mb-8">
+                        <div class="bg-blue-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-blue-700 dark:text-blue-300">Reflection</h2>
+                                <button type="button" class="preview-toggle bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded-lg text-sm dark:bg-blue-900 dark:text-blue-300" data-section="reflection">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Reflection Title</label>
+                                <input type="text" name="reflectionTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Reflection Content</label>
+                                <textarea name="reflectionContent" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Key Learnings (one per line)</label>
+                                <textarea name="reflectionLearnings" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Learning 1: User feedback is critical"></textarea>
+                            </div>
+                            <div class="section-preview" id="reflection-preview">
+                                <div class="border-t border-blue-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-reflectionTitle" class="text-2xl font-bold text-blue-600 dark:text-blue-300 mb-2"></h2>
+                                        <p id="preview-reflectionContent" class="text-gray-700 dark:text-gray-400 mb-4"></p>
+                                        <h3 class="text-lg font-bold text-blue-600 dark:text-blue-300 mb-2">Key Learnings</h3>
+                                        <ul id="preview-reflectionLearnings" class="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-400">
+                                            <!-- Learnings will be displayed here -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gallery Section -->
+                    <div id="galleryContent" class="section-container mb-8" style="display:none;">
+                        <div class="bg-gray-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Image Gallery</h2>
+                                <button type="button" class="preview-toggle bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg text-sm dark:bg-gray-600 dark:text-gray-300" data-section="gallery">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Cloudinary Image Upload Section -->
+                            <div class="mb-6 border-b pb-6 border-gray-200 dark:border-gray-600">
+                                <h3 class="block text-gray-700 mb-2 dark:text-gray-300 font-semibold">Upload Images to Gallery</h3>
+                                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">Select images to upload to Cloudinary (max 10 images)</p>
+                                
+                                <div id="cloudinaryUploadContainer" class="mb-4">
+                                    <div class="flex items-center justify-center w-full">
+                                        <label class="flex flex-col w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                                            <div class="flex flex-col items-center justify-center pt-7">
+                                                <svg class="w-8 h-8 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                </svg>
+                                                <p class="pt-1 text-sm text-gray-600 dark:text-gray-400">Drag & drop images or <span class="text-blue-500">browse</span></p>
+                                            </div>
+                                            <input id="cloudinaryImageUpload" type="file" class="opacity-0" accept="image/*" multiple />
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Upload progress indicator -->
+                                <div id="uploadProgress" class="hidden w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 mb-4">
+                                    <div id="uploadProgressBar" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
+                                </div>
+                                
+                                <!-- Uploaded images preview -->
+                                <div id="uploadedImagesContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
+                                
+                                <!-- Error message display -->
+                                <div id="uploadError" class="hidden text-red-500 text-sm mb-4"></div>
+                            </div>
+                            
+                            <!-- Legacy textarea for backward compatibility & URL input -->
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Image URLs (one per line, max 10)</label>
+                                <textarea name="galleryImages" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://example.com/slide1.jpg"></textarea>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Images uploaded above will be added here automatically.</p>
+                            </div>
+                            
+                            <div class="section-preview" id="gallery-preview">
+                                <div class="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div id="preview-galleryImages" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                        <!-- Gallery images will be displayed here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Document Section -->
+                    <div id="documentContent" class="section-container mb-8">
+                        <div class="bg-gray-100 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Document / Slides</h2>
+                                <button type="button" class="preview-toggle bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg text-sm dark:bg-gray-600 dark:text-gray-300" data-section="document">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Document URL</label>
+                                <input type="text" name="documentUrl" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Embed URL or PDF link">
+                            </div>
+                            <div class="section-preview" id="document-preview">
+                                <div class="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <iframe id="preview-documentIframe" src="" class="w-full h-64" frameborder="0"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Section -->
+                    <div id="videoContent" class="section-container mb-8">
+                        <div class="bg-gray-100 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Demo Video</h2>
+                                <button type="button" class="preview-toggle bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-lg text-sm dark:bg-gray-600 dark:text-gray-300" data-section="video">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">YouTube URL</label>
+                                <input type="text" name="videoUrl" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="YouTube video URL">
+                            </div>
+                            <div class="section-preview" id="video-preview">
+                                <div class="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <iframe id="preview-videoIframe" src="" class="w-full h-64" frameborder="0" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Links Section -->
+                    <div id="linksContent" class="section-container mb-8">
+                        <div class="bg-indigo-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Additional Links</h2>
+                                <button type="button" class="preview-toggle bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-3 py-1 rounded-lg text-sm dark:bg-indigo-900 dark:text-indigo-300" data-section="links">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Links Title</label>
+                                <input type="text" name="linksTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., Related Resources">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Links (one per line, format: Link Name|URL)</label>
+                                <textarea name="linksList" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="GitHub Repository|https://github.com/username/repo&#10;Live Demo|https://demo.example.com"></textarea>
+                            </div>
+                            <div class="section-preview" id="links-preview">
+                                <div class="border-t border-indigo-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <h2 id="preview-linksTitle" class="text-2xl font-bold text-indigo-600 dark:text-indigo-300 mb-2"></h2>
+                                        <div id="preview-linksList" class="space-y-2">
+                                            <!-- Links will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button type="button" id="cancelBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform transition hover:scale-105">
+                            Save Case Study
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+            authDomain: "projectportfolio-29467.firebaseapp.com",
+            databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+            projectId: "projectportfolio-29467",
+            storageBucket: "projectportfolio-29467.appspot.com",
+            messagingSenderId: "506713176316",
+            appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // DOM Elements
+        const projectSelector = document.getElementById('projectSelector');
+        const caseStudyForm = document.getElementById('caseStudyForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const sectionToggles = document.querySelectorAll('.section-toggle');
+        const previewToggles = document.querySelectorAll('.preview-toggle');
+
+        // Auth state observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadProjects();
+            } else {
+                window.location.href = 'admin.html'; // Redirect to admin login if not authenticated
+            }
+        });
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseStudyId = urlParams.get('caseId');
+        const projectId = urlParams.get('id');
+        
+        // Load projects for selection
+        function loadProjects() {
+            // Initialize the dropdown with a placeholder option
+            projectSelector.innerHTML = '<option value="">-- Select Case Study --</option>';
+            
+            // Load all case studies directly
+            db.ref('caseStudies').orderByChild('projectTitle').once('value')
+                .then(snapshot => {
+                    let found = false;
+                    
+                    snapshot.forEach(childSnap => {
+                        const caseStudy = childSnap.val();
+                        found = true;
+                        
+                        // Create an option for each case study
+                        const option = document.createElement('option');
+                        option.value = childSnap.key;
+                        option.textContent = caseStudy.projectTitle || caseStudy.title || 'Untitled Case Study';
+                        projectSelector.appendChild(option);
+                    });
+                    
+                    // If we have a case study ID in the URL, select it
+                    if (caseStudyId) {
+                        projectSelector.value = caseStudyId;
+                        loadCaseStudyFromCaseStudiesCollection(caseStudyId);
+                    }
+                    
+                    if (!found) {
+                        debugLog('No case studies found in database');
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.textContent = 'No case studies available';
+                        projectSelector.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading case studies: ", error);
+                    debugLog('Error loading case studies', { error: error.message });
+                    alert("Error loading case studies. Please try again.");
+                });
+        }
+
+        // Check if a project has an existing case study
+        function checkForExistingCaseStudy(projectId) {
+            db.ref(`projects/${projectId}`).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const project = snapshot.val();
+                        if (project.caseStudyId) {
+                            loadCaseStudyFromCaseStudiesCollection(project.caseStudyId);
+                        } else {
+                            caseStudyForm.reset();
+                            sectionToggles.forEach(toggle => toggleSectionVisibility(toggle.dataset.section, toggle.checked));
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error checking for existing case study: ", error);
+                    alert("Error checking for existing case study. Please try again.");
+                });
+        }
+
+        // Load case study from caseStudies collection
+        function loadCaseStudyFromCaseStudiesCollection(caseStudyId) {
+            if (!caseStudyId) {
+                debugLog('No case study ID provided');
+                return;
+            }
+            
+            debugLog('Loading case study', { caseStudyId });
+
+            db.ref(`caseStudies/${caseStudyId}`).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const caseStudy = snapshot.val();
+                        debugLog('Loading case study', { caseStudyId, sections: caseStudy.sections });
+                        
+                        // Fill form with case study data
+                        if (caseStudy.sections) {
+                            const sections = caseStudy.sections;
+                            
+                            // Enable/disable sections based on saved data
+                            sectionToggles.forEach(toggle => {
+                                const section = toggle.dataset.section;
+                                toggle.checked = sections[section] ? sections[section].enabled : false;
+                                toggleSectionVisibility(section, toggle.checked);
+                            });
+                            
+                            // Fill in section content
+                            if (sections.hero) {
+                                document.querySelector('[name="heroTitle"]').value = sections.hero.headline || '';
+                                document.querySelector('[name="heroSubtitle"]').value = sections.hero.subheading || '';
+                                document.querySelector('[name="heroText"]').value = sections.hero.text || '';
+                            }
+                            
+                            if (sections.overview) {
+                                document.querySelector('[name="overviewTitle"]').value = sections.overview.title || 'Project Overview';
+                                document.querySelector('[name="overviewSummary"]').value = sections.overview.summary || '';
+                                document.querySelector('[name="overviewMetrics"]').value = sections.overview.outcomes || '';
+                            }
+                            
+                            if (sections.problem) {
+                                document.querySelector('[name="problemTitle"]').value = sections.problem.title || 'Problem Statement';
+                                document.querySelector('[name="problemDescription"]').value = 
+                                    (sections.problem.challenge || '') + '\n\n' + (sections.problem.goals || '');
+                            }
+                            
+                            if (sections.process) {
+                                document.querySelector('[name="processTitle"]').value = sections.process.title || 'Research & Process';
+                                document.querySelector('[name="processDescription"]').value = 
+                                    (sections.process.research || '') + '\n\n' + (sections.process.insights || '');
+                                document.querySelector('[name="processSteps"]').value = sections.process.steps || '';
+                            }
+                            
+                            if (sections.showcase) {
+                                document.querySelector('[name="showcaseTitle"]').value = sections.showcase.title || 'Solution Showcase';
+                                document.querySelector('[name="showcaseDescription"]').value = sections.showcase.solution || '';
+                                document.querySelector('[name="showcaseFeatures"]').value = sections.showcase.assets || '';
+                            }
+                            
+                            if (sections.reflection) {
+                                document.querySelector('[name="reflectionTitle"]').value = sections.reflection.title || 'Reflection';
+                                document.querySelector('[name="reflectionContent"]').value = sections.reflection.lessons || '';
+                                document.querySelector('[name="reflectionLearnings"]').value = sections.reflection.improvements || '';
+                            }
+                            
+                            // Populate Document & Video fields
+                            if (sections.document) {
+                                document.querySelector('[name="documentUrl"]').value = sections.document.url || '';
+                            }
+                            if (sections.video) {
+                                document.querySelector('[name="videoUrl"]').value = sections.video.url || '';
+                            }
+                            
+                            // Populate Gallery fields
+                            if (sections.gallery) {
+                                debugLog('Loading gallery section', { gallery: sections.gallery });
+                                
+                                // Check if images is an array or a string
+                                let galleryImages = [];
+                                if (Array.isArray(sections.gallery.images)) {
+                                    galleryImages = sections.gallery.images;
+                                } else if (typeof sections.gallery.images === 'string') {
+                                    galleryImages = sections.gallery.images.split('\n').filter(url => url.trim());
+                                }
+                                
+                                // Make sure gallery section is enabled
+                                document.getElementById('gallerySectionToggle').checked = true;
+                                toggleSectionVisibility('gallery', true);
+                                
+                                // Update the textarea
+                                document.querySelector('[name="galleryImages"]').value = galleryImages.join('\n');
+                                
+                                // Initialize gallery preview
+                                setTimeout(() => {
+                                    initializeGalleryPreview();
+                                }, 300);
+                            }
+                            
+                            // Populate Links fields
+                            if (sections.links) {
+                                debugLog('Loading links section', { links: sections.links });
+                                document.querySelector('[name="linksTitle"]').value = sections.links.title || 'Additional Links';
+                                document.querySelector('[name="linksList"]').value = sections.links.items || '';
+                                // Ensure the links section toggle is checked if links exist
+                                document.getElementById('linksSectionToggle').checked = true;
+                                toggleSectionVisibility('links', true);
+                            }
+                        } else {
+                            resetForm();
+                        }
+                    } else {
+                        alert("Case study not found.");
+                        resetForm();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading case study data: ", error);
+                    alert("Error loading case study data. Please try again.");
+                });
+        }
+
+        // Project selection change
+        projectSelector.addEventListener('change', function() {
+            const selectedCaseStudyId = this.value;
+            if (selectedCaseStudyId) {
+                loadCaseStudyFromCaseStudiesCollection(selectedCaseStudyId);
+            } else {
+                resetForm();
+            }
+        });
+
+        // Reset form
+        function resetForm() {
+            caseStudyForm.reset();
+            
+            // Enable all sections by default
+            sectionToggles.forEach(toggle => {
+                toggle.checked = true;
+                toggleSectionVisibility(toggle.dataset.section, true);
+            });
+        }
+
+        // Toggle section visibility
+        function toggleSectionVisibility(section, isVisible) {
+            const sectionElement = document.getElementById(section + 'Content');
+            if (sectionElement) {
+                sectionElement.style.display = isVisible ? 'block' : 'none';
+            }
+        }
+
+        // Section toggle event listeners
+        sectionToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const section = this.dataset.section;
+                toggleSectionVisibility(section, this.checked);
+                if (section === 'gallery') {
+                    document.getElementById('galleryContent').style.display = this.checked ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Preview toggle event listeners
+        previewToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const section = this.dataset.section;
+                const preview = document.getElementById(section + '-preview');
+                preview.classList.toggle('active');
+                
+                // Update preview content
+                updatePreview(section);
+            });
+        });
+
+        // Update preview content
+        function updatePreview(section) {
+            if (section === 'hero') {
+                document.getElementById('preview-heroTitle').textContent = document.querySelector('[name="heroTitle"]').value;
+                document.getElementById('preview-heroSubtitle').textContent = document.querySelector('[name="heroSubtitle"]').value;
+                document.getElementById('preview-heroText').textContent = document.querySelector('[name="heroText"]').value;
+            } else if (section === 'overview') {
+                document.getElementById('preview-overviewTitle').textContent = document.querySelector('[name="overviewTitle"]').value;
+                document.getElementById('preview-overviewSummary').textContent = document.querySelector('[name="overviewSummary"]').value;
+                
+                // Handle metrics
+                const metricsContainer = document.getElementById('preview-overviewMetrics');
+                metricsContainer.innerHTML = '';
+                
+                const metricsText = document.querySelector('[name="overviewMetrics"]').value;
+                const metrics = metricsText.split('\n').filter(line => line.trim() !== '');
+                
+                metrics.forEach(metric => {
+                    const parts = metric.split(':');
+                    if (parts.length === 2) {
+                        const div = document.createElement('div');
+                        div.className = 'bg-green-50 p-2 rounded dark:bg-green-900';
+                        div.innerHTML = `
+                            <div class="font-bold">${parts[0].trim()}</div>
+                            <div class="text-xl">${parts[1].trim()}</div>
+                        `;
+                        metricsContainer.appendChild(div);
+                    }
+                });
+            } else if (section === 'problem') {
+                document.getElementById('preview-problemTitle').textContent = document.querySelector('[name="problemTitle"]').value;
+                document.getElementById('preview-problemDescription').textContent = document.querySelector('[name="problemDescription"]').value;
+            } else if (section === 'process') {
+                document.getElementById('preview-processTitle').textContent = document.querySelector('[name="processTitle"]').value;
+                document.getElementById('preview-processDescription').textContent = document.querySelector('[name="processDescription"]').value;
+                
+                // Handle steps
+                const stepsContainer = document.getElementById('preview-processSteps');
+                stepsContainer.innerHTML = '';
+                
+                const stepsText = document.querySelector('[name="processSteps"]').value;
+                const steps = stepsText.split('\n').filter(line => line.trim() !== '');
+                
+                steps.forEach((step, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-start';
+                    div.innerHTML = `
+                        <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-green-100 rounded-full text-green-700 text-xl font-bold">${index + 1}</div>
+                        <div class="ml-4">
+                            <p class="text-gray-700">${step}</p>
+                        </div>
+                    `;
+                    stepsContainer.appendChild(div);
+                });
+            } else if (section === 'showcase') {
+                document.getElementById('preview-showcaseTitle').textContent = document.querySelector('[name="showcaseTitle"]').value;
+                document.getElementById('preview-showcaseDescription').textContent = document.querySelector('[name="showcaseDescription"]').value;
+                
+                // Handle features
+                const featuresContainer = document.getElementById('preview-showcaseFeatures');
+                featuresContainer.innerHTML = '';
+                
+                const featuresText = document.querySelector('[name="showcaseFeatures"]').value;
+                const features = featuresText.split('\n').filter(line => line.trim() !== '');
+                
+                features.forEach(feature => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-start p-2 bg-purple-50 rounded dark:bg-purple-900';
+                    div.innerHTML = `
+                        <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-purple-100 rounded-full text-purple-700 dark:bg-purple-800 dark:text-purple-300">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-gray-700 dark:text-gray-400">${feature}</p>
+                        </div>
+                    `;
+                    featuresContainer.appendChild(div);
+                });
+            } else if (section === 'reflection') {
+                document.getElementById('preview-reflectionTitle').textContent = document.querySelector('[name="reflectionTitle"]').value;
+                document.getElementById('preview-reflectionContent').textContent = document.querySelector('[name="reflectionContent"]').value;
+                
+                // Handle learnings
+                const learningsContainer = document.getElementById('preview-reflectionLearnings');
+                learningsContainer.innerHTML = '';
+                
+                const learningsText = document.querySelector('[name="reflectionLearnings"]').value;
+                const learnings = learningsText.split('\n').filter(line => line.trim() !== '');
+                
+                learnings.forEach(learning => {
+                    const li = document.createElement('li');
+                    li.textContent = learning;
+                    learningsContainer.appendChild(li);
+                });
+            } else if (section === 'gallery') {
+                // Use the new renderImagePreviews function for gallery
+                renderImagePreviews();
+            } else if (section === 'links') {
+                document.getElementById('preview-linksTitle').textContent = document.querySelector('[name="linksTitle"]').value;
+                
+                const linksContainer = document.getElementById('preview-linksList');
+                linksContainer.innerHTML = '';
+                
+                const linksText = document.querySelector('[name="linksList"]').value;
+                const links = linksText.split('\n').filter(link => link.trim() !== '');
+                
+                links.forEach(link => {
+                    const [name, url] = link.split('|').map(item => item.trim());
+                    if (name && url) {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center';
+                        div.innerHTML = `
+                            <a href="${url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                <i class="fas fa-external-link-alt mr-2"></i>${name}
+                            </a>
+                        `;
+                        linksContainer.appendChild(div);
+                    }
+                });
+            }
+        }
+
+        let debugConsoleTimeout = null;
+        function debugLog(message, data = null) {
+            const debugConsole = document.getElementById('debugConsole');
+            const debugContent = document.getElementById('debugContent');
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            
+            if (data) {
+                try {
+                    logMessage += "\n" + JSON.stringify(data, null, 2);
+                } catch (e) {
+                    logMessage += "\n[Object cannot be serialized]";
+                }
+            }
+            
+            debugContent.innerHTML += logMessage + "\n\n";
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            
+            // Show debug console if hidden
+            if (!debugConsole.classList.contains('show')) {
+                debugConsole.classList.add('show');
+            }
+
+            // Clear any previous timer
+            if (debugConsoleTimeout) {
+                clearTimeout(debugConsoleTimeout);
+            }
+            // Hide after 20 seconds (20000 ms)
+            debugConsoleTimeout = setTimeout(() => {
+                debugConsole.classList.remove('show');
+            }, 20000);
+
+            // Log to console as well
+            console.log(message, data);
+        }
+        
+        // Show notification popup
+        function showNotification(type, title, message, duration = 5000) {
+            const popup = document.getElementById('notificationPopup');
+            const iconElement = document.getElementById('notificationIcon');
+            const titleElement = document.getElementById('notificationTitle');
+            const messageElement = document.getElementById('notificationMessage');
+            
+            // Remove all classes first
+            popup.classList.remove('notification-success', 'notification-error');
+            
+            // Set content
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            
+            if (type === 'success') {
+                popup.classList.add('notification-success');
+                iconElement.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else {
+                popup.classList.add('notification-error');
+                iconElement.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            }
+            
+            // Show popup
+            popup.classList.add('show');
+            
+            // Hide after duration
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, duration);
+        }
+        
+        // Toggle debug console with keyboard shortcut (Ctrl+D)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                document.getElementById('debugConsole').classList.toggle('show');
+            }
+        });
+
+        // Form submission - update with enhanced notifications
+        caseStudyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const selectedCaseStudyId = projectSelector.value;
+            if (!selectedCaseStudyId) {
+                showNotification('error', 'Error', 'Please select a case study first.');
+                return;
+            }
+            
+            debugLog('Form submission started', { caseStudyId: selectedCaseStudyId });
+            
+            // Show a processing notification
+            showNotification('success', 'Processing', 'Updating your case study...', 10000);
+            
+            // Gather form data
+            const formData = {
+                sections: {}
+            };
+            
+            // Get enabled/disabled status for each section
+            sectionToggles.forEach(toggle => {
+                const section = toggle.dataset.section;
+                formData.sections[section] = { enabled: toggle.checked };
+            });
+            
+            // Get content for each section
+            if (formData.sections.hero && formData.sections.hero.enabled) {
+                formData.sections.hero.headline = document.querySelector('[name="heroTitle"]').value;
+                formData.sections.hero.subheading = document.querySelector('[name="heroSubtitle"]').value;
+                formData.sections.hero.text = document.querySelector('[name="heroText"]').value;
+            }
+            
+            if (formData.sections.overview && formData.sections.overview.enabled) {
+                formData.sections.overview.title = document.querySelector('[name="overviewTitle"]').value;
+                formData.sections.overview.summary = document.querySelector('[name="overviewSummary"]').value;
+                formData.sections.overview.outcomes = document.querySelector('[name="overviewMetrics"]').value;
+            }
+            
+            if (formData.sections.problem && formData.sections.problem.enabled) {
+                formData.sections.problem.title = document.querySelector('[name="problemTitle"]').value;
+                
+                // Split the problem description into challenge and goals if it contains multiple paragraphs
+                const problemText = document.querySelector('[name="problemDescription"]').value;
+                const problemParagraphs = problemText.split('\n\n').filter(p => p.trim() !== '');
+                
+                if (problemParagraphs.length > 1) {
+                    formData.sections.problem.challenge = problemParagraphs[0];
+                    formData.sections.problem.goals = problemParagraphs.slice(1).join('\n\n');
+                } else {
+                    formData.sections.problem.challenge = problemText;
+                    formData.sections.problem.goals = '';
+                }
+            }
+            
+            if (formData.sections.process && formData.sections.process.enabled) {
+                formData.sections.process.title = document.querySelector('[name="processTitle"]').value;
+                
+                // Split the process description into research and insights if it contains multiple paragraphs
+                const processText = document.querySelector('[name="processDescription"]').value;
+                const processParagraphs = processText.split('\n\n').filter(p => p.trim() !== '');
+                
+                if (processParagraphs.length > 1) {
+                    formData.sections.process.research = processParagraphs[0];
+                    formData.sections.process.insights = processParagraphs.slice(1).join('\n\n');
+                } else {
+                    formData.sections.process.research = processText;
+                    formData.sections.process.insights = '';
+                }
+                
+                formData.sections.process.steps = document.querySelector('[name="processSteps"]').value;
+            }
+            
+            if (formData.sections.showcase && formData.sections.showcase.enabled) {
+                formData.sections.showcase.title = document.querySelector('[name="showcaseTitle"]').value;
+                formData.sections.showcase.solution = document.querySelector('[name="showcaseDescription"]').value;
+                formData.sections.showcase.assets = document.querySelector('[name="showcaseFeatures"]').value;
+            }
+            
+            if (formData.sections.reflection && formData.sections.reflection.enabled) {
+                formData.sections.reflection.title = document.querySelector('[name="reflectionTitle"]').value;
+                formData.sections.reflection.lessons = document.querySelector('[name="reflectionContent"]').value;
+                formData.sections.reflection.improvements = document.querySelector('[name="reflectionLearnings"]').value;
+            }
+            
+            // Gather Document & Video inputs
+            if (formData.sections.document && formData.sections.document.enabled) {
+                formData.sections.document.url = document.querySelector('[name="documentUrl"]').value;
+            }
+            if (formData.sections.video && formData.sections.video.enabled) {
+                formData.sections.video.url = document.querySelector('[name="videoUrl"]').value;
+            }
+            
+            // Gather Gallery inputs
+            if (formData.sections.gallery && formData.sections.gallery.enabled) {
+                formData.sections.gallery.images = document.querySelector('[name="galleryImages"]').value.trim()
+                    .split('\n').slice(0,10).map(url => url.trim()).filter(url => url);
+            }
+            
+            // Gather Links inputs
+            if (formData.sections.links && formData.sections.links.enabled) {
+                const linksTitle = document.querySelector('[name="linksTitle"]').value;
+                const linksList = document.querySelector('[name="linksList"]').value;
+                debugLog('Saving links section', { title: linksTitle, items: linksList });
+                
+                formData.sections.links = {
+                    enabled: true,
+                    title: linksTitle,
+                    items: linksList
+                };
+            }
+            
+            // Generate HTML from structured data
+            const html = generateHTML(formData);
+            debugLog('Generated HTML', { length: html.length });
+            
+            // Directly update the existing case study
+            db.ref(`caseStudies/${selectedCaseStudyId}`).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const caseStudy = snapshot.val();
+                        debugLog('Case study data retrieved', { caseStudyId: selectedCaseStudyId });
+                        
+                        // --- START EDIT: Add harmonized fields ---
+                        let projectTitle = (formData.sections.hero && formData.sections.hero.enabled) ? formData.sections.hero.headline : caseStudy.projectTitle;
+                        let projectDescription = (formData.sections.hero && formData.sections.hero.enabled) ? formData.sections.hero.text : caseStudy.projectDescription;
+                        let projectImageUrl = caseStudy.projectImageUrl; // Default to existing
+                        if (formData.sections.gallery && formData.sections.gallery.enabled && formData.sections.gallery.images && formData.sections.gallery.images.length > 0) {
+                            projectImageUrl = formData.sections.gallery.images[0]; // Use first gallery image if available
+                        }
+                        // --- END EDIT ---
+                        
+                        // Prepare update data - keeping existing fields but updating sections and content
+                        const updates = {
+                            // Keep existing meta data
+                            ...caseStudy,
+                            // --- START EDIT: Ensure harmonized fields are included ---
+                            projectTitle: projectTitle || caseStudy.title || 'Untitled Case Study', // Add fallback from original title if needed
+                            projectDescription: projectDescription || '', // Use derived or existing
+                            projectImageUrl: projectImageUrl || '', // Use derived or existing
+                            // projectUrl: caseStudy.projectUrl || '', // Keep existing projectUrl (no input here)
+                             // --- END EDIT ---
+                            // Update with new sections and content
+                            sections: formData.sections,
+                            content: html,
+                            updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        };
+                        
+                        // Remove the key itself from the data (Firebase doesn't want this in the value)
+                        if (updates.key) delete updates.key;
+                        
+                        debugLog('Updating case study', { id: selectedCaseStudyId });
+                        
+                        db.ref(`caseStudies/${selectedCaseStudyId}`).update(updates)
+                        .then(() => {
+                            showNotification('success', 'Success!', 'Case study updated successfully.');
+                            debugLog('Case study updated successfully');
+                            
+                            // Reload the case studies dropdown to refresh the list
+                            loadProjects();
+                            
+                            // Redirect after a delay
+                            setTimeout(() => {
+                                window.location.href = 'admin.html';
+                            }, 2000);
+                        })
+                        .catch(error => {
+                            showNotification('error', 'Update Failed', `Error: ${error.message}`);
+                            debugLog('Error updating case study', { error: error.message });
+                        });
+                    } else {
+                        showNotification('error', 'Case Study Not Found', 'Please select a valid case study.');
+                        debugLog('Case study not found', { caseStudyId: selectedCaseStudyId });
+                    }
+                })
+                .catch(error => {
+                    showNotification('error', 'Error', `Error getting case study details: ${error.message}`);
+                    debugLog('Error getting case study details', { error: error.message });
+                });
+        });
+
+        // Generate HTML from structured data
+        function generateHTML(data) {
+            let html = '';
+            const sections = data.sections;
+            
+            // Hero Section
+            if (sections.hero && sections.hero.enabled) {
+                html += `
+                <section class="page-section cloud-bg flex items-center justify-center">
+                    <div class="container mx-auto px-6">
+                        <h1 class="text-4xl md:text-6xl font-bold mb-6 ghibli-text-blue ghibli-font">${sections.hero.headline}</h1>
+                        <h2 class="text-2xl md:text-3xl mb-6 ghibli-text-green">${sections.hero.subheading}</h2>
+                        <p class="text-lg mb-8 text-gray-700">${sections.hero.text}</p>
+                    </div>
+                </section>`;
+            }
+            
+            // Overview Section
+            if (sections.overview && sections.overview.enabled) {
+                let metricsHTML = '';
+                const metrics = sections.overview.outcomes.split('\n').filter(line => line.trim() !== '');
+                
+                metrics.forEach(metric => {
+                    const parts = metric.split(':');
+                    if (parts.length === 2) {
+                        metricsHTML += `
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-sm text-gray-600">${parts[0].trim()}</div>
+                            <div class="text-3xl font-bold ghibli-text-blue">${parts[1].trim()}</div>
+                        </div>`;
+                    }
+                });
+                
+                html += `
+                <section class="bg-white p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-green handwriting">${sections.overview.title}</h2>
+                    <p class="text-gray-700 mb-6">${sections.overview.summary}</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${metricsHTML}
+                    </div>
+                </section>`;
+            }
+            
+            // Problem Section
+            if (sections.problem && sections.problem.enabled) {
+                html += `
+                <section class="bg-yellow-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-red handwriting">${sections.problem.title}</h2>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold ghibli-text-red mb-3">Challenge</h3>
+                        <p class="text-gray-700 mb-6">${sections.problem.challenge || ''}</p>
+                        
+                        ${sections.problem.goals ? `
+                        <h3 class="text-xl font-bold ghibli-text-red mb-3">Goals</h3>
+                        <p class="text-gray-700">${sections.problem.goals}</p>
+                        ` : ''}
+                    </div>
+                </section>`;
+            }
+            
+            // Process Section
+            if (sections.process && sections.process.enabled) {
+                let stepsHTML = '';
+                if (sections.process.steps) {
+                    const steps = sections.process.steps.split('\n').filter(step => step.trim() !== '');
+                    stepsHTML = `
+                        <h3 class="text-xl font-bold ghibli-text-green mb-3 mt-6">Process Steps</h3>
+                        <div class="space-y-4">
+                            ${steps.map((step, index) => `
+                            <div class="flex">
+                                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-green-100 rounded-full text-green-700 text-xl font-bold">${index + 1}</div>
+                                <div class="ml-4">
+                                    <p class="text-gray-700">${step}</p>
+                                </div>
+                            </div>`).join('')}
+                        </div>
+                    `;
+                }
+                
+                html += `
+                <section class="bg-green-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-green handwriting">${sections.process.title}</h2>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold ghibli-text-green mb-3">Research</h3>
+                        <p class="text-gray-700 mb-6">${sections.process.research || ''}</p>
+                        
+                        ${sections.process.insights ? `
+                        <h3 class="text-xl font-bold ghibli-text-green mb-3">Key Insights</h3>
+                        <p class="text-gray-700 mb-6">${sections.process.insights}</p>
+                        ` : ''}
+                        
+                        ${stepsHTML}
+                    </div>
+                </section>`;
+            }
+            
+            // Showcase Section
+            if (sections.showcase && sections.showcase.enabled) {
+                let assetsHTML = '';
+                if (sections.showcase.assets) {
+                    const assets = sections.showcase.assets.split('\n').filter(asset => asset.trim() !== '');
+                    if (assets.length > 0) {
+                        assetsHTML = `
+                            <h3 class="text-xl font-bold ghibli-text-purple mb-3 mt-6">Key Features</h3>
+                            <ul class="list-disc pl-6 space-y-2">
+                                ${assets.map(asset => `<li class="text-gray-700">${asset}</li>`).join('')}
+                            </ul>
+                        `;
+                    }
+                }
+                
+                html += `
+                <section class="bg-purple-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-purple handwriting">${sections.showcase.title}</h2>
+                    <p class="text-gray-700 mt-6">${sections.showcase.solution || ''}</p>
+                    ${assetsHTML}
+                </section>`;
+            }
+            
+            // Reflection Section
+            if (sections.reflection && sections.reflection.enabled) {
+                let learningsHTML = '';
+                if (sections.reflection.improvements) {
+                    const learnings = sections.reflection.improvements.split('\n').filter(learning => learning.trim() !== '');
+                    if (learnings.length > 0) {
+                        learningsHTML = `
+                            <h3 class="text-xl font-bold ghibli-text-blue mb-3 mt-6">Future Improvements</h3>
+                            <ul class="list-disc pl-6 space-y-2">
+                                ${learnings.map(learning => `<li class="text-gray-700">${learning}</li>`).join('')}
+                            </ul>
+                        `;
+                    }
+                }
+                
+                html += `
+                <section class="bg-blue-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-blue handwriting">${sections.reflection.title}</h2>
+                    <p class="text-gray-700 mt-6">${sections.reflection.lessons || ''}</p>
+                    ${learningsHTML}
+                </section>`;
+            }
+            
+            // Links Section
+            if (sections.links && sections.links.enabled) {
+                let linksHTML = '';
+                if (sections.links.items) {
+                    const links = sections.links.items.split('\n').filter(link => link.trim() !== '');
+                    if (links.length > 0) {
+                        linksHTML = `
+                            <div class="mt-6 space-y-4">
+                                ${links.map(link => {
+                                    const [name, url] = link.split('|').map(item => item.trim());
+                                    if (name && url) {
+                                        return `
+                                            <div class="flex items-center">
+                                                <a href="${url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                                    <i class="fas fa-external-link-alt mr-2"></i>${name}
+                                                </a>
+                                            </div>
+                                        `;
+                                    }
+                                    return '';
+                                }).join('')}
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += `
+                <section class="bg-indigo-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-indigo handwriting">${sections.links.title || 'Additional Links'}</h2>
+                    ${linksHTML}
+                </section>`;
+            }
+            
+            // Gallery Section
+            if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length > 0) {
+                // Ensure images is an array
+                const galleryImages = Array.isArray(sections.gallery.images) 
+                    ? sections.gallery.images 
+                    : sections.gallery.images.split('\n').filter(url => url.trim());
+                
+                if (galleryImages.length > 0) {
+                    html += `
+                    <section class="bg-gray-50 p-8 rounded-xl shadow-lg my-8">
+                        <h2 class="text-3xl font-bold text-center ghibli-text-gray handwriting">Image Gallery</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                            ${galleryImages.map(imageUrl => `
+                                <div class="overflow-hidden rounded-lg shadow-md">
+                                    <img src="${imageUrl}" alt="Gallery image" class="w-full h-64 object-cover hover:scale-105 transition-transform duration-300">
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>`;
+                }
+            }
+            
+            return html;
+        }
+
+        // Cancel button
+        cancelBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to cancel? All unsaved changes will be lost.")) {
+                window.location.href = 'admin.html';
+            }
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // --- CLOUDINARY INTEGRATION FOR GALLERY IMAGES ---
+        
+        // Cloudinary upload widget configuration and initialization
+        const cloudinaryUploadInput = document.getElementById('cloudinaryImageUpload');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadError = document.getElementById('uploadError');
+        const uploadedImagesContainer = document.getElementById('uploadedImagesContainer');
+        const galleryImagesTextarea = document.querySelector('[name="galleryImages"]');
+        
+        // Track uploaded images
+        const uploadedImages = [];
+        const maxImages = 10;
+        
+        // Helper function to show error messages
+        function showUploadError(message) {
+            uploadError.textContent = message;
+            uploadError.classList.remove('hidden');
+            setTimeout(() => {
+                uploadError.classList.add('hidden');
+            }, 5000);
+        }
+        
+        // Initialize the preview when loading existing data
+        function initializeGalleryPreview() {
+            const galleryPreviewContainer = document.getElementById('preview-galleryImages');
+            galleryPreviewContainer.innerHTML = '';
+            
+            // Get URLs from textarea
+            const imageUrls = galleryImagesTextarea.value.trim().split('\n')
+                .map(url => url.trim())
+                .filter(url => url);
+                
+            // Update uploadedImages array
+            uploadedImages.length = 0;
+            imageUrls.forEach(url => {
+                if (!uploadedImages.includes(url)) {
+                    uploadedImages.push(url);
+                }
+            });
+            
+            // Render previews for existing images
+            renderImagePreviews();
+        }
+        
+        // Render image previews in the preview container
+        function renderImagePreviews() {
+            const galleryPreviewContainer = document.getElementById('preview-galleryImages');
+            uploadedImagesContainer.innerHTML = '';
+            galleryPreviewContainer.innerHTML = '';
+            
+            // Update the textarea with current image URLs
+            galleryImagesTextarea.value = uploadedImages.join('\n');
+            
+            // No images to display
+            if (uploadedImages.length === 0) {
+                galleryPreviewContainer.innerHTML = '<p class="text-gray-500 col-span-full text-center py-4">No images added yet</p>';
+                return;
+            }
+            
+            // Add image previews to both containers
+            uploadedImages.forEach((imageUrl, index) => {
+                // Create preview for the upload container
+                const uploadPreviewDiv = document.createElement('div');
+                uploadPreviewDiv.className = 'relative group';
+                uploadPreviewDiv.innerHTML = `
+                    <img src="${imageUrl}" alt="Gallery image ${index + 1}" class="h-24 w-full object-cover rounded-lg">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                        <button type="button" class="remove-image text-white bg-red-600 hover:bg-red-700 rounded-full p-1" data-index="${index}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                uploadedImagesContainer.appendChild(uploadPreviewDiv);
+                
+                // Create preview for the gallery preview section
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'overflow-hidden rounded-lg shadow-sm';
+                previewDiv.innerHTML = `
+                    <img src="${imageUrl}" alt="Gallery image ${index + 1}" class="w-full h-32 object-cover">
+                `;
+                galleryPreviewContainer.appendChild(previewDiv);
+            });
+            
+            // Add remove event listeners
+            document.querySelectorAll('.remove-image').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    removeImage(index);
+                });
+            });
+        }
+        
+        // Remove an image from the gallery
+        function removeImage(index) {
+            if (index >= 0 && index < uploadedImages.length) {
+                uploadedImages.splice(index, 1);
+                renderImagePreviews();
+                showNotification('success', 'Image Removed', 'Image has been removed from gallery');
+            }
+        }
+        
+        // Process selected files for upload to Cloudinary
+        cloudinaryUploadInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            // Check number of images (existing + new)
+            if (uploadedImages.length + files.length > maxImages) {
+                showUploadError(`You can only upload a maximum of ${maxImages} images. Please select fewer images.`);
+                return;
+            }
+            
+            // Show progress bar
+            uploadProgress.classList.remove('hidden');
+            
+            // Process each file
+            let completedUploads = 0;
+            const totalFiles = files.length;
+            
+            // Update progress
+            function updateProgress() {
+                const percentage = Math.round((completedUploads / totalFiles) * 100);
+                uploadProgressBar.style.width = `${percentage}%`;
+            }
+            
+            // Upload each file to Cloudinary
+            files.forEach(file => {
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('folder', 'case-studies');
+                formData.append('imageType', 'case-studies');
+                
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Add the URL to our list
+                    if (data.url && !uploadedImages.includes(data.url)) {
+                        uploadedImages.push(data.url);
+                    }
+                    
+                    // Update progress
+                    completedUploads++;
+                    updateProgress();
+                    
+                    // Check if all uploads are done
+                    if (completedUploads === totalFiles) {
+                        // Hide progress after a short delay
+                        setTimeout(() => {
+                            uploadProgress.classList.add('hidden');
+                            uploadProgressBar.style.width = '0%';
+                            // Reset the file input
+                            cloudinaryUploadInput.value = '';
+                        }, 1000);
+                        
+                        // Render the previews
+                        renderImagePreviews();
+                        
+                        // Show success message
+                        showNotification('success', 'Upload Complete', `${totalFiles} image${totalFiles === 1 ? '' : 's'} uploaded successfully`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading image:', error);
+                    showUploadError('Error uploading image. Please try again.');
+                    
+                    // Update progress
+                    completedUploads++;
+                    updateProgress();
+                    
+                    // Check if all uploads are done
+                    if (completedUploads === totalFiles) {
+                        // Hide progress after a short delay
+                        setTimeout(() => {
+                            uploadProgress.classList.add('hidden');
+                            uploadProgressBar.style.width = '0%';
+                        }, 1000);
+                    }
+                });
+            });
+        });
+        
+        // Update preview button behavior for gallery
+        document.querySelectorAll('.preview-toggle').forEach(button => {
+            if (button.dataset.section === 'gallery') {
+                button.addEventListener('click', function() {
+                    const previewSection = document.getElementById('gallery-preview');
+                    previewSection.classList.toggle('active');
+                    renderImagePreviews();
+                });
+            }
+        });
+        
+        // Initialize gallery when loading an existing case study
+        function loadGalleryImages(images) {
+            if (Array.isArray(images) && images.length > 0) {
+                // Set the textarea value
+                galleryImagesTextarea.value = images.join('\n');
+                
+                // Initialize the preview
+                initializeGalleryPreview();
+            }
+        }
+        
+        // Override the original loadCaseStudyFromCaseStudiesCollection function
+        const originalLoadCaseStudy = loadCaseStudyFromCaseStudiesCollection;
+        loadCaseStudyFromCaseStudiesCollection = function(caseStudyId) {
+            // Call the original function
+            originalLoadCaseStudy(caseStudyId);
+            
+            // Add extra handling for gallery images after a short delay
+            setTimeout(() => {
+                if (document.getElementById('gallerySectionToggle').checked) {
+                    initializeGalleryPreview();
+                }
+            }, 500);
+        };
+
+        // Debug logging function
+        function debugLog(message, data = {}) {
+            const debugConsole = document.getElementById('debugContent');
+            const timestamp = new Date().toISOString().substr(11, 8);
+            const logEntry = `[${timestamp}] ${message}: ${JSON.stringify(data)}`;
+            console.log(logEntry);
+            if (debugConsole) {
+                debugConsole.innerHTML += logEntry + '\n';
+                debugConsole.scrollTop = debugConsole.scrollHeight;
+            }
+        }
+
+        // Debug case study loading by pressing Ctrl+` (backtick)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === '`') {
+                e.preventDefault();
+                document.getElementById('debugConsole').classList.add('show');
+                const caseId = urlParams.get('caseId');
+                if (caseId) {
+                    debugLog('Debug info for case study', { caseId });
+                    // Check if case study exists
+                    db.ref(`caseStudies/${caseId}`).once('value')
+                        .then(snapshot => {
+                            if (snapshot.exists()) {
+                                const caseStudy = snapshot.val();
+                                debugLog('Case study found', { 
+                                    projectId: caseStudy.projectId,
+                                    title: caseStudy.projectTitle || caseStudy.title,
+                                    sections: caseStudy.sections ? Object.keys(caseStudy.sections) : []
+                                });
+                                
+                                // Check if project exists
+                                if (caseStudy.projectId) {
+                                    db.ref(`projects/${caseStudy.projectId}`).once('value')
+                                        .then(projectSnapshot => {
+                                            if (projectSnapshot.exists()) {
+                                                debugLog('Project found', { 
+                                                    title: projectSnapshot.val().title,
+                                                    caseStudyId: projectSnapshot.val().caseStudyId
+                                                });
+                                            } else {
+                                                debugLog('Project not found in database', { projectId: caseStudy.projectId });
+                                            }
+                                        });
+                                }
+                            } else {
+                                debugLog('Case study not found in database', { caseId });
+                            }
+                        })
+                        .catch(error => {
+                            debugLog('Error checking case study', { error: error.message });
+                        });
+                } else {
+                    debugLog('No case ID in URL');
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

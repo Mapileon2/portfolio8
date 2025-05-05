@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghibli-Inspired Case Study</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@400;600&display=swap');
+        
+        :root {
+            --ghibli-blue: #6bb2e2;
+            --ghibli-green: #a5d6a7;
+            --ghibli-yellow: #fff59d;
+            --ghibli-red: #ef9a9a;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f9f7f0;
+            color: #333;
+            scroll-behavior: smooth;
+        }
+        
+        .handwriting {
+            font-family: 'Patrick Hand', cursive;
+        }
+        
+        .ghibli-bg-blue {
+            background-color: var(--ghibli-blue);
+        }
+        
+        .ghibli-bg-green {
+            background-color: var(--ghibli-green);
+        }
+        
+        .ghibli-bg-yellow {
+            background-color: var(--ghibli-yellow);
+        }
+        
+        .ghibli-bg-red {
+            background-color: var(--ghibli-red);
+        }
+        
+        .ghibli-text-blue {
+            color: var(--ghibli-blue);
+        }
+        
+        .ghibli-text-green {
+            color: var(--ghibli-green);
+        }
+        
+        .ghibli-text-yellow {
+            color: var(--ghibli-yellow);
+        }
+        
+        .ghibli-text-red {
+            color: var(--ghibli-red);
+        }
+        
+        .sketch-border {
+            border: 3px dashed #333;
+            border-radius: 8px;
+        }
+        
+        .cloud-bg {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%236bb2e2' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .page-section {
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--ghibli-blue), var(--ghibli-green), var(--ghibli-yellow), var(--ghibli-red));
+        }
+        
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .slide-in {
+            animation: slideIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .delayed-1 {
+            animation-delay: 0.2s;
+        }
+        
+        .delayed-2 {
+            animation-delay: 0.4s;
+        }
+        
+        .delayed-3 {
+            animation-delay: 0.6s;
+        }
+        
+        .delayed-4 {
+            animation-delay: 0.8s;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--ghibli-blue);
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4a90e2;
+        }
+        
+        .sketch-filter {
+            filter: url(#sketchFilter);
+        }
+        
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal-content {
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: var(--ghibli-blue);
+            border: 3px solid white;
+        }
+        
+        .timeline-connector {
+            position: absolute;
+            left: -1rem;
+            top: 1rem;
+            bottom: -1rem;
+            width: 2px;
+            background-color: var(--ghibli-blue);
+        }
+        
+        .gallery-item {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="relative">
+    <!-- SVG Filter for Sketch Effect -->
+    <svg width="0" height="0" style="position:absolute">
+        <filter id="sketchFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white bg-opacity-90 shadow-md z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold ghibli-text-blue handwriting">Studio Case</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#hero" class="hover:text-blue-500 transition">Home</a>
+                <a href="#overview" class="hover:text-blue-500 transition">Overview</a>
+                <a href="#problem" class="hover:text-blue-500 transition">Problem</a>
+                <a href="#process" class="hover:text-blue-500 transition">Process</a>
+                <a href="#showcase" class="hover:text-blue-500 transition">Showcase</a>
+                <a href="#reflection" class="hover:text-blue-500 transition">Reflection</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white py-2 px-4 shadow-lg">
+            <a href="#hero" class="block py-2 hover:text-blue-500 transition">Home</a>
+            <a href="#overview" class="block py-2 hover:text-blue-500 transition">Overview</a>
+            <a href="#problem" class="block py-2 hover:text-blue-500 transition">Problem</a>
+            <a href="#process" class="block py-2 hover:text-blue-500 transition">Process</a>
+            <a href="#showcase" class="block py-2 hover:text-blue-500 transition">Showcase</a>
+            <a href="#reflection" class="block py-2 hover:text-blue-500 transition">Reflection</a>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="hero" class="page-section cloud-bg flex items-center justify-center">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0 slide-in">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 ghibli-text-blue handwriting">Whispering Winds</h1>
+                <h2 class="text-2xl md:text-3xl mb-6 ghibli-text-green">A Ghibli-Inspired Digital Experience</h2>
+                <p class="text-lg mb-8 text-gray-700">Journey through the creative process of designing an immersive digital platform that captures the magic and wonder of Studio Ghibli's storytelling.</p>
+                <div class="flex space-x-4">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full transition transform hover:scale-105">
+                        Explore Case Study
+                    </button>
+                    <button id="play-teaser" class="flex items-center text-blue-500 hover:text-blue-700 transition">
+                        <i class="fas fa-play-circle text-2xl mr-2"></i>
+                        Watch Teaser
+                    </button>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center slide-in delayed-1">
+                <div class="relative w-64 h-64 md:w-80 md:h-80 floating">
+                    <img src="https://i.imgur.com/JYw0Dk3.png" alt="Ghibli-inspired illustration" class="w-full h-full object-contain">
+                    <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-yellow-100 rounded-full opacity-70"></div>
+                    <div class="absolute -top-6 -right-6 w-16 h-16 bg-blue-100 rounded-full opacity-70"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-10 left-0 right-0 flex justify-center">
+            <a href="#overview" class="animate-bounce">
+                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </a>
+        </div>
+    </section>
+    
+    <!-- Video Teaser Modal -->
+    <div id="teaser-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 opacity-0 invisible">
+        <div class="modal-content bg-white rounded-lg overflow-hidden w-full max-w-4xl relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-50">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe id="teaser-video" class="w-full h-96" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Executive Overview Section -->
+    <section id="overview" class="page-section bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center ghibli-text-green handwriting slide-in">Project Overview</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-blue-50 p-8 rounded-xl sketch-border slide-in">
+                    <h3 class="text-2xl font-bold mb-4 ghibli-text-blue">Project Snapshot</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-calendar-alt mt-1 mr-3 ghibli-text-blue"></i>
+                            <span><strong>Timeline:</strong> 6 months (Jan - Jun 2023)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-user-friends mt-1 mr-3 ghibli-text-blue"></i>
+                            <span><strong>Team:</strong> 4 Designers, 2 Developers, 1 PM</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-tasks mt-1 mr-3 ghibli-text-blue"></i>
+                            <span><strong>My Role:</strong> Lead UI/UX Designer & Art Director</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-bullseye mt-1 mr-3 ghibli-text-blue"></i>
+                            <span><strong>Goal:</strong> Create an immersive Ghibli-inspired digital experience</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-green-50 p-8 rounded-xl sketch-border slide-in delayed-1">
+                    <h3 class="text-2xl font-bold mb-4 ghibli-text-green">Key Outcomes</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold ghibli-text-blue mb-2">87%</div>
+                            <div class="text-sm">User Engagement Increase</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold ghibli-text-green mb-2">4.8★</div>
+                            <div class="text-sm">Average Rating</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold ghibli-text-yellow mb-2">32%</div>
+                            <div class="text-sm">Faster Load Times</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold ghibli-text-red mb-2">94%</div>
+                            <div class="text-sm">Retention Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-in delayed-2">
+                <h3 class="text-2xl font-bold mb-6 ghibli-text-blue">Project Deck</h3>
+                <div class="bg-gray-100 rounded-xl p-4 h-96 flex items-center justify-center sketch-border">
+                    <div class="text-center">
+                        <i class="fas fa-file-powerpoint text-5xl mb-4 ghibli-text-blue"></i>
+                        <p class="mb-4">Embedded PowerPoint Viewer</p>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full transition">
+                            View Full Deck
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Problem Statement Section -->
+    <section id="problem" class="page-section bg-yellow-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center ghibli-text-red handwriting slide-in">The Challenge</h2>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center mb-16">
+                <div class="slide-in">
+                    <h3 class="text-2xl font-bold mb-6 ghibli-text-red">Problem Statement</h3>
+                    <p class="text-lg mb-6">Existing digital platforms fail to capture the magical essence and emotional depth of Studio Ghibli films. Fans crave more immersive experiences that go beyond static content and traditional e-commerce.</p>
+                    <p class="text-lg mb-6">Our research showed that 78% of Ghibli fans feel current fan sites lack interactivity, while 65% would engage more with content that makes them feel part of the Ghibli world.</p>
+                    <div class="bg-white p-6 rounded-xl sketch-border">
+                        <h4 class="font-bold mb-3 ghibli-text-blue">Key Research Insights:</h4>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>Users want emotional connection, not just information</li>
+                            <li>Interactive elements increase engagement by 3x</li>
+                            <li>Authentic Ghibli aesthetic is crucial for acceptance</li>
+                            <li>Mobile-first approach needed for younger audiences</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="slide-in delayed-1">
+                    <div class="bg-white p-6 rounded-xl shadow-lg sketch-border">
+                        <h4 class="text-xl font-bold mb-4 ghibli-text-green">User Persona: Maya, 24</h4>
+                        <div class="flex items-start mb-4">
+                            <img src="https://i.imgur.com/3QZx5cE.png" alt="User persona" class="w-20 h-20 rounded-full object-cover mr-4">
+                            <div>
+                                <p><strong>Occupation:</strong> Graphic Designer</p>
+                                <p><strong>Location:</strong> Portland, OR</p>
+                                <p><strong>Favorite Ghibli:</strong> Spirited Away</p>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h5 class="font-bold mb-2 ghibli-text-blue">Goals:</h5>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Feel connected to Ghibli worlds</li>
+                                <li>Discover behind-the-scenes content</li>
+                                <li>Share experiences with other fans</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-bold mb-2 ghibli-text-red">Frustrations:</h5>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Static, information-heavy sites</li>
+                                <li>Lack of community features</li>
+                                <li>Inauthentic Ghibli aesthetics</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white p-6 rounded-xl shadow-lg sketch-border">
+                        <h4 class="text-xl font-bold mb-4 ghibli-text-yellow">Journey Map</h4>
+                        <div class="h-48 bg-gray-100 rounded flex items-center justify-center">
+                            <p class="text-gray-500">Interactive journey map visualization</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-in delayed-2">
+                <h3 class="text-2xl font-bold mb-6 ghibli-text-blue">Competitive Analysis</h3>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="min-w-full bg-white rounded-lg overflow-hidden sketch-border">
+                        <thead class="bg-blue-500 text-white">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Platform</th>
+                                <th class="py-3 px-4 text-left">Strengths</th>
+                                <th class="py-3 px-4 text-left">Weaknesses</th>
+                                <th class="py-3 px-4 text-left">Opportunity</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="py-3 px-4">Ghibli Official Site</td>
+                                <td class="py-3 px-4">Authentic content</td>
+                                <td class="py-3 px-4">Minimal interactivity</td>
+                                <td class="py-3 px-4">Expand engagement</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">Fan Site A</td>
+                                <td class="py-3 px-4">Active community</td>
+                                <td class="py-3 px-4">Poor mobile experience</td>
+                                <td class="py-3 px-4">Mobile optimization</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4">Fan Site B</td>
+                                <td class="py-3 px-4">Comprehensive info</td>
+                                <td class="py-3 px-4">Dated design</td>
+                                <td class="py-3 px-4">Modern aesthetics</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Process Section -->
+    <section id="process" class="page-section bg-green-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center ghibli-text-green handwriting slide-in">Our Creative Process</h2>
+            
+            <div class="mb-16 slide-in">
+                <h3 class="text-2xl font-bold mb-6 ghibli-text-blue">Ideation & Brainstorming</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg sketch-border gallery-item">
+                        <img src="https://i.imgur.com/5Z3Wf7j.jpg" alt="Brainstorming session" class="w-full h-40 object-cover rounded mb-4">
+                        <h4 class="font-bold mb-2 ghibli-text-blue">Initial Sketches</h4>
+                        <p class="text-sm">Early concepts exploring Ghibli themes and interactive elements.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg sketch-border gallery-item">
+                        <img src="https://i.imgur.com/8KQ3b9L.jpg" alt="Miro board" class="w-full h-40 object-cover rounded mb-4">
+                        <h4 class="font-bold mb-2 ghibli-text-green">Collaborative Board</h4>
+                        <p class="text-sm">Digital whiteboard for remote team collaboration.</p>
+                        <button class="mt-3 text-blue-500 hover:text-blue-700 text-sm flex items-center">
+                            <i class="fas fa-external-link-alt mr-2"></i> View Miro Board
+                        </button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg sketch-border gallery-item">
+                        <img src="https://i.imgur.com/9R2Xc5H.jpg" alt="Moodboard" class="w-full h-40 object-cover rounded mb-4">
+                        <h4 class="font-bold mb-2 ghibli-text-yellow">Visual Moodboard</h4>
+                        <p class="text-sm">Curated collection of Ghibli aesthetics and inspirations.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-16 slide-in delayed-1">
+                <h3 class="text-2xl font-bold mb-6 ghibli-text-green">Design Evolution</h3>
+                <div class="bg-white p-6 rounded-xl sketch-border">
+                    <div class="flex overflow-x-auto pb-4 custom-scrollbar space-x-4">
+                        <div class="flex-shrink-0 w-64">
+                            <img src="https://i.imgur.com/Jp1hFD1.png" alt="Wireframe 1" class="w-full h-auto rounded border border-gray-200">
+                            <p class="text-center mt-2 text-sm">Low-fidelity Wireframe</p>
+                        </div>
+                        <div class="flex-shrink-0 w-64">
+                            <img src="https://i.imgur.com/3VtTQ2B.png" alt="Wireframe 2" class="w-full h-auto rounded border border-gray-200">
+                            <p class="text-center mt-2 text-sm">Mid-fidelity Prototype</p>
+                        </div>
+                        <div class="flex-shrink-0 w-64">
+                            <img src="https://i.imgur.com/5Z3Wf7j.jpg" alt="Design 1" class="w-full h-auto rounded border border-gray-200">
+                            <p class="text-center mt-2 text-sm">High-fidelity Mockup</p>
+                        </div>
+                        <div class="flex-shrink-0 w-64">
+                            <img src="https://i.imgur.com/8KQ3b9L.jpg" alt="Design 2" class="w-full h-auto rounded border border-gray-200">
+                            <p class="text-center mt-2 text-sm">Interactive Prototype</p>
+                            <button class="mt-2 mx-auto text-blue-500 hover:text-blue-700 text-sm flex items-center justify-center">
+                                <i class="fas fa-external-link-alt mr-2"></i> View Figma
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-in delayed-2">
+                <h3 class="text-2xl font-bold mb-6 ghibli-text-red">Development Timeline</h3>
+                <div class="relative pl-8">
+                    <!-- Timeline connector -->
+                    <div class="timeline-connector"></div>
+                    
+                    <!-- Timeline items -->
+                    <div class="relative mb-10 timeline-item">
+                        <div class="bg-white p-6 rounded-xl shadow-lg sketch-border">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold ghibli-text-blue">Research Phase</h4>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Jan 2023</span>
+                            </div>
+                            <p>Conducted user interviews, competitive analysis, and defined project scope.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative mb-10 timeline-item">
+                        <div class="bg-white p-6 rounded-xl shadow-lg sketch-border">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold ghibli-text-green">

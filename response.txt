@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Admin - Project Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f8ff;
+            color: #2a4365;
+        }
+        .ghibli-font {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .dark-mode {
+            background-color: #1a365d;
+            color: #e2e8f0;
+        }
+        .dark-mode .bg-white {
+            background-color: #1e293b;
+        }
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark-mode .text-gray-700, .dark-mode .text-gray-600 {
+            color: #94a3b8;
+        }
+        .dark-mode input, .dark-mode textarea, .dark-mode select {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+        /* Notification popup styles */
+        .notification-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 350px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .notification-popup.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .notification-success {
+            background-color: #d1fae5;
+            border-left: 5px solid #10b981;
+            color: #065f46;
+        }
+        .notification-error {
+            background-color: #fee2e2;
+            border-left: 5px solid #ef4444;
+            color: #b91c1c;
+        }
+        .dark-mode .notification-success {
+            background-color: #064e3b;
+            color: #d1fae5;
+        }
+        .dark-mode .notification-error {
+            background-color: #7f1d1d;
+            color: #fee2e2;
+        }
+        /* Debug console styles */
+        .debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0;
+            max-height: 200px;
+            background-color: rgba(0,0,0,0.8);
+            color: #10b981;
+            overflow-y: auto;
+            transition: height 0.3s ease;
+            font-family: monospace;
+            z-index: 1000;
+            padding: 0 10px;
+        }
+        .debug-console.show {
+            height: 200px;
+            padding: 10px;
+        }
+        .debug-console pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="min-h-screen transition-colors duration-300">
+    <!-- Add the notification popup container -->
+    <div id="notificationPopup" class="notification-popup">
+        <div class="flex items-start">
+            <div id="notificationIcon" class="mr-3 text-lg"></div>
+            <div>
+                <h3 id="notificationTitle" class="font-bold"></h3>
+                <p id="notificationMessage"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Debug console (hidden by default) -->
+    <div id="debugConsole" class="debug-console">
+        <pre id="debugContent"></pre>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-16 z-50">
+        <button id="darkModeToggle" class="bg-yellow-200 hover:bg-yellow-300 text-gray-800 rounded-full p-2 shadow-lg">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="w-full bg-white bg-opacity-90 shadow-sm z-40 dark:bg-gray-800 dark:bg-opacity-90">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="ghibli-font text-2xl text-blue-600 dark:text-blue-300">
+                    <a href="index.html"><span class="text-yellow-500">★</span> Admin Panel</a>
+                </div>
+                <div class="flex space-x-8">
+                    <a href="index.html" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">View Portfolio</a>
+                    <button id="logoutBtn" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto">
+            <!-- Login Section -->
+            <div id="loginSection" class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                <h2 class="text-2xl font-bold mb-6 text-center dark:text-gray-200">Admin Login</h2>
+                <div id="firebaseui-auth-container"></div>
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 mb-2 dark:text-gray-300">Email</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 mb-2 dark:text-gray-300">Password</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">
+                    Login
+                </button>
+            </div>
+
+            <!-- Admin Navigation (hidden until logged in) -->
+            <div id="adminNavSection" class="hidden mb-8">
+                <div class="bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <h1 class="text-3xl font-bold ghibli-font text-blue-700 dark:text-blue-300 mb-4 md:mb-0">Admin Dashboard</h1>
+                        <div class="flex space-x-4 flex-wrap gap-2">
+                            <button id="showProjectsBtn" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-folder mr-2"></i> Projects
+                            </button>
+                            <button id="showCaseStudiesBtn" class="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-book-open mr-2"></i> Case Studies
+                            </button>
+                            <button id="showCreateCaseStudyBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Create Case Study
+                            </button>
+                            <button id="showSectionsBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-sliders-h mr-2"></i> Edit Sections
+                            </button>
+                            <button id="showCarouselBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-images mr-2"></i> Magical Journeys
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Management Section (hidden until logged in) -->
+            <div id="projectFormSection" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-bold ghibli-font text-blue-700 dark:text-blue-300">Project Management</h2>
+                    <button id="newProjectBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> New Project
+                    </button>
+                </div>
+                
+                <div id="projectForm" class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-6 dark:text-gray-200">Project Details</h3>
+                    <form id="addEditProjectForm">
+                        <div class="mb-6">
+                            <label for="title" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Project Title</label>
+                            <input type="text" id="title" name="title" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="description" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Project Description</label>
+                            <textarea id="description" name="description" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></textarea>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="imageUrl" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Project Image URL</label>
+                            <input type="url" id="imageUrl" name="imageUrl" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            <p class="text-sm text-gray-500 mt-1 dark:text-gray-400">Enter a URL for your project image (e.g., from Unsplash)</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="category" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Category</label>
+                                <select id="category" name="category" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                    <option value="Lead PM">Lead PM</option>
+                                    <option value="Product Lead">Product Lead</option>
+                                    <option value="UX/PM">UX/PM</option>
+                                    <option value="Development">Development</option>
+                                    <option value="Strategy">Strategy</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="rating" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Rating (1-5)</label>
+                                <select id="rating" name="rating" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                    <option value="5">★★★★★ (5)</option>
+                                    <option value="4">★★★★☆ (4)</option>
+                                    <option value="3">★★★☆☆ (3)</option>
+                                    <option value="2">★★☆☆☆ (2)</option>
+                                    <option value="1">★☆☆☆☆ (1)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="achievement" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Key Achievement</label>
+                            <div class="flex">
+                                <input type="text" id="achievement" name="achievement" class="w-3/4 px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="e.g., 40% faster onboarding">
+                                <input type="text" id="achievementMetric" name="achievementMetric" class="w-1/4 px-4 py-2 border-t border-r border-b rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="%">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="caseStudyTemplate" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Case Study Template</label>
+                            <select id="caseStudyTemplate" name="caseStudyTemplate" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">None (Basic Template)</option>
+                                <option value="template1">Ghibli-Inspired Template</option>
+                            </select>
+                            <p class="text-sm text-gray-500 mt-1 dark:text-gray-400">Select a template or leave blank to use basic template</p>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button type="button" id="cancelBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform transition hover:scale-105">
+                                Save Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div id="projectsListSection">
+                    <h3 class="text-xl font-bold mb-6 dark:text-gray-200">Your Projects</h3>
+                    <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Projects will be loaded here dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Case Study Management Section (initially hidden) -->
+            <div id="caseStudySection" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-bold ghibli-font text-purple-700 dark:text-purple-300">Case Study Editor</h2>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-6 dark:text-gray-200">Select a Project</h3>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">Choose a project to edit its case study content:</p>
+                    
+                    <div class="mb-6">
+                        <select id="caseStudyProjectSelector" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">-- Select Project --</option>
+                            <!-- Projects will be loaded here -->
+                        </select>
+                    </div>
+                    
+                    <div id="noCaseStudySelected" class="text-center py-6">
+                        <i class="fas fa-book-open text-5xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400">Select a project to edit its case study content</p>
+                    </div>
+                    
+                    <div id="caseStudyActions" class="hidden">
+                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                            <a id="viewCaseStudyBtn" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-eye mr-2"></i> View Case Study
+                            </a>
+                            <a id="editStructuredCaseStudyBtn" href="#" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-edit mr-2"></i> Edit with Sections
+                            </a>
+                            <button id="editRawHtmlBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-code mr-2"></i> Edit Raw HTML
+                            </button>
+                            <button id="deleteCaseStudyBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-trash-alt mr-2"></i> Delete Case Study
+                            </button>
+                        </div>
+                        
+                        <!-- Raw HTML editor (initially hidden) -->
+                        <div id="rawHtmlEditor" class="hidden mt-6">
+                            <div class="mb-6">
+                                <label for="rawCaseStudyContent" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Case Study HTML Content</label>
+                                <textarea id="rawCaseStudyContent" rows="12" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono"></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button id="saveRawHtmlBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                                    Save HTML Content
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Study Creation Section (initially hidden) -->
+            <div id="createCaseStudySection" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-bold ghibli-font text-green-700 dark:text-green-300">New Case Study</h2>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-6 dark:text-gray-200">Select a Project</h3>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">Choose a project to create a case study for:</p>
+                    
+                    <div class="mb-6">
+                        <select id="newCaseStudyProjectSelector" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">-- Select Project --</option>
+                            <!-- Projects will be loaded here -->
+                        </select>
+                    </div>
+                    
+                    <div id="caseStudyTemplateSelector" class="mb-6 hidden">
+                        <h3 class="text-lg font-bold mb-4 dark:text-gray-200">Choose a Template</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="border-2 border-blue-300 p-4 rounded-lg hover:bg-blue-50 cursor-pointer dark:hover:bg-blue-900 dark:border-blue-700 template-option active" data-template="standard">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                                    <h4 class="font-bold">Standard Template</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Basic case study with all standard sections</p>
+                            </div>
+                            <div class="border-2 border-gray-300 p-4 rounded-lg hover:bg-blue-50 cursor-pointer dark:hover:bg-blue-900 dark:border-gray-700 template-option" data-template="ghibli">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-check-circle text-gray-300 mr-2"></i>
+                                    <h4 class="font-bold">Ghibli-Inspired</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Magical style with enhanced visuals</p>
+                            </div>
+                            <div class="border-2 border-gray-300 p-4 rounded-lg hover:bg-blue-50 cursor-pointer dark:hover:bg-blue-900 dark:border-gray-700 template-option" data-template="minimal">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-check-circle text-gray-300 mr-2"></i>
+                                    <h4 class="font-bold">Minimal</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Clean, simple layout with essential sections only</p>
+                            </div>
+                            <div class="border-2 border-gray-300 p-4 rounded-lg hover:bg-blue-50 cursor-pointer dark:hover:bg-blue-900 dark:border-gray-700 template-option" data-template="portfolio">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-check-circle text-gray-300 mr-2"></i>
+                                    <h4 class="font-bold">Portfolio Focus</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Highlights visuals and outcomes</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="selectedTemplateSections" class="mb-6 hidden">
+                        <h3 class="text-lg font-bold mb-4 dark:text-gray-200">Template Sections</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeHeroSection" class="mr-2 section-toggle" checked data-section="heroSection">
+                                    <label for="includeHeroSection" class="text-gray-700 dark:text-gray-300 font-bold">Hero/Introduction</label>
+                                </div>
+                                <div id="heroSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Headline</label>
+                                        <input type="text" id="heroHeadline" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Enter a catchy headline">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Subheading</label>
+                                        <input type="text" id="heroSubheading" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Enter a brief description">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeOverviewSection" class="mr-2 section-toggle" checked data-section="overviewSection">
+                                    <label for="includeOverviewSection" class="text-gray-700 dark:text-gray-300 font-bold">Overview</label>
+                                </div>
+                                <div id="overviewSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Project Summary</label>
+                                        <textarea id="overviewSummary" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Brief summary of the project"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Key Outcomes</label>
+                                        <textarea id="overviewOutcomes" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="List main project outcomes"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeProblemSection" class="mr-2 section-toggle" checked data-section="problemSection">
+                                    <label for="includeProblemSection" class="text-gray-700 dark:text-gray-300 font-bold">Problem Statement</label>
+                                </div>
+                                <div id="problemSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Challenge</label>
+                                        <textarea id="problemChallenge" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Describe the main challenge or problem"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Goals</label>
+                                        <textarea id="problemGoals" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="List key goals for the project"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeProcessSection" class="mr-2 section-toggle" checked data-section="processSection">
+                                    <label for="includeProcessSection" class="text-gray-700 dark:text-gray-300 font-bold">Process/Research</label>
+                                </div>
+                                <div id="processSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Research Methods</label>
+                                        <textarea id="processResearch" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Describe your research approach"></textarea>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Key Insights</label>
+                                        <textarea id="processInsights" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="List key research insights"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Process Steps</label>
+                                        <textarea id="processSteps" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Outline your process steps"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeShowcaseSection" class="mr-2 section-toggle" checked data-section="showcaseSection">
+                                    <label for="includeShowcaseSection" class="text-gray-700 dark:text-gray-300 font-bold">Showcase</label>
+                                </div>
+                                <div id="showcaseSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Final Solution</label>
+                                        <textarea id="showcaseSolution" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Describe your solution"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Visual Assets (URLs)</label>
+                                        <textarea id="showcaseAssets" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Enter URLs for screenshots or mock-ups (one per line)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeReflectionSection" class="mr-2 section-toggle" checked data-section="reflectionSection">
+                                    <label for="includeReflectionSection" class="text-gray-700 dark:text-gray-300 font-bold">Reflection</label>
+                                </div>
+                                <div id="reflectionSection" class="pl-6 mt-2">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Lessons Learned</label>
+                                        <textarea id="reflectionLessons" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="What did you learn from this project?"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Future Improvements</label>
+                                        <textarea id="reflectionImprovements" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="What would you improve in the future?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Document/Slides Section (Enhanced) -->
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeDocumentSection" class="mr-2 section-toggle" data-section="documentSection">
+                                    <label for="includeDocumentSection" class="text-gray-700 dark:text-gray-300 font-bold">Document / Slides Viewer</label>
+                                </div>
+                                <div id="documentSection" class="pl-6 mt-2 hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Document URL (PDF/PPT/Google Slides)</label>
+                                        <input type="text" id="documentUrl" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                                            placeholder="Enter URL to PDF, PPT or Google Slides document">
+                                        <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">For Google Slides, use the "Publish to web" embed link</p>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Or Upload File</label>
+                                        <input type="file" id="documentUpload" accept=".pdf,.ppt,.pptx" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">File will be uploaded to Firebase Storage</p>
+                                    </div>
+                                    <div class="mb-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Preview (How document will appear in case study)</label>
+                                        <div class="bg-white dark:bg-gray-600 p-2 border border-gray-300 dark:border-gray-500 rounded-lg h-48 flex items-center justify-center">
+                                            <div id="documentPreview" class="text-center text-gray-500 dark:text-gray-400">
+                                                <i class="fas fa-file-pdf text-3xl mb-2"></i>
+                                                <p>Document preview will appear here</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- YouTube Video Section -->
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeVideoSection" class="mr-2 section-toggle" data-section="videoSection">
+                                    <label for="includeVideoSection" class="text-gray-700 dark:text-gray-300 font-bold">YouTube Demo Video</label>
+                                </div>
+                                <div id="videoSection" class="pl-6 mt-2 hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">YouTube Video URL</label>
+                                        <input type="text" id="videoUrl" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                                            placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX">
+                                        <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">Paste full YouTube video URL - will be automatically converted to embed format</p>
+                                    </div>
+                                    <div class="mb-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Preview (How video will appear in case study)</label>
+                                        <div class="bg-white dark:bg-gray-600 p-2 border border-gray-300 dark:border-gray-500 rounded-lg h-48 flex items-center justify-center">
+                                            <div id="videoPreview" class="text-center text-gray-500 dark:text-gray-400">
+                                                <i class="fab fa-youtube text-red-500 text-3xl mb-2"></i>
+                                                <p>Video preview will appear here</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Insert new Gallery section -->
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="includeGallerySection" class="mr-2 section-toggle" data-section="gallerySection">
+                                    <label for="includeGallerySection" class="text-gray-700 dark:text-gray-300 font-bold">Image Slider/Gallery</label>
+                                </div>
+                                <div id="gallerySection" class="pl-6 mt-2 hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Image URLs (one per line, max 10)</label>
+                                        <textarea id="galleryImages" rows="4" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://example.com/slide1.jpg"></textarea>
+                                        <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">Enter each slide image URL on its own line</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button id="clearCaseStudyBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                            Clear
+                        </button>
+                        <button id="createCaseStudyBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                            Create & Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections Editor (initially hidden) -->
+            <div id="sectionsEditorSection" class="hidden mt-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-4 dark:text-gray-200">Homepage Sections (JSON)</h3>
+                    <textarea id="sectionsJsonEditor" rows="10" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono"></textarea>
+                    <div class="mt-4 flex space-x-4">
+                        <button id="saveSectionsBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-lg">Save Sections</button>
+                        <button id="clearSectionsBtn" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg">Clear JSON</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections Management (hidden until button clicked) -->
+            <div id="sectionsEditSection" class="hidden">
+                <!-- ... existing sections management content ... -->
+            </div>
+
+            <!-- Magical Journeys Carousel Management (hidden until button clicked) -->
+            <div id="carouselSection" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-bold ghibli-font text-blue-700 dark:text-blue-300">Magical Journeys Carousel</h2>
+                    <button id="addCarouselImageBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Add New Image
+                    </button>
+                </div>
+                
+                <!-- Image List -->
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8 dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-4 dark:text-gray-200">Current Carousel Images</h3>
+                    <div id="carouselImagesLoading" class="py-20 text-center">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+                        <p class="mt-4 text-gray-600 dark:text-gray-400">Loading carousel images...</p>
+                    </div>
+                    <div id="carouselImagesEmpty" class="py-16 text-center hidden">
+                        <i class="fas fa-image text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-xl text-gray-500 dark:text-gray-400">No images have been added yet</p>
+                        <p class="text-gray-500 dark:text-gray-400 mt-2">Click "Add New Image" to get started</p>
+                    </div>
+                    <div id="carouselImagesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+                        <!-- Images will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Add/Edit Image Form -->
+                <div id="carouselImageForm" class="bg-white p-8 rounded-xl shadow-lg mb-8 dark:bg-gray-800 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold dark:text-gray-200" id="imageFormTitle">Add New Image</h3>
+                        <button id="closeImageFormBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="addEditImageForm">
+                        <input type="hidden" id="imageId" name="imageId">
+                        
+                        <div class="mb-6">
+                            <label for="imageTitle" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Title</label>
+                            <input type="text" id="imageTitle" name="imageTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="Journey Step 1">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="imageDescription" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Description</label>
+                            <input type="text" id="imageDescription" name="imageDescription" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Description for journey step 1">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="imageUrl" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Image URL or Google Drive Link</label>
+                            <input type="text" id="imageUrl" name="imageUrl" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="https://drive.google.com/file/d/...">
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                You can use a direct image URL or a Google Drive link. Google Drive links will be automatically converted to a viewable format.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Image Preview</label>
+                            <div id="imagePreviewContainer" class="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center">
+                                <div id="imagePreviewLoading" class="hidden">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                                    <p class="mt-2 text-gray-600 dark:text-gray-400">Loading preview...</p>
+                                </div>
+                                <div id="imagePreviewEmpty">
+                                    <i class="fas fa-image text-5xl text-gray-300"></i>
+                                    <p class="mt-2 text-gray-500 dark:text-gray-400">Enter a URL to see a preview</p>
+                                </div>
+                                <img id="imagePreview" class="max-h-64 mx-auto hidden" alt="Image preview">
+                                <div id="imagePreviewError" class="hidden">
+                                    <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+                                    <p class="mt-2 text-red-500">Error loading image preview</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="imageOrder" class="block text-gray-700 mb-2 font-bold dark:text-gray-300">Display Order</label>
+                            <input type="number" id="imageOrder" name="imageOrder" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="1" value="1">
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                Images will be displayed in this order in the carousel
+                            </p>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" id="cancelImageBtn" class="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                                Cancel
+                            </button>
+                            <button type="submit" id="saveImageBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                <i class="fas fa-save mr-2"></i> Save Image
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+            authDomain: "projectportfolio-29467.firebaseapp.com",
+            databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+            projectId: "projectportfolio-29467",
+            storageBucket: "projectportfolio-29467.appspot.com",
+            messagingSenderId: "506713176316",
+            appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+        };
+        
+        // Initialize all Firebase products
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+        
+        // Debug logger function
+        function debugLog(message, data = null) {
+            const debugConsole = document.getElementById('debugConsole');
+            const debugContent = document.getElementById('debugContent');
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            
+            if (data) {
+                try {
+                    logMessage += "\n" + JSON.stringify(data, null, 2);
+                } catch (e) {
+                    logMessage += "\n[Object cannot be serialized]";
+                }
+            }
+            
+            debugContent.innerHTML += logMessage + "\n\n";
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            
+            // Show debug console if hidden
+            if (!debugConsole.classList.contains('show')) {
+                debugConsole.classList.add('show');
+            }
+            
+            // Log to console as well
+            console.log(message, data);
+        }
+        
+        // Show notification popup
+        function showNotification(type, title, message, duration = 5000) {
+            const popup = document.getElementById('notificationPopup');
+            const iconElement = document.getElementById('notificationIcon');
+            const titleElement = document.getElementById('notificationTitle');
+            const messageElement = document.getElementById('notificationMessage');
+            
+            // Remove all classes first
+            popup.classList.remove('notification-success', 'notification-error');
+            
+            // Set content
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            
+            if (type === 'success') {
+                popup.classList.add('notification-success');
+                iconElement.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else {
+                popup.classList.add('notification-error');
+                iconElement.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            }
+            
+            // Show popup
+            popup.classList.add('show');
+            
+            // Hide after duration
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, duration);
+        }
+        
+        // Toggle debug console with keyboard shortcut (Ctrl+D)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                document.getElementById('debugConsole').classList.toggle('show');
+            }
+        });
+
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const adminNavSection = document.getElementById('adminNavSection');
+        const projectFormSection = document.getElementById('projectFormSection');
+        const caseStudySection = document.getElementById('caseStudySection');
+        const createCaseStudySection = document.getElementById('createCaseStudySection');
+        const addEditProjectForm = document.getElementById('addEditProjectForm');
+        const projectForm = document.getElementById('projectForm');
+        const projectsListSection = document.getElementById('projectsListSection');
+        const projectsList = document.getElementById('projectsList');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const newProjectBtn = document.getElementById('newProjectBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const showProjectsBtn = document.getElementById('showProjectsBtn');
+        const showCaseStudiesBtn = document.getElementById('showCaseStudiesBtn');
+        const showCreateCaseStudyBtn = document.getElementById('showCreateCaseStudyBtn');
+        const caseStudyProjectSelector = document.getElementById('caseStudyProjectSelector');
+        const noCaseStudySelected = document.getElementById('noCaseStudySelected');
+        const caseStudyActions = document.getElementById('caseStudyActions');
+        const viewCaseStudyBtn = document.getElementById('viewCaseStudyBtn');
+        const editStructuredCaseStudyBtn = document.getElementById('editStructuredCaseStudyBtn');
+        const editRawHtmlBtn = document.getElementById('editRawHtmlBtn');
+        const rawHtmlEditor = document.getElementById('rawHtmlEditor');
+        const rawCaseStudyContent = document.getElementById('rawCaseStudyContent');
+        const saveRawHtmlBtn = document.getElementById('saveRawHtmlBtn');
+        const newCaseStudyProjectSelector = document.getElementById('newCaseStudyProjectSelector');
+        const caseStudyTemplateSelector = document.getElementById('caseStudyTemplateSelector');
+        const selectedTemplateSections = document.getElementById('selectedTemplateSections');
+        const createCaseStudyBtn = document.getElementById('createCaseStudyBtn');
+        const clearCaseStudyBtn = document.getElementById('clearCaseStudyBtn');
+        
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+        
+        // Auth state observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginSection.classList.add('hidden');
+                adminNavSection.classList.remove('hidden');
+                projectFormSection.classList.remove('hidden');
+                loadProjects();
+                loadCaseStudyProjects();
+                loadNewCaseStudyProjects();
+                projectForm.classList.add('hidden'); // Hide form initially
+            } else {
+                loginSection.classList.remove('hidden');
+                adminNavSection.classList.add('hidden');
+                projectFormSection.classList.add('hidden');
+                caseStudySection.classList.add('hidden');
+                createCaseStudySection.classList.add('hidden');
+            }
+        });
+        
+        // Login functionality
+        loginBtn.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    alert('Login failed: ' + error.message);
+                });
+        });
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // Show Projects section
+        showProjectsBtn.addEventListener('click', () => {
+            projectFormSection.classList.remove('hidden');
+            caseStudySection.classList.add('hidden');
+            createCaseStudySection.classList.add('hidden');
+            
+            // Update button styles
+            showProjectsBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            showProjectsBtn.classList.add('bg-blue-800', 'hover:bg-blue-900');
+            showCaseStudiesBtn.classList.remove('bg-purple-800', 'hover:bg-purple-900');
+            showCaseStudiesBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            showCreateCaseStudyBtn.classList.remove('bg-green-800', 'hover:bg-green-900');
+            showCreateCaseStudyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        });
+        
+        // Show Case Studies section
+        showCaseStudiesBtn.addEventListener('click', () => {
+            projectFormSection.classList.add('hidden');
+            caseStudySection.classList.remove('hidden');
+            createCaseStudySection.classList.add('hidden');
+            
+            // Update button styles
+            showProjectsBtn.classList.remove('bg-blue-800', 'hover:bg-blue-900');
+            showProjectsBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            showCaseStudiesBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+            showCaseStudiesBtn.classList.add('bg-purple-800', 'hover:bg-purple-900');
+            showCreateCaseStudyBtn.classList.remove('bg-green-800', 'hover:bg-green-900');
+            showCreateCaseStudyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        });
+        
+        // Show Create Case Study section
+        showCreateCaseStudyBtn.addEventListener('click', () => {
+            projectFormSection.classList.add('hidden');
+            caseStudySection.classList.add('hidden');
+            createCaseStudySection.classList.remove('hidden');
+            
+            // Update button styles
+            showProjectsBtn.classList.remove('bg-blue-800', 'hover:bg-blue-900');
+            showProjectsBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            showCaseStudiesBtn.classList.remove('bg-purple-800', 'hover:bg-purple-900');
+            showCaseStudiesBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            showCreateCaseStudyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            showCreateCaseStudyBtn.classList.add('bg-green-800', 'hover:bg-green-900');
+            // Hide main sections and show sections editor
+            sectionsEditorSection.classList.add('hidden');
+        });
+        
+        // Show Sections editor
+        const showSectionsBtn = document.getElementById('showSectionsBtn');
+        const sectionsEditorSection = document.getElementById('sectionsEditorSection');
+        const sectionsJsonEditor = document.getElementById('sectionsJsonEditor');
+        const saveSectionsBtn = document.getElementById('saveSectionsBtn');
+        const clearSectionsBtn = document.getElementById('clearSectionsBtn');
+        showSectionsBtn.addEventListener('click', () => {
+            projectFormSection.classList.add('hidden');
+            caseStudySection.classList.add('hidden');
+            createCaseStudySection.classList.add('hidden');
+            sectionsEditorSection.classList.remove('hidden');
+            // Load sections JSON with fallback to live DOM if DB is empty
+            db.ref('sections').once('value').then(snap => {
+                const data = snap.val();
+                if (data && Object.keys(data).length) {
+                    sectionsJsonEditor.value = JSON.stringify(data, null, 2);
+                } else {
+                    const fallback = {};
+                    ['hero','about','skills','timeline','testimonials'].forEach(id => {
+                        fallback[id] = { html: document.getElementById(id).innerHTML.trim() };
+                    });
+                    sectionsJsonEditor.value = JSON.stringify(fallback, null, 2);
+                }
+            });
+        });
+        clearSectionsBtn.addEventListener('click', () => {
+            sectionsJsonEditor.value = '';
+        });
+        saveSectionsBtn.addEventListener('click', () => {
+            let json;
+            try { json = JSON.parse(sectionsJsonEditor.value); }
+            catch (e) { showNotification('error', 'JSON Error', 'Invalid JSON: ' + e.message); return; }
+            showNotification('success', 'Saving', 'Updating sections...');
+            db.ref('sections').set(json)
+              .then(() => showNotification('success', 'Saved', 'Sections updated'))
+              .catch(err => showNotification('error', 'Error', err.message));
+        });
+        
+        // New project functionality
+        newProjectBtn.addEventListener('click', () => {
+            // Reset form and show it
+            addEditProjectForm.reset();
+            projectForm.classList.remove('hidden');
+            projectsListSection.classList.add('hidden');
+            
+            // Reset form submission to add new
+            addEditProjectForm.onsubmit = handleFormSubmit;
+        });
+        
+        // Cancel button functionality
+        cancelBtn.addEventListener('click', () => {
+            addEditProjectForm.reset();
+            projectForm.classList.add('hidden');
+            projectsListSection.classList.remove('hidden');
+        });
+        
+        // Form submission handler
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            // Gather form data
+            const project = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                imageUrl: document.getElementById('imageUrl').value,
+                category: document.getElementById('category').value,
+                rating: parseInt(document.getElementById('rating').value),
+                achievement: document.getElementById('achievement').value,
+                achievementMetric: document.getElementById('achievementMetric').value,
+                caseStudyTemplate: document.getElementById('caseStudyTemplate').value,
+                caseStudyContent: '',
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            // Debug and notify
+            debugLog('Submitting new project', project);
+            showNotification('success', 'Saving Project', 'Adding your project...', 8000);
+
+            // Save to Firebase Realtime Database
+            db.ref('projects').push(project)
+                .then(docRef => {
+                    debugLog('Project added with ID', { projectId: docRef.key });
+                    showNotification('success', 'Success!', 'Project added successfully!');
+
+                    // Reset UI after a short delay
+                    setTimeout(() => {
+                        addEditProjectForm.reset();
+                        projectForm.classList.add('hidden');
+                        projectsListSection.classList.remove('hidden');
+                        loadProjects();
+                        loadCaseStudyProjects();
+                        loadNewCaseStudyProjects();
+                    }, 1000);
+                })
+                .catch(error => {
+                    debugLog('Error adding project', { error: error.message });
+                    showNotification('error', 'Error Adding Project', error.message);
+                });
+        }
+        
+        // Load case study project selector
+        function loadCaseStudyProjects() {
+            caseStudyProjectSelector.innerHTML = '<option value="">-- Select Project --</option>';
+            
+            db.ref('projects').orderByChild('title').on('value', snapshot => {
+                snapshot.forEach(doc => {
+                    const project = doc.val();
+                    const projectId = doc.key;
+                    
+                    const option = document.createElement('option');
+                    option.value = projectId;
+                    option.textContent = project.title;
+                    caseStudyProjectSelector.appendChild(option);
+                });
+            });
+        }
+        
+        // Case study project selector change
+        caseStudyProjectSelector.addEventListener('change', function() {
+            const projectId = this.value;
+            
+            if (projectId) {
+                noCaseStudySelected.classList.add('hidden');
+                caseStudyActions.classList.remove('hidden');
+                viewCaseStudyBtn.href = `case_study.html?id=${projectId}`;
+                editStructuredCaseStudyBtn.href = `case_study_editor.html?id=${projectId}`;
+                
+                // Load raw HTML content if available
+                db.ref(`projects/${projectId}/caseStudyContent`).once('value')
+                    .then(snapshot => {
+                        if (snapshot.exists()) {
+                            const project = snapshot.val();
+                            rawCaseStudyContent.value = project || '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error loading case study content: ", error);
+                    });
+            } else {
+                noCaseStudySelected.classList.remove('hidden');
+                caseStudyActions.classList.add('hidden');
+                rawHtmlEditor.classList.add('hidden');
+            }
+        });
+        
+        // Toggle raw HTML editor
+        editRawHtmlBtn.addEventListener('click', function() {
+            rawHtmlEditor.classList.toggle('hidden');
+        });
+        
+        // Save raw HTML content
+        saveRawHtmlBtn.addEventListener('click', function() {
+            const projectId = caseStudyProjectSelector.value;
+            if (!projectId) return;
+            
+            const htmlContent = rawCaseStudyContent.value;
+            
+            db.ref(`projects/${projectId}/caseStudyContent`).set(htmlContent)
+                .then(() => {
+                    alert('Case study content saved successfully!');
+                })
+                .catch(error => {
+                    alert('Error saving case study content: ' + error.message);
+                });
+        });
+        
+        // Attach the form submit handler
+        addEditProjectForm.onsubmit = handleFormSubmit;
+        
+        // Load projects from Firebase Realtime Database
+        function loadProjects() {
+            projectsList.innerHTML = '<div class="col-span-full text-center py-8">Loading projects...</div>';
+            
+            db.ref('projects').orderByChild('createdAt').on('value', snapshot => {
+                if (snapshot.exists()) {
+                    const projects = snapshot.val();
+                    if (Object.keys(projects).length === 0) {
+                        projectsList.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No projects yet. Add your first project above!</div>';
+                        return;
+                    }
+                    
+                    projectsList.innerHTML = '';
+                    Object.entries(projects).forEach(([projectId, project]) => {
+                        const projectCard = document.createElement('div');
+                        projectCard.className = 'bg-white rounded-xl shadow-lg overflow-hidden dark:bg-gray-800';
+                        
+                        let stars = '';
+                        for (let i = 0; i < 5; i++) {
+                            if (i < project.rating) {
+                                stars += '★';
+                            } else {
+                                stars += '☆';
+                            }
+                        }
+                        
+                        const date = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown';
+                        
+                        projectCard.innerHTML = `
+                            <img src="${project.imageUrl}" alt="${project.title}" class="w-full h-48 object-cover">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold mb-2 dark:text-gray-200">${project.title}</h3>
+                                <p class="text-gray-600 mb-4 dark:text-gray-400">${project.description.substring(0, 100)}${project.description.length > 100 ? '...' : ''}</p>
+                                <div class="flex items-center mb-2">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-800 dark:text-blue-200">${project.category}</span>
+                                </div>
+                                <div class="text-sm text-gray-500 mb-4 dark:text-gray-400">Added: ${date}</div>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-yellow-500">${stars}</span>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">${project.achievement} ${project.achievementMetric}</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <a href="case_study.html?id=${projectId}" target="_blank" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-2" title="View Case Study">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2" onclick="editProject('${projectId}')" title="Edit Project Details">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2" onclick="deleteProject('${projectId}')" title="Delete Project">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        projectsList.appendChild(projectCard);
+                    });
+                }
+            });
+        }
+        
+        // Edit project
+        window.editProject = function(projectId) {
+            db.ref(`projects/${projectId}`).once('value')
+                .then(snapshot => {
+                    if (!snapshot.exists()) {
+                        alert('Project not found');
+                        return;
+                    }
+                    
+                    const project = snapshot.val();
+                    
+                    document.getElementById('title').value = project.title;
+                    document.getElementById('description').value = project.description;
+                    document.getElementById('imageUrl').value = project.imageUrl;
+                    document.getElementById('category').value = project.category;
+                    document.getElementById('rating').value = project.rating;
+                    document.getElementById('achievement').value = project.achievement;
+                    document.getElementById('achievementMetric').value = project.achievementMetric;
+                    
+                    if (project.caseStudyTemplate) {
+                        document.getElementById('caseStudyTemplate').value = project.caseStudyTemplate;
+                    } else {
+                        document.getElementById('caseStudyTemplate').value = "";
+                    }
+                    
+                    // Show the form
+                    projectForm.classList.remove('hidden');
+                    projectsListSection.classList.add('hidden');
+                    
+                    // Change form submission to update
+                    addEditProjectForm.onsubmit = (e) => {
+                        e.preventDefault();
+                        
+                        const updatedProject = {
+                            title: document.getElementById('title').value,
+                            description: document.getElementById('description').value,
+                            imageUrl: document.getElementById('imageUrl').value,
+                            category: document.getElementById('category').value,
+                            rating: parseInt(document.getElementById('rating').value),
+                            achievement: document.getElementById('achievement').value,
+                            achievementMetric: document.getElementById('achievementMetric').value,
+                            caseStudyTemplate: document.getElementById('caseStudyTemplate').value,
+                            updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        };
+                        
+                        db.ref(`projects/${projectId}`).update(updatedProject)
+                            .then(() => {
+                                alert('Project updated successfully!');
+                                addEditProjectForm.reset();
+                                projectForm.classList.add('hidden');
+                                projectsListSection.classList.remove('hidden');
+                                // Reset form submission to add new
+                                addEditProjectForm.onsubmit = handleFormSubmit;
+                                loadProjects();
+                                loadCaseStudyProjects();
+                            })
+                            .catch(error => {
+                                alert('Error updating project: ' + error.message);
+                            });
+                    };
+                })
+                .catch(error => {
+                    alert('Error loading project: ' + error.message);
+                });
+        };
+        
+        // Delete project
+        window.deleteProject = function(projectId) {
+            if (confirm('Are you sure you want to delete this project?')) {
+                db.ref(`projects/${projectId}`).remove()
+                    .then(() => {
+                        alert('Project deleted successfully!');
+                        loadProjects();
+                        loadCaseStudyProjects();
+                    })
+                    .catch(error => {
+                        alert('Error deleting project: ' + error.message);
+                    });
+            }
+        };
+
+        // Load projects for the new case study selector
+        function loadNewCaseStudyProjects() {
+            newCaseStudyProjectSelector.innerHTML = '<option value="">-- Select Project --</option>';
+            
+            db.ref('projects').orderByChild('title').on('value', snapshot => {
+                snapshot.forEach(doc => {
+                    const project = doc.val();
+                    const option = document.createElement('option');
+                    option.value = doc.key;
+                    option.textContent = project.title;
+                    newCaseStudyProjectSelector.appendChild(option);
+                });
+            });
+        }
+
+        // New case study project selector change
+        newCaseStudyProjectSelector.addEventListener('change', function() {
+            if (this.value) {
+                caseStudyTemplateSelector.classList.remove('hidden');
+                selectedTemplateSections.classList.remove('hidden');
+            } else {
+                caseStudyTemplateSelector.classList.add('hidden');
+                selectedTemplateSections.classList.add('hidden');
+            }
+        });
+
+        // Template option selection
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove active class from all options
+                document.querySelectorAll('.template-option').forEach(opt => {
+                    opt.classList.remove('active');
+                    opt.classList.remove('border-blue-300');
+                    opt.classList.add('border-gray-300');
+                    opt.querySelector('i').classList.add('text-gray-300');
+                    opt.querySelector('i').classList.remove('text-blue-500');
+                });
+                
+                // Add active class to clicked option
+                this.classList.add('active');
+                this.classList.remove('border-gray-300');
+                this.classList.add('border-blue-300');
+                this.querySelector('i').classList.remove('text-gray-300');
+                this.querySelector('i').classList.add('text-blue-500');
+                
+                // Set sections based on template
+                const templateType = this.getAttribute('data-template');
+                
+                if (templateType === 'minimal') {
+                    document.getElementById('includeHeroSection').checked = true;
+                    document.getElementById('includeOverviewSection').checked = true;
+                    document.getElementById('includeProblemSection').checked = true;
+                    document.getElementById('includeProcessSection').checked = false;
+                    document.getElementById('includeShowcaseSection').checked = true;
+                    document.getElementById('includeReflectionSection').checked = false;
+                } else if (templateType === 'portfolio') {
+                    document.getElementById('includeHeroSection').checked = true;
+                    document.getElementById('includeOverviewSection').checked = true;
+                    document.getElementById('includeProblemSection').checked = false;
+                    document.getElementById('includeProcessSection').checked = false;
+                    document.getElementById('includeShowcaseSection').checked = true;
+                    document.getElementById('includeReflectionSection').checked = true;
+                } else {
+                    // Default for standard and ghibli
+                    document.getElementById('includeHeroSection').checked = true;
+                    document.getElementById('includeOverviewSection').checked = true;
+                    document.getElementById('includeProblemSection').checked = true;
+                    document.getElementById('includeProcessSection').checked = true;
+                    document.getElementById('includeShowcaseSection').checked = true;
+                    document.getElementById('includeReflectionSection').checked = true;
+                }
+                
+                // Update section visibility
+                updateSectionVisibility();
+            });
+        });
+        
+        // Toggle sections based on checkboxes
+        document.querySelectorAll('.section-toggle').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSectionVisibility();
+            });
+        });
+        
+        // Function to update section visibility
+        function updateSectionVisibility() {
+            document.querySelectorAll('.section-toggle').forEach(checkbox => {
+                const sectionId = checkbox.getAttribute('data-section');
+                const section = document.getElementById(sectionId);
+                
+                if (checkbox.checked) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+        }
+
+        // Initialize section visibility
+        updateSectionVisibility();
+        
+        // Clear case study form
+        clearCaseStudyBtn.addEventListener('click', function() {
+            newCaseStudyProjectSelector.value = '';
+            caseStudyTemplateSelector.classList.add('hidden');
+            selectedTemplateSections.classList.add('hidden');
+            
+            // Reset template selection
+            document.querySelectorAll('.template-option').forEach(opt => {
+                if (opt.getAttribute('data-template') === 'standard') {
+                    opt.classList.add('active', 'border-blue-300');
+                    opt.classList.remove('border-gray-300');
+                    opt.querySelector('i').classList.remove('text-gray-300');
+                    opt.querySelector('i').classList.add('text-blue-500');
+                } else {
+                    opt.classList.remove('active', 'border-blue-300');
+                    opt.classList.add('border-gray-300');
+                    opt.querySelector('i').classList.add('text-gray-300');
+                    opt.querySelector('i').classList.remove('text-blue-500');
+                }
+            });
+            
+            // Reset sections
+            document.getElementById('includeHeroSection').checked = true;
+            document.getElementById('includeOverviewSection').checked = true;
+            document.getElementById('includeProblemSection').checked = true;
+            document.getElementById('includeProcessSection').checked = true;
+            document.getElementById('includeShowcaseSection').checked = true;
+            document.getElementById('includeReflectionSection').checked = true;
+            
+            // Clear all input fields
+            document.getElementById('heroHeadline').value = '';
+            document.getElementById('heroSubheading').value = '';
+            document.getElementById('overviewSummary').value = '';
+            document.getElementById('overviewOutcomes').value = '';
+            document.getElementById('problemChallenge').value = '';
+            document.getElementById('problemGoals').value = '';
+            document.getElementById('processResearch').value = '';
+            document.getElementById('processInsights').value = '';
+            document.getElementById('processSteps').value = '';
+            document.getElementById('showcaseSolution').value = '';
+            document.getElementById('showcaseAssets').value = '';
+            document.getElementById('reflectionLessons').value = '';
+            document.getElementById('reflectionImprovements').value = '';
+            
+            updateSectionVisibility();
+        });
+
+        // Create and edit case study
+        createCaseStudyBtn.addEventListener('click', function() {
+            const projectId = newCaseStudyProjectSelector.value;
+            if (!projectId) {
+                showNotification('error', 'Error', 'Please select a project first');
+                return;
+            }
+            
+            // Show a processing notification
+            showNotification('success', 'Processing', 'Creating your case study...', 10000);
+            debugLog('Starting case study creation', { projectId });
+            
+            // Get selected template
+            let template = '';
+            document.querySelectorAll('.template-option').forEach(opt => {
+                if (opt.classList.contains('active')) {
+                    template = opt.getAttribute('data-template');
+                }
+            });
+            debugLog('Selected template', { template });
+            
+            // Look for where the document section is gathered
+            const docFileInput = document.getElementById('documentUpload');
+            const docFile = docFileInput.files[0] || null;
+            const documentSection = {
+                enabled: document.getElementById('includeDocumentSection').checked,
+                url: document.getElementById('documentUrl').value.trim(),
+                fileName: docFile ? docFile.name : ''
+            };
+            // Gather video section data
+            const videoSection = {
+                enabled: document.getElementById('includeVideoSection').checked,
+                url: document.getElementById('videoUrl').value.trim()
+            };
+
+            // Add the sections object right after
+            const sections = {
+                hero: { 
+                    enabled: document.getElementById('includeHeroSection').checked,
+                    headline: document.getElementById('heroHeadline').value,
+                    subheading: document.getElementById('heroSubheading').value
+                },
+                overview: { 
+                    enabled: document.getElementById('includeOverviewSection').checked,
+                    summary: document.getElementById('overviewSummary').value,
+                    outcomes: document.getElementById('overviewOutcomes').value
+                },
+                problem: { 
+                    enabled: document.getElementById('includeProblemSection').checked,
+                    challenge: document.getElementById('problemChallenge').value,
+                    goals: document.getElementById('problemGoals').value
+                },
+                process: { 
+                    enabled: document.getElementById('includeProcessSection').checked,
+                    research: document.getElementById('processResearch').value,
+                    insights: document.getElementById('processInsights').value,
+                    steps: document.getElementById('processSteps').value
+                },
+                showcase: { 
+                    enabled: document.getElementById('includeShowcaseSection').checked,
+                    solution: document.getElementById('showcaseSolution').value,
+                    assets: document.getElementById('showcaseAssets').value
+                },
+                reflection: { 
+                    enabled: document.getElementById('includeReflectionSection').checked,
+                    lessons: document.getElementById('reflectionLessons').value,
+                    improvements: document.getElementById('reflectionImprovements').value
+                }
+            };
+
+            // Add document section
+            sections.document = documentSection;
+            // Add video section
+            sections.video = videoSection;
+            // Add gallery section with up to 10 image URLs
+            const gallerySection = {
+                enabled: document.getElementById('includeGallerySection').checked,
+                images: document.getElementById('galleryImages').value.trim().split('\n').slice(0,10).map(url => url.trim()).filter(url => url)
+            };
+            sections.gallery = gallerySection;
+            
+            debugLog('Sections including document and video', { sectionsCount: Object.keys(sections).length });
+
+            // Validate inputs - ensure we have some content
+            let hasContent = false;
+            Object.keys(sections).forEach(sectionKey => {
+                if (sections[sectionKey].enabled) {
+                    const section = sections[sectionKey];
+                    Object.keys(section).forEach(key => {
+                        if (key !== 'enabled' && section[key] && section[key].trim() !== '') {
+                            hasContent = true;
+                        }
+                    });
+                }
+            });
+            
+            if (!hasContent) {
+                showNotification('error', 'Error', 'Please add some content to at least one section');
+                return;
+            }
+            
+            // First get the project details
+            db.ref(`projects/${projectId}`).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const project = snapshot.val();
+                        debugLog('Project data retrieved', { projectTitle: project.title });
+                        
+                        // Create a new case study in the caseStudies collection
+                        const caseStudy = {
+                            projectId: projectId,
+                            projectTitle: project.title,
+                            projectDescription: project.description,
+                            projectImageUrl: project.imageUrl,
+                            projectCategory: project.category,
+                            projectRating: project.rating,
+                            projectAchievement: project.achievement ? `${project.achievement} ${project.achievementMetric || ''}` : '',
+                            template: template,
+                            sections: sections,
+                            createdAt: firebase.database.ServerValue.TIMESTAMP,
+                            updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        };
+                        
+                        // Save to caseStudies collection
+                        db.ref('caseStudies').push(caseStudy)
+                            .then(docRef => {
+                                debugLog('Case study created successfully', { caseStudyId: docRef.key });
+                                
+                                // Update the project to reference this case study
+                                db.ref(`projects/${projectId}/hasCaseStudy`).set(true);
+                                db.ref(`projects/${projectId}/caseStudyId`).set(docRef.key);
+                                db.ref(`projects/${projectId}/updatedAt`).set(firebase.database.ServerValue.TIMESTAMP);
+                                
+                                showNotification('success', 'Success', 'Case study created successfully!');
+                                debugLog('Project updated with case study reference');
+                                
+                                // Redirect after a short delay
+                                setTimeout(() => {
+                                    window.location.href = `case_study_editor.html?caseId=${docRef.key}`;
+                                }, 2000);
+                            })
+                            .catch(error => {
+                                showNotification('error', 'Partial Success', 'Case study created but failed to update project reference: ' + error.message);
+                                debugLog('Error updating project reference', { error: error.message });
+                                
+                                // Still redirect to the editor after a delay
+                                setTimeout(() => {
+                                    window.location.href = `case_study_editor.html?caseId=${docRef.key}`;
+                                }, 3000);
+                            });
+                    } else {
+                        showNotification('error', 'Error', 'Project not found');
+                        debugLog('Project not found', { projectId });
+                    }
+                })
+                .catch(error => {
+                    showNotification('error', 'Error', 'Error getting project details: ' + error.message);
+                    debugLog('Error getting project details', { error: error.message });
+                });
+        });
+
+        // Delete Case Study
+        const deleteCaseStudyBtn = document.getElementById('deleteCaseStudyBtn');
+        deleteCaseStudyBtn.addEventListener('click', function() {
+            const projectId = caseStudyProjectSelector.value;
+            if (!projectId) return;
+            if (!confirm('Are you sure you want to delete this case study? This cannot be undone.')) return;
+            showNotification('success', 'Deleting', 'Deleting case study...', 10000);
+            debugLog('Deleting case study for project', { projectId });
+            
+            // Fetch project to get caseStudyId
+            db.ref(`projects/${projectId}/caseStudyId`).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists() && snapshot.val()) {
+                        const csId = snapshot.val();
+                        
+                        // Delete the actual case study document
+                        db.ref(`caseStudies/${csId}`).remove()
+                            .then(() => {
+                                showNotification('success', 'Deleted', 'Case study deleted successfully.');
+                                debugLog('Deleted case study doc', { caseStudyId: csId });
+                                
+                                // Clear reference in project doc
+                                db.ref(`projects/${projectId}/hasCaseStudy`).set(false);
+                                db.ref(`projects/${projectId}/caseStudyId`).set(null);
+                                db.ref(`projects/${projectId}/updatedAt`).set(firebase.database.ServerValue.TIMESTAMP);
+                                
+                                // Reset UI
+                                caseStudyProjectSelector.value = '';
+                                caseStudyActions.classList.add('hidden');
+                                noCaseStudySelected.classList.remove('hidden');
+                            })
+                            .catch(err => {
+                                showNotification('error', 'Delete Failed', `Error deleting: ${err.message}`);
+                                debugLog('Error deleting case study', { error: err.message });
+                            });
+                    } else {
+                        showNotification('error', 'Not Found', 'No case study linked for this project.');
+                        debugLog('No caseStudyId in project', { projectId });
+                    }
+                })
+                .catch(err => {
+                    showNotification('error', 'Error', `Error fetching project: ${err.message}`);
+                    debugLog('Error fetching project for deletion', { error: err.message });
+                });
+        });
+
+        // Add file upload functionality
+        const imageFileInput = document.getElementById('imageFileInput');
+        imageFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const projectId = caseStudyProjectSelector.value;
+            if (!projectId) return;
+
+            const ref = storage.ref(`projects/${projectId}/images/${file.name}`);
+            const task = ref.put(file);
+            task
+                .then(() => ref.getDownloadURL())
+                .then(url => {
+                    // Save `url` into Firebase Realtime Database's `imageUrl` field
+                    db.ref(`projects/${projectId}/imageUrl`).set(url)
+                        .then(() => {
+                            showNotification('success', 'Image Uploaded', 'Image uploaded successfully!');
+                            // Optionally, you can update the UI to show the new image URL
+                        })
+                        .catch(error => {
+                            showNotification('error', 'Error', 'Error uploading image: ' + error.message);
+                        });
+                })
+                .catch(error => {
+                    showNotification('error', 'Error', 'Error uploading image: ' + error.message);
+                });
+        });
+
+        // Add document URL preview functionality
+        document.getElementById('documentUrl').addEventListener('input', function() {
+            const rawUrl = this.value.trim();
+            const previewEl = document.getElementById('documentPreview');
+            
+            if (!rawUrl) {
+                previewEl.innerHTML = '<i class="fas fa-file-pdf text-3xl mb-2"></i><p>Document preview will appear here</p>';
+                return;
+            }
+            
+            // If it's a Google Drive share URL, convert to preview
+            let embedUrl = rawUrl;
+            const driveMatch = rawUrl.match(/\/d\/([A-Za-z0-9_-]+)/);
+            if (driveMatch) {
+                embedUrl = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+            }
+            
+            // Render in iframe preview
+            previewEl.innerHTML = `
+                <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+            `;
+        });
+
+        // Add video URL preview functionality
+        document.getElementById('videoUrl').addEventListener('input', function() {
+            const url = this.value.trim();
+            const previewEl = document.getElementById('videoPreview');
+            
+            if (!url) {
+                previewEl.innerHTML = '<i class="fab fa-youtube text-red-500 text-3xl mb-2"></i><p>Video preview will appear here</p>';
+                return;
+            }
+            
+            // Check if it's a valid YouTube URL
+            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+                // Extract video ID (simple extraction, may need more robust method in production)
+                let videoId = '';
+                if (url.includes('youtube.com/watch')) {
+                    videoId = url.split('v=')[1];
+                } else if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1];
+                }
+                
+                if (videoId) {
+                    videoId = videoId.split('&')[0]; // Remove any parameters
+                    previewEl.innerHTML = `
+                        <div class="w-full h-full">
+                            <div class="bg-gray-200 dark:bg-gray-800 p-1 text-xs font-mono mb-1 rounded">youtube.com/embed/${videoId}</div>
+                            <div class="border border-gray-300 dark:border-gray-700 rounded h-24 flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
+                                <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" class="absolute inset-0 w-full h-full object-cover opacity-50">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center">
+                                        <i class="fas fa-play"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                previewEl.innerHTML = `
+                    <div class="text-yellow-600 dark:text-yellow-400">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Please enter a valid YouTube URL</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Add direct case study management container
+        const caseStudyManagerDiv = document.createElement('div');
+        caseStudyManagerDiv.id = 'caseStudyManager';
+        caseStudyManagerDiv.className = 'container mx-auto px-4 my-8';
+        caseStudyManagerDiv.innerHTML = `
+            <h2 class="text-2xl font-bold mb-4 dark:text-white border-b pb-2">Direct Case Study Management</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 my-4">
+                <h3 class="text-xl font-bold mb-4 dark:text-white">Delete Case Studies</h3>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-500 mb-2">Delete case studies directly by ID (use with caution)</p>
+                    <div id="directCaseStudyList" class="space-y-2 max-h-60 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div class="text-center text-gray-500">Loading case studies...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(caseStudyManagerDiv);
+        
+        // Load all case studies for direct management
+        function loadAllCaseStudies() {
+            const container = document.getElementById('directCaseStudyList');
+            if (!container) return;
+            
+            container.innerHTML = '<div class="text-center text-gray-500">Loading case studies...</div>';
+            
+            db.ref('caseStudies').once('value')
+                .then(snapshot => {
+                    if (!snapshot.exists()) {
+                        container.innerHTML = '<div class="text-center text-gray-500">No case studies found</div>';
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    snapshot.forEach(csSnap => {
+                        const csId = csSnap.key;
+                        const cs = csSnap.val();
+                        
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded';
+                        itemEl.innerHTML = `
+                            <div>
+                                <div class="font-semibold text-gray-800 dark:text-white">${cs.projectTitle || 'Untitled'}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${csId}</div>
+                            </div>
+                            <button class="direct-delete-cs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm" 
+                                    data-id="${csId}">
+                                Delete
+                            </button>
+                        `;
+                        container.appendChild(itemEl);
+                    });
+                    
+                    // Add event listeners to delete buttons
+                    document.querySelectorAll('.direct-delete-cs').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const csId = this.getAttribute('data-id');
+                            if (confirm(`Are you sure you want to permanently delete case study ${csId}? This action cannot be undone.`)) {
+                                showNotification('info', 'Processing', 'Deleting case study...', 5000);
+                                
+                                // Delete the case study
+                                db.ref(`caseStudies/${csId}`).remove()
+                                    .then(() => {
+                                        // Get the case study data to find linked project
+                                        db.ref(`projects`).once('value')
+                                            .then(projectsSnapshot => {
+                                                if (projectsSnapshot.exists()) {
+                                                    // Check all projects to find those referencing this case study
+                                                    projectsSnapshot.forEach(projSnap => {
+                                                        const project = projSnap.val();
+                                                        if (project.caseStudyId === csId) {
+                                                            // Update project references
+                                                            db.ref(`projects/${projSnap.key}/hasCaseStudy`).set(false);
+                                                            db.ref(`projects/${projSnap.key}/caseStudyId`).set(null);
+                                                            db.ref(`projects/${projSnap.key}/updatedAt`).set(firebase.database.ServerValue.TIMESTAMP);
+                                                            console.log(`Updated project ${projSnap.key} to remove reference to deleted case study`);
+                                                        }
+                                                    });
+                                                }
+                                                
+                                                showNotification('success', 'Success', 'Case study deleted successfully');
+                                                loadAllCaseStudies(); // Refresh the list
+                                            })
+                                            .catch(error => {
+                                                console.error('Error checking projects:', error);
+                                                // Still show success even if project update fails
+                                                showNotification('success', 'Success', 'Case study deleted but some project references may not be updated');
+                                                loadAllCaseStudies();
+                                            });
+                                    })
+                                    .catch(error => {
+                                        showNotification('error', 'Error', `Failed to delete: ${error.message}`);
+                                        console.error('Delete error:', error);
+                                    });
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="text-center text-red-500">Error loading case studies: ${error.message}</div>`;
+                    console.error('Error loading case studies:', error);
+                });
+        }
+        
+        // Load case studies when the page loads
+        loadAllCaseStudies();
+
+        // ==================== MAGICAL JOURNEYS CAROUSEL MANAGEMENT ============= //
+        
+        // Show carousel section when button is clicked
+        document.getElementById('showCarouselBtn').addEventListener('click', function() {
+            hideAllSections();
+            document.getElementById('carouselSection').classList.remove('hidden');
+            loadCarouselImages();
+        });
+        
+        // Handle "Add New Image" button click
+        document.getElementById('addCarouselImageBtn').addEventListener('click', function() {
+            showImageForm();
+        });
+        
+        // Handle close form button click
+        document.getElementById('closeImageFormBtn').addEventListener('click', function() {
+            hideImageForm();
+        });
+        
+        // Handle cancel button click
+        document.getElementById('cancelImageBtn').addEventListener('click', function() {
+            hideImageForm();
+        });
+        
+        // Handle form submission
+        document.getElementById('addEditImageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCarouselImage();
+        });
+        
+        // Handle URL input for preview
+        document.getElementById('imageUrl').addEventListener('input', function() {
+            updateImagePreview();
+        });
+        
+        // Function to show the image form
+        function showImageForm(imageData = null) {
+            const form = document.getElementById('carouselImageForm');
+            const titleEl = document.getElementById('imageFormTitle');
+            
+            // Reset form
+            document.getElementById('addEditImageForm').reset();
+            document.getElementById('imagePreviewEmpty').classList.remove('hidden');
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('imagePreviewError').classList.add('hidden');
+            document.getElementById('imagePreviewLoading').classList.add('hidden');
+            
+            // If editing an existing image
+            if (imageData) {
+                titleEl.textContent = 'Edit Image';
+                document.getElementById('imageId').value = imageData.id;
+                document.getElementById('imageTitle').value = imageData.title || '';
+                document.getElementById('imageDescription').value = imageData.description || '';
+                document.getElementById('imageUrl').value = imageData.originalUrl || imageData.url || '';
+                document.getElementById('imageOrder').value = imageData.order || 1;
+                
+                // Show preview
+                updateImagePreview();
+            } else {
+                titleEl.textContent = 'Add New Image';
+                document.getElementById('imageId').value = '';
+                
+                // Get next available order number
+                db.ref('carouselImages').orderByChild('order').limitToLast(1).once('value').then(snapshot => {
+                    if (snapshot.exists()) {
+                        let maxOrder = 0;
+                        snapshot.forEach(child => {
+                            maxOrder = child.val().order || 0;
+                        });
+                        document.getElementById('imageOrder').value = maxOrder + 1;
+                    } else {
+                        document.getElementById('imageOrder').value = 1;
+                    }
+                }).catch(error => {
+                    console.error('Error getting next order:', error);
+                    document.getElementById('imageOrder').value = 1;
+                });
+            }
+            
+            form.classList.remove('hidden');
+        }
+        
+        // Function to hide the image form
+        function hideImageForm() {
+            document.getElementById('carouselImageForm').classList.add('hidden');
+        }
+        
+        // Function to update the image preview
+        function updateImagePreview() {
+            const url = document.getElementById('imageUrl').value.trim();
+            const previewImg = document.getElementById('imagePreview');
+            const previewEmpty = document.getElementById('imagePreviewEmpty');
+            const previewError = document.getElementById('imagePreviewError');
+            const previewLoading = document.getElementById('imagePreviewLoading');
+            
+            // Hide all preview states
+            previewImg.classList.add('hidden');
+            previewEmpty.classList.add('hidden');
+            previewError.classList.add('hidden');
+            previewLoading.classList.add('hidden');
+            
+            if (!url) {
+                previewEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading state
+            previewLoading.classList.remove('hidden');
+            
+            // Process the URL (convert Google Drive links if needed)
+            const processedUrl = processImageUrl(url);
+            
+            // Create a new image to test if the URL is valid
+            const testImage = new Image();
+            testImage.onload = function() {
+                previewLoading.classList.add('hidden');
+                previewImg.src = processedUrl;
+                previewImg.classList.remove('hidden');
+            };
+            testImage.onerror = function() {
+                previewLoading.classList.add('hidden');
+                previewError.classList.remove('hidden');
+            };
+            testImage.src = processedUrl;
+        }
+        
+        // Function to process image URLs (convert Google Drive links)
+        function processImageUrl(url) {
+            // Check if it's a Google Drive link
+            const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+            const driveMatch = url.match(driveRegex);
+            
+            if (driveMatch) {
+                return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+            }
+            
+            return url;
+        }
+        
+        // Function to save a carousel image
+        function saveCarouselImage() {
+            const form = document.getElementById('addEditImageForm');
+            const imageId = document.getElementById('imageId').value;
+            const title = document.getElementById('imageTitle').value;
+            const description = document.getElementById('imageDescription').value;
+            const originalUrl = document.getElementById('imageUrl').value.trim();
+            const order = parseInt(document.getElementById('imageOrder').value) || 1;
+            
+            // Process the URL for Google Drive links
+            const url = processImageUrl(originalUrl);
+            
+            // Show saving notification
+            showNotification('info', 'Saving', 'Saving image...', 3000);
+            
+            const imageData = {
+                title,
+                description,
+                url,
+                originalUrl,
+                order,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            // If no ID, create new image
+            if (!imageId) {
+                imageData.createdAt = firebase.database.ServerValue.TIMESTAMP;
+                db.ref('carouselImages').push(imageData)
+                    .then(docRef => {
+                        showNotification('success', 'Success', 'Image added successfully');
+                        hideImageForm();
+                        loadCarouselImages();
+                    })
+                    .catch(error => {
+                        showNotification('error', 'Error', 'Failed to add image: ' + error.message);
+                    });
+            } else {
+                // Update existing image
+                db.ref(`carouselImages/${imageId}`).update(imageData)
+                    .then(() => {
+                        showNotification('success', 'Success', 'Image updated successfully');
+                        hideImageForm();
+                        loadCarouselImages();
+                    })
+                    .catch(error => {
+                        showNotification('error', 'Error', 'Failed to update image: ' + error.message);
+                    });
+            }
+        }
+        
+        // Function to load carousel images
+        function loadCarouselImages() {
+            const loadingEl = document.getElementById('carouselImagesLoading');
+            const emptyEl = document.getElementById('carouselImagesEmpty');
+            const listEl = document.getElementById('carouselImagesList');
+            
+            // Show loading, hide others
+            loadingEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+            listEl.classList.add('hidden');
+            
+            // Get images from Firebase
+            db.ref('carouselImages').orderByChild('order').once('value')
+                .then(snapshot => {
+                    loadingEl.classList.add('hidden');
+                    
+                    if (!snapshot.exists()) {
+                        emptyEl.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    // Clear the list
+                    listEl.innerHTML = '';
+                    
+                    // Add each image to the list
+                    const images = [];
+                    snapshot.forEach(child => {
+                        images.push({
+                            id: child.key,
+                            ...child.val()
+                        });
+                    });
+                    
+                    // Sort by order
+                    images.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    
+                    // Create the image cards
+                    images.forEach(image => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden';
+                        card.innerHTML = `
+                            <div class="relative" style="height: 180px;">
+                                <img src="${image.url}" alt="${image.title}" class="w-full h-full object-cover">
+                                <div class="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white py-1 px-2 rounded text-sm">
+                                    #${image.order || 0}
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-bold mb-1 text-gray-800 dark:text-white">${image.title}</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">${image.description || 'No description'}</p>
+                                <div class="flex justify-between">
+                                    <button class="edit-image-btn text-blue-600 dark:text-blue-400 hover:text-blue-800 text-sm" data-id="${image.id}">
+                                        <i class="fas fa-edit mr-1"></i> Edit
+                                    </button>
+                                    <button class="delete-image-btn text-red-600 dark:text-red-400 hover:text-red-800 text-sm" data-id="${image.id}">
+                                        <i class="fas fa-trash-alt mr-1"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        listEl.appendChild(card);
+                    });
+                    
+                    // Add event listeners
+                    document.querySelectorAll('.edit-image-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const imageId = this.getAttribute('data-id');
+                            const imageData = images.find(img => img.id === imageId);
+                            if (imageData) {
+                                showImageForm(imageData);
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-image-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const imageId = this.getAttribute('data-id');
+                            if (confirm('Are you sure you want to delete this image? This cannot be undone.')) {
+                                db.ref(`carouselImages/${imageId}`).remove()
+                                    .then(() => {
+                                        showNotification('success', 'Success', 'Image deleted successfully');
+                                        loadCarouselImages();
+                                    })
+                                    .catch(error => {
+                                        showNotification('error', 'Error', 'Failed to delete image: ' + error.message);
+                                    });
+                            }
+                        });
+                    });
+                    
+                    // Show the list
+                    listEl.classList.remove('hidden');
+                })
+                .catch(error => {
+                    loadingEl.classList.add('hidden');
+                    showNotification('error', 'Error', 'Failed to load images: ' + error.message);
+                });
+        }
+    </script>
+</body>
+</html> 

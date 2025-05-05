@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Debugger Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .format-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-4 text-blue-600">Image URL Debugger</h1>
+        
+        <div class="bg-blue-50 p-4 rounded mb-6">
+            <h2 class="text-xl font-bold mb-2">Instructions</h2>
+            <p>This tool helps you test Google Drive image URLs to see which format works best in your browser. Enter any Google Drive URL or file ID below.</p>
+        </div>
+        
+        <div class="mb-6">
+            <label class="block text-gray-700 mb-2" for="imageUrl">Image URL or Google Drive File ID:</label>
+            <input type="text" id="imageUrl" class="w-full p-2 border border-gray-300 rounded" 
+                   placeholder="Enter URL or file ID (e.g., https://drive.google.com/file/d/FILEID/view or just FILEID)">
+            <button onclick="testImage()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Test Image
+            </button>
+        </div>
+        
+        <div id="fileIdInfo" class="hidden bg-green-100 p-4 rounded mb-6">
+            <h3 class="font-bold text-green-800">Extracted File ID:</h3>
+            <p id="fileIdDisplay" class="font-mono"></p>
+        </div>
+        
+        <div id="results" class="hidden">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Test Results</h2>
+            
+            <div id="formatContainers" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Format containers will be added here -->
+            </div>
+            
+            <div class="mt-8 bg-yellow-50 p-4 rounded">
+                <h3 class="font-bold text-yellow-800 mb-2">Recommendations:</h3>
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Use the URL format that loads successfully in your test</li>
+                    <li>Add the working URL to your carousel or gallery</li>
+                    <li>Make sure your Google Drive file is set to "Anyone with the link can view"</li>
+                    <li>For best results, use the drive.usercontent.google.com format</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load the shared scripts
+        const carouselScript = document.createElement('script');
+        carouselScript.src = 'carousel.js';
+        document.head.appendChild(carouselScript);
+        
+        const swiperScript = document.createElement('script');
+        swiperScript.src = 'swiper-carousel.js';
+        document.head.appendChild(swiperScript);
+        
+        // Extract Google Drive file ID from URL
+        function extractFileId(input) {
+            // Check if input is already just a file ID (no slashes or spaces)
+            if (/^[A-Za-z0-9_-]+$/.test(input)) {
+                return input;
+            }
+            
+            // Extract from Google Drive URL
+            // Format: https://drive.google.com/file/d/FILE_ID/view
+            const fileMatch = input.match(/\/file\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (fileMatch) return fileMatch[1];
+            
+            // Format: https://drive.google.com/open?id=FILE_ID
+            const openMatch = input.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (openMatch) return openMatch[1];
+            
+            // Format: https://drive.google.com/uc?export=view&id=FILE_ID
+            const ucMatch = input.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (ucMatch) return ucMatch[1];
+            
+            // Format: https://drive.google.com/d/FILE_ID/
+            const directMatch = input.match(/\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (directMatch) return directMatch[1];
+            
+            return null;
+        }
+        
+        // Test the image with different formats
+        function testImage() {
+            const input = document.getElementById('imageUrl').value.trim();
+            const fileIdInfo = document.getElementById('fileIdInfo');
+            const fileIdDisplay = document.getElementById('fileIdDisplay');
+            const resultsDiv = document.getElementById('results');
+            const formatContainers = document.getElementById('formatContainers');
+            
+            // Reset UI
+            fileIdInfo.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+            formatContainers.innerHTML = '';
+            
+            if (!input) {
+                alert('Please enter a URL or file ID');
+                return;
+            }
+            
+            // Extract file ID
+            const fileId = extractFileId(input);
+            
+            if (!fileId) {
+                alert('Could not extract a valid file ID from the input. Please enter a Google Drive URL or file ID.');
+                return;
+            }
+            
+            // Show file ID
+            fileIdDisplay.textContent = fileId;
+            fileIdInfo.classList.remove('hidden');
+            
+            // Define formats to test
+            const formats = [
+                {
+                    name: "Drive Usercontent Format (Newest & Recommended)",
+                    url: `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`,
+                    description: "This is the latest Google Drive format with the best CORS support."
+                },
+                {
+                    name: "LH3 Format (Alternative)",
+                    url: `https://lh3.googleusercontent.com/d/${fileId}`,
+                    description: "Alternative format that works with some Google Drive images."
+                },
+                {
+                    name: "Direct Export Format",
+                    url: `https://drive.google.com/uc?export=view&id=${fileId}`,
+                    description: "Traditional format that may have CORS restrictions."
+                },
+                {
+                    name: "Thumbnail Format",
+                    url: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+                    description: "Lower resolution thumbnail that often works when others fail."
+                }
+            ];
+            
+            // Test each format
+            formats.forEach(format => {
+                // Create container for this format
+                const container = document.createElement('div');
+                container.className = 'format-container';
+                
+                // Add header
+                const header = document.createElement('h3');
+                header.className = 'font-bold text-lg mb-1';
+                header.textContent = format.name;
+                container.appendChild(header);
+                
+                // Add description
+                const description = document.createElement('p');
+                description.className = 'text-sm text-gray-600 mb-2';
+                description.textContent = format.description;
+                container.appendChild(description);
+                
+                // Add URL display
+                const urlDisplay = document.createElement('div');
+                urlDisplay.className = 'bg-gray-100 p-2 rounded mb-2 font-mono text-xs overflow-x-auto';
+                urlDisplay.textContent = format.url;
+                container.appendChild(urlDisplay);
+                
+                // Add copy button
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'bg-green-600 text-white text-xs px-2 py-1 rounded mr-2';
+                copyBtn.textContent = 'Copy URL';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(format.url);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy URL';
+                    }, 2000);
+                };
+                container.appendChild(copyBtn);
+                
+                // Add status indicator
+                const status = document.createElement('div');
+                status.className = 'status mt-2';
+                status.textContent = 'Testing...';
+                
+                // Add image test
+                const img = document.createElement('img');
+                img.className = 'w-full h-auto mt-2 border rounded';
+                img.style.maxHeight = '150px';
+                img.style.objectFit = 'contain';
+                
+                // Set up load/error handlers
+                img.onload = function() {
+                    status.textContent = '✅ Success! Image loaded correctly.';
+                    status.className = 'status mt-2 text-green-600 font-bold';
+                    container.classList.add('border-green-300', 'bg-green-50');
+                };
+                
+                img.onerror = function() {
+                    status.textContent = '❌ Failed to load image with this format.';
+                    status.className = 'status mt-2 text-red-600';
+                    img.style.display = 'none';
+                };
+                
+                // Add everything to container
+                container.appendChild(status);
+                container.appendChild(img);
+                formatContainers.appendChild(container);
+                
+                // Load the image
+                img.src = format.url;
+            });
+            
+            // Show results
+            resultsDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html> 

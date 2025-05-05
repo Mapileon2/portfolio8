@@ -1,0 +1,373 @@
+/**
+ * Admin Authentication CSS - Production Version
+ * Handles styling for authentication states in the admin interface
+ */
+
+/* ======== Base Styles for Authentication States ======== */
+html {
+  --admin-primary-color: #4299e1;
+  --admin-primary-hover: #3182ce;
+  --admin-bg-light: #f7fafc;
+  --admin-bg-dark: #1a202c;
+  --admin-text-light: #2d3748;
+  --admin-text-dark: #e2e8f0;
+  --admin-border-light: #e2e8f0;
+  --admin-success: #48bb78;
+  --admin-error: #f56565;
+  --admin-warning: #ed8936;
+  --admin-transition-speed: 0.3s;
+}
+
+/* ======== Authentication State Class Modifiers ======== */
+/* When user is not authenticated */
+body.auth-admin-content-hidden {
+  /* Ensures login section is in view */
+  padding-top: 2rem !important;
+}
+
+/* When user is authenticated */
+body.auth-admin-content-visible #loginSection {
+  display: none !important;
+}
+
+/* ======== Login Form Styling ======== */
+/* Login container styling when not authenticated */
+body.auth-admin-content-hidden #loginSection,
+#loginSection.login-visible {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+  z-index: 1000 !important;
+  background-color: white !important;
+  padding: 2rem !important;
+  margin: 2rem auto !important;
+  max-width: 32rem !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+              0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  transition: all var(--admin-transition-speed) ease !important;
+  border: 1px solid var(--admin-border-light) !important;
+}
+
+/* Login form container */
+body.auth-admin-content-hidden #loginSection .bg-white,
+#loginSection.login-visible .bg-white {
+  background-color: white !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+/* Login form title */
+body.auth-admin-content-hidden #loginSection h2,
+#loginSection.login-visible h2 {
+  display: block !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  margin-bottom: 1.5rem !important;
+  text-align: center !important;
+  color: var(--admin-text-light) !important;
+}
+
+/* Login form input fields */
+body.auth-admin-content-hidden #loginSection input,
+#loginSection.login-visible input {
+  display: block !important;
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  margin: 0.5rem 0 1rem 0 !important;
+  border: 1px solid var(--admin-border-light) !important;
+  border-radius: 0.5rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  color: var(--admin-text-light) !important;
+  background-color: white !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: border-color var(--admin-transition-speed) ease-in-out,
+              box-shadow var(--admin-transition-speed) ease-in-out !important;
+}
+
+body.auth-admin-content-hidden #loginSection input:focus,
+#loginSection.login-visible input:focus {
+  outline: none !important;
+  border-color: var(--admin-primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5) !important;
+}
+
+/* Login button */
+body.auth-admin-content-hidden #loginBtn,
+#loginSection.login-visible #loginBtn {
+  display: block !important;
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  background-color: var(--admin-primary-color) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  font-weight: bold !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  transition: background-color var(--admin-transition-speed) ease !important;
+  text-align: center !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+              0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+body.auth-admin-content-hidden #loginBtn:hover,
+#loginSection.login-visible #loginBtn:hover {
+  background-color: var(--admin-primary-hover) !important;
+}
+
+body.auth-admin-content-hidden #loginBtn:focus,
+#loginSection.login-visible #loginBtn:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5) !important;
+}
+
+body.auth-admin-content-hidden #loginBtn:disabled,
+#loginSection.login-visible #loginBtn:disabled {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+/* Form labels */
+body.auth-admin-content-hidden #loginSection label,
+#loginSection.login-visible label {
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--admin-text-light) !important;
+}
+
+/* ======== Admin Content Hiding ======== */
+/* Hide specific sections when not authenticated */
+body.auth-admin-content-hidden #carouselSection,
+body.auth-admin-content-hidden #carouselImageForm,
+body.auth-admin-content-hidden #carouselImagesLoading,
+body.auth-admin-content-hidden #carouselImagesEmpty,
+body.auth-admin-content-hidden #carouselImagesList,
+body.auth-admin-content-hidden #addEditImageForm,
+body.auth-admin-content-hidden #googleDriveImageForm,
+body.auth-admin-content-hidden #gdrivePreviewContainer,
+body.auth-admin-content-hidden #imagePreviewContainer,
+body.auth-admin-content-hidden #carouselImages,
+body.auth-admin-content-hidden #carouselImageList,
+body.auth-admin-content-hidden #addCarouselImageBtn,
+body.auth-admin-content-hidden #adminNavSection,
+body.auth-admin-content-hidden #projectFormSection,
+body.auth-admin-content-hidden #caseStudySection,
+body.auth-admin-content-hidden #createCaseStudySection,
+body.auth-admin-content-hidden #sectionsEditorSection,
+body.auth-admin-content-hidden [id*="carousel"],
+body.auth-admin-content-hidden [id*="Carousel"],
+body.auth-admin-content-hidden [id*="gdrive"],
+body.auth-admin-content-hidden [id*="Gdrive"],
+body.auth-admin-content-hidden [id*="admin-"],
+body.auth-admin-content-hidden [id*="google"],
+body.auth-admin-content-hidden [id*="Google"],
+body.auth-admin-content-hidden .admin-hidden-section,
+body.auth-admin-content-hidden .admin-only {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  max-height: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Hide text and section content based on section headings - more specific targeting */
+body.auth-admin-content-hidden h2:has(~ div:contains("Carousel")),
+body.auth-admin-content-hidden h2:has(~ div:contains("Google Drive")),
+body.auth-admin-content-hidden h2:has(~ div:contains("Image Management")),
+body.auth-admin-content-hidden h3:has(~ div:contains("Carousel")),
+body.auth-admin-content-hidden h3:has(~ div:contains("Google Drive")),
+body.auth-admin-content-hidden h3:has(~ div:contains("Image Management")),
+body.auth-admin-content-hidden h4:has(~ div:contains("Carousel")),
+body.auth-admin-content-hidden h4:has(~ div:contains("Google Drive")),
+body.auth-admin-content-hidden h4:has(~ div:contains("Image Management")),
+body.auth-admin-content-hidden h2:contains("Carousel"),
+body.auth-admin-content-hidden h3:contains("Carousel"),
+body.auth-admin-content-hidden h4:contains("Carousel"),
+body.auth-admin-content-hidden h2:contains("Google Drive"),
+body.auth-admin-content-hidden h3:contains("Google Drive"),
+body.auth-admin-content-hidden h4:contains("Google Drive"),
+body.auth-admin-content-hidden h2:contains("Image Management"),
+body.auth-admin-content-hidden h3:contains("Image Management"),
+body.auth-admin-content-hidden h4:contains("Image Management"),
+body.auth-admin-content-hidden h2:contains("Magical Journeys"),
+body.auth-admin-content-hidden h3:contains("Magical Journeys"),
+body.auth-admin-content-hidden h4:contains("Magical Journeys") {
+  display: none !important;
+}
+
+/* Hide parent containers and siblings of admin content */
+body.auth-admin-content-hidden div:has(h2:contains("Carousel")),
+body.auth-admin-content-hidden div:has(h3:contains("Carousel")),
+body.auth-admin-content-hidden div:has(h4:contains("Carousel")),
+body.auth-admin-content-hidden div:has(h2:contains("Google Drive")),
+body.auth-admin-content-hidden div:has(h3:contains("Google Drive")),
+body.auth-admin-content-hidden div:has(h4:contains("Google Drive")),
+body.auth-admin-content-hidden div:has(h2:contains("Image Management")),
+body.auth-admin-content-hidden div:has(h3:contains("Image Management")),
+body.auth-admin-content-hidden div:has(h4:contains("Image Management")),
+body.auth-admin-content-hidden div:has(h2:contains("Magical Journeys")),
+body.auth-admin-content-hidden div:has(h3:contains("Magical Journeys")),
+body.auth-admin-content-hidden div:has(h4:contains("Magical Journeys")),
+body.auth-admin-content-hidden h2:contains("Carousel") ~ div,
+body.auth-admin-content-hidden h2:contains("Google Drive") ~ div,
+body.auth-admin-content-hidden h2:contains("Image Management") ~ div,
+body.auth-admin-content-hidden h3:contains("Carousel") ~ div,
+body.auth-admin-content-hidden h3:contains("Google Drive") ~ div,
+body.auth-admin-content-hidden h3:contains("Image Management") ~ div,
+body.auth-admin-content-hidden h4:contains("Carousel") ~ div,
+body.auth-admin-content-hidden h4:contains("Google Drive") ~ div,
+body.auth-admin-content-hidden h4:contains("Image Management") ~ div {
+  display: none !important;
+}
+
+/* Direct targeting of specific section titles */
+body:not(.auth-admin-content-visible) div:has(> h2, > h3, > h4, > div):has(text="Carousel Image Management"),
+body:not(.auth-admin-content-visible) div:has(> h2, > h3, > h4, > div):has(text="Google Drive Image Uploader"),
+body:not(.auth-admin-content-visible) div:has(> h2, > h3, > h4, > div):has(text="Magical Journeys") {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -1 !important;
+}
+
+/* ======== Admin Content Display ======== */
+/* Show sections when authenticated */
+body.auth-admin-content-visible #carouselSection,
+body.auth-admin-content-visible #carouselImageForm,
+body.auth-admin-content-visible #carouselImagesLoading,
+body.auth-admin-content-visible #carouselImagesEmpty,
+body.auth-admin-content-visible #carouselImagesList,
+body.auth-admin-content-visible #addEditImageForm,
+body.auth-admin-content-visible #googleDriveImageForm,
+body.auth-admin-content-visible #gdrivePreviewContainer,
+body.auth-admin-content-visible #imagePreviewContainer,
+body.auth-admin-content-visible #carouselImages,
+body.auth-admin-content-visible #carouselImageList,
+body.auth-admin-content-visible #addCarouselImageBtn,
+body.auth-admin-content-visible #adminNavSection,
+body.auth-admin-content-visible #projectFormSection,
+body.auth-admin-content-visible #caseStudySection,
+body.auth-admin-content-visible #createCaseStudySection,
+body.auth-admin-content-visible #sectionsEditorSection,
+body.auth-admin-content-visible [id*="carousel"],
+body.auth-admin-content-visible [id*="Carousel"],
+body.auth-admin-content-visible [id*="gdrive"],
+body.auth-admin-content-visible [id*="Gdrive"],
+body.auth-admin-content-visible [id*="admin-"],
+body.auth-admin-content-visible .admin-hidden-section,
+body.auth-admin-content-visible .admin-only {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* ======== Dark Mode Support ======== */
+.dark body.auth-admin-content-hidden #loginSection,
+.dark #loginSection.login-visible {
+  background-color: var(--admin-bg-dark) !important;
+  border-color: #2d3748 !important;
+}
+
+.dark body.auth-admin-content-hidden #loginSection h2,
+.dark #loginSection.login-visible h2 {
+  color: var(--admin-text-dark) !important;
+}
+
+.dark body.auth-admin-content-hidden #loginSection input,
+.dark #loginSection.login-visible input {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: var(--admin-text-dark) !important;
+}
+
+.dark body.auth-admin-content-hidden #loginSection label,
+.dark #loginSection.login-visible label {
+  color: var(--admin-text-dark) !important;
+}
+
+/* ======== Responsive Adjustments ======== */
+@media (max-width: 640px) {
+  body.auth-admin-content-hidden #loginSection,
+  #loginSection.login-visible {
+    margin: 1rem !important;
+    padding: 1.5rem !important;
+  }
+  
+  body.auth-admin-content-hidden #loginSection h2,
+  #loginSection.login-visible h2 {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* ======== Utility Classes ======== */
+.admin-only {
+  display: none !important;
+}
+
+body.auth-admin-content-visible .admin-only {
+  display: block !important;
+}
+
+.admin-hidden {
+  display: none !important;
+}
+
+/* ======== Fix for display types ======== */
+/* Support for flex containers */
+body.auth-admin-content-visible .flex.admin-hidden-section,
+body.auth-admin-content-visible div[class*="flex-"].admin-hidden-section {
+  display: flex !important;
+}
+
+/* Support for grid containers */
+body.auth-admin-content-visible .grid.admin-hidden-section,
+body.auth-admin-content-visible div[class*="grid-"].admin-hidden-section {
+  display: grid !important;
+}
+
+/* Support for inline elements */
+body.auth-admin-content-visible .inline.admin-hidden-section,
+body.auth-admin-content-visible .inline-block.admin-hidden-section,
+body.auth-admin-content-visible .inline-flex.admin-hidden-section {
+  display: inline-block !important;
+}
+
+/* ======== Animation Effects ======== */
+body.auth-admin-content-visible .admin-hidden-section {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

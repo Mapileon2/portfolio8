@@ -1,0 +1,72 @@
+{
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dlvtcwqu7/image/upload/v1746385834/portfolio/carousel/qrn9zgxevaduievcacod.jpg",
+      "publicId": "portfolio/carousel/qrn9zgxevaduievcacod",
+      "service": "cloudinary",
+      "caption": "tekion",
+      "title": "tekion",
+      "description": "",
+      "altText": "tekion",
+      "order": 1,
+      "width": 1784,
+      "height": 3859,
+      "thumbnail": "https://res.cloudinary.com/dlvtcwqu7/image/upload/c_fill,w_300,h_200/v1746385834/portfolio/carousel/qrn9zgxevaduievcacod.jpg",
+      "createdAt": "2025-05-04T19:10:34.747Z",
+      "updatedAt": "2025-05-04T19:10:34.747Z",
+      "id": "maa11a7u44ine",
+      "createdBy": "anonymous"
+    },
+    {
+      "url": "https://res.cloudinary.com/dlvtcwqu7/image/upload/v1746385880/portfolio/carousel/k4xbhssk43aoqc14anjs.jpg",
+      "publicId": "portfolio/carousel/k4xbhssk43aoqc14anjs",
+      "service": "cloudinary",
+      "caption": "gg",
+      "title": "gg",
+      "description": "",
+      "altText": "gg",
+      "order": 2,
+      "width": 1875,
+      "height": 3859,
+      "thumbnail": "https://res.cloudinary.com/dlvtcwqu7/image/upload/c_fill,w_300,h_200/v1746385880/portfolio/carousel/k4xbhssk43aoqc14anjs.jpg",
+      "createdAt": "2025-05-04T19:11:21.238Z",
+      "updatedAt": "2025-05-04T19:11:21.238Z",
+      "id": "maa12a3atjwhw",
+      "createdBy": "anonymous"
+    },
+    {
+      "url": "https://res.cloudinary.com/dlvtcwqu7/image/upload/v1746389801/portfolio/carousel/d1csj7wkpa1a8sjomext.jpg",
+      "publicId": "portfolio/carousel/d1csj7wkpa1a8sjomext",
+      "service": "cloudinary",
+      "caption": "Ye",
+      "title": "Ye",
+      "description": "",
+      "altText": "Ye",
+      "order": 3,
+      "width": 1920,
+      "height": 1080,
+      "thumbnail": "https://res.cloudinary.com/dlvtcwqu7/image/upload/c_fill,w_300,h_200/v1746389801/portfolio/carousel/d1csj7wkpa1a8sjomext.jpg",
+      "createdAt": "2025-05-04T20:16:42.221Z",
+      "updatedAt": "2025-05-04T20:16:42.221Z",
+      "id": "maa3ebjhm4xfy",
+      "createdBy": "anonymous"
+    },
+    {
+      "url": "https://res.cloudinary.com/dlvtcwqu7/image/upload/v1746468698/portfolio/carousel/a8j6enpzfmty7awibw7f.png",
+      "publicId": "portfolio/carousel/a8j6enpzfmty7awibw7f",
+      "service": "cloudinary",
+      "caption": "sff",
+      "title": "sff",
+      "description": "",
+      "altText": "sff",
+      "order": 4,
+      "width": 1439,
+      "height": 682,
+      "thumbnail": "https://res.cloudinary.com/dlvtcwqu7/image/upload/c_fill,w_300,h_200/v1746468698/portfolio/carousel/a8j6enpzfmty7awibw7f.png",
+      "createdAt": "2025-05-05T18:11:39.108Z",
+      "updatedAt": "2025-05-05T18:11:39.108Z",
+      "id": "mabedcroyi1nj",
+      "createdBy": "anonymous"
+    }
+  ]
+}

@@ -1,0 +1,874 @@
+/* Simple Carousel Styles - Enhanced Aesthetic Design */
+.simple-carousel {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 1rem 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+    padding: 0;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 -2px;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+
+.carousel-slide.active {
+    transform: scale(1);
+    opacity: 1;
+}
+
+@media (min-width: 640px) {
+    .carousel-slide {
+        flex: 0 0 50%;
+        width: 50%;
+    }
+}
+
+@media (min-width: 1024px) {
+    .carousel-slide {
+        flex: 0 0 33.333333%;
+        width: 33.333333%;
+    }
+}
+
+/* Adaptive image scaling */
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 400px;
+    transition: all 0.5s ease;
+    border-radius: 8px;
+}
+
+.carousel-slide:hover img {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3rem;
+    height: 3rem;
+    background: rgba(255, 255, 255, 0.8);
+    color: #555;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0.7;
+}
+
+.carousel-btn:hover {
+    background: #fff;
+    color: #333;
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+    left: 1rem;
+}
+
+.next-btn {
+    right: 1rem;
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+}
+
+.carousel-dot:hover {
+    opacity: 0.9;
+    transform: scale(1.2);
+}
+
+.carousel-dot.active {
+    background-color: #4a90e2;
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* Dark mode support */
+.dark-mode .carousel-dot.active,
+[class*="dark-"] .carousel-dot.active {
+    background-color: #4a90e2;
+}
+
+.dark-mode .carousel-btn {
+    background: rgba(50, 50, 50, 0.8);
+    color: #ddd;
+}
+
+.dark-mode .carousel-btn:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* Lightbox styles */
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+
+.lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 15px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.95);
+    transition: transform 0.5s ease;
+}
+
+.lightbox.active .lightbox-img {
+    transform: scale(1);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.lightbox-close:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: rotate(90deg);
+}
+
+/* Swiper overrides for adaptive scaling */
+.swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 400px;
+    transition: all 0.5s ease;
+    border-radius: 8px;
+}
+
+/* Equal height carousel items */
+.carousel-slide .bg-white,
+.swiper-slide .bg-white {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    transform: translateY(0);
+    margin: 0;
+}
+
+.carousel-slide:hover .bg-white,
+.swiper-slide:hover .bg-white {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.carousel-slide .bg-white img,
+.swiper-slide .bg-white img {
+    flex: 1;
+    min-height: 0;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Adaptive image styling */
+.adaptive-image {
+    width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    border-radius: 8px;
+}
+
+.adaptive-image:hover {
+    transform: scale(1.03);
+}
+
+.image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 300px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 3px;
+    transition: all 0.4s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.image-container:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Caption styling */
+.carousel-slide .p-3,
+.swiper-slide .p-3 {
+    padding: 0.75rem;
+    font-weight: 500;
+    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Preserve aspect ratio for different sized images */
+.swiper-slide {
+    height: auto;
+    display: flex;
+    align-items: center;
+    transition: transform 0.4s ease;
+    padding: 0 2px;
+    margin: 0;
+}
+
+.swiper-slide-active {
+    transform: scale(1.02);
+}
+
+/* Improve visibility of navigation on light backgrounds */
+.swiper-button-next,
+.swiper-button-prev {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #555;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    padding: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    opacity: 0.8;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background-color: #fff;
+    color: #333;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Improve pagination dots */
+.swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    background-color: #999;
+}
+
+.swiper-pagination-bullet:hover {
+    opacity: 0.8;
+    transform: scale(1.2);
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    width: 10px;
+    height: 10px;
+    background-color: #4a90e2;
+    transform: scale(1.2);
+}
+
+/* Dark mode adjustments */
+.dark-mode .image-container {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .swiper-button-next,
+.dark-mode .swiper-button-prev {
+    background-color: rgba(50, 50, 50, 0.8);
+    color: #ddd;
+}
+
+.dark-mode .swiper-button-next:hover,
+.dark-mode .swiper-button-prev:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.dark-mode .carousel-slide .p-3,
+.dark-mode .swiper-slide .p-3 {
+    background: linear-gradient(to right, #2d3748, #1a202c);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .bg-white {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Image error handling styles */
+.error-image {
+    border: 2px dashed #dc3545 !important;
+    background-color: #f8f9fa;
+    min-height: 100px;
+    border-radius: 8px;
+}
+
+.image-error-help {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 5;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+.image-error-help:hover {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 15px rgba(220, 53, 69, 0.4);
+}
+
+/* Help modal styles */
+.image-help-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.image-help-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+    transform-origin: center;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.image-help-content h3 {
+    margin-top: 0;
+    color: #dc3545;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.image-help-content h4 {
+    margin-top: 15px;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.image-help-content ol {
+    padding-left: 20px;
+}
+
+.image-help-content li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.image-details {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-family: monospace;
+    font-size: 12px;
+    word-break: break-all;
+    border-left: 3px solid #4a90e2;
+}
+
+.help-tools {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+    justify-content: flex-end;
+}
+
+.help-tools button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.help-tools button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#test-image-btn {
+    background-color: #0d6efd;
+    color: white;
+}
+
+#drive-url-btn {
+    background-color: #198754;
+    color: white;
+}
+
+#close-help-modal {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Special effects */
+.swiper-gallery .swiper-wrapper {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.carousel-slide, .swiper-slide {
+    animation: fadeInUp 0.6s ease forwards;
+    animation-delay: calc(var(--slide-index, 0) * 0.1s);
+}
+
+/* Compact Swiper layout */
+.swiper-container {
+    padding: 0;
+}
+
+.swiper-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+.swiper-carousel {
+    padding: 0;
+    margin: 0;
+}
+
+/* Improve spacing globally */
+.swiper-container, 
+.swiper-wrapper,
+.swiper, 
+.swiper-carousel {
+    --swiper-pagination-bottom: 0px;
+    --swiper-navigation-size: 24px;
+}
+
+/* Reduce spacing on various containers */
+.swiper-gallery, 
+.swiper-magical,
+.carousel-container {
+    margin: 0;
+    padding: 0;
+}
+
+/* Make sure full-width layouts don't have excessive space */
+@media (max-width: 639px) {
+    .carousel-slide, 
+    .swiper-slide {
+        padding: 0 1px;
+    }
+    
+    .carousel-track {
+        margin: 0 -1px;
+    }
+    
+    .image-container {
+        padding: 2px;
+    }
+}
+
+/* Mobile devices need even tighter spacing */
+@media (max-width: 480px) {
+    .carousel-slide, 
+    .swiper-slide {
+        padding: 0;
+    }
+    
+    .carousel-track {
+        margin: 0;
+    }
+    
+    .swiper-pagination {
+        margin-top: 5px;
+    }
+    
+    .carousel-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+}
+
+/* Compact gallery specific styles */
+.compact-gallery {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.compact-gallery .swiper-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+.compact-slide {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.compact-gallery .swiper-pagination {
+    bottom: 0;
+    margin-top: 5px;
+    position: relative;
+}
+
+.compact-gallery .swiper-button-next,
+.compact-gallery .swiper-button-prev {
+    width: 35px;
+    height: 35px;
+    margin-top: -17.5px;
+}
+
+.compact-gallery .swiper-button-next:after,
+.compact-gallery .swiper-button-prev:after {
+    font-size: 16px;
+}
+
+/* Adjust image containers in compact mode */
+.compact-slide .image-container {
+    border-radius: 8px;
+    padding: 2px;
+    min-height: 250px;
+}
+
+/* Tighten up spacing in all carousels */
+.carousel-slide, 
+.swiper-slide {
+    padding: 1px !important;
+}
+
+.carousel-track {
+    margin: 0 -1px !important;
+}
+
+.swiper-container-horizontal>.swiper-pagination-bullets {
+    bottom: 0px;
+}
+
+/* Even tighter spacing on small screens */
+@media (max-width: 640px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+        font-size: 14px !important;
+    }
+    
+    .compact-slide .image-container,
+    .carousel-slide .image-container {
+        min-height: 200px;
+    }
+}
+
+.swiper {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.swiper-slide {
+    text-align: center;
+    font-size: 18px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+}
+
+.swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #4a5568;
+    background: rgba(255, 255, 255, 0.8);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 18px;
+}
+
+.swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    background: #4a5568;
+    opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+    background: #4a5568;
+    opacity: 1;
+}
+
+/* Custom styles for the carousel container */
+.carousel-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Adjust spacing between slides */
+.swiper-wrapper {
+    padding: 0;
+    margin: 0;
+}
+
+/* Add smooth transition for slide changes */
+.swiper-slide {
+    transition: transform 0.3s ease;
+}
+
+/* Improve image container */
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+/* Add hover effect */
+.swiper-slide:hover {
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+        font-size: 14px;
+    }
+    
+    .swiper-pagination-bullet {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Update PowerPoint-like adaptive display for carousel images */
+.swiper-slide img, 
+.carousel-slide img, 
+.adaptive-carousel-image {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain !important; /* Use contain instead of cover to prevent cropping */
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 0 auto; /* Center the image */
+    display: block;
+    background-color: rgba(0, 0, 0, 0.03); /* Subtle background to show image bounds */
+}
+
+/* Maintain slide height consistency while using contain */
+.swiper-slide, 
+.carousel-slide {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Adaptive slide heights based on screen sizes */
+@media (max-width: 640px) {
+    .swiper-slide, 
+    .carousel-slide {
+        height: 300px;
+    }
+    .swiper-slide img, 
+    .carousel-slide img, 
+    .adaptive-carousel-image {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .swiper-slide, 
+    .carousel-slide {
+        height: 250px;
+    }
+    .swiper-slide img, 
+    .carousel-slide img, 
+    .adaptive-carousel-image {
+        max-height: 250px;
+    }
+}
+
+/* Improved caption display that doesn't cover important image content */
+.swiper-slide .absolute,
+.carousel-slide .absolute {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+    padding: 15px 10px 10px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+/* PowerPoint-like slide transition effect */
+.swiper-slide-active {
+    transition: transform 0.5s ease;
+    transform: scale(1.02);
+    z-index: 1;
+}
+
+/* Fade in animation for captions */
+.swiper-slide-active .absolute {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

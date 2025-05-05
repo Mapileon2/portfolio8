@@ -1,0 +1,145 @@
+/* 
+ * Carousel Flickering Fix CSS
+ * Optimizes the carousel animations to eliminate flickering and ensure smooth transitions
+ */
+
+/* Improve overall performance with hardware acceleration */
+.swiper-container,
+.swiper-wrapper,
+.swiper-slide {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Fix flickering during slide transitions */
+.swiper-slide {
+  transition: opacity 1s ease-in-out, transform 0.8s ease-in-out !important;
+  opacity: 1 !important;
+}
+
+.swiper-slide-active {
+  z-index: 2;
+}
+
+/* Prevent flashing on slide change */
+.swiper-container-fade .swiper-slide {
+  pointer-events: none;
+  transition-property: opacity;
+}
+
+.swiper-container-fade .swiper-slide-active {
+  pointer-events: auto;
+}
+
+/* Smooth transitions for images */
+.swiper-slide img {
+  transition: opacity 0.8s ease-in-out !important;
+  will-change: transform, opacity;
+}
+
+/* PowerPoint-style slide styling */
+.powerpoint-slide {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background-color: rgba(245, 245, 245, 0.5) !important;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Improved adaptive image styling */
+.adaptive-carousel-image {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+  transition: all 0.5s ease-in-out !important;
+  will-change: transform, opacity;
+}
+
+/* Fix caption flickering */
+.swiper-slide .absolute {
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.swiper-slide-active .absolute {
+  opacity: 1;
+}
+
+/* Ensure smooth animation with hardware acceleration for navigation controls */
+.swiper-button-next,
+.swiper-button-prev {
+  will-change: transform, opacity;
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Prevent layout shifts during transitions */
+.swiper-magical {
+  min-height: 300px; /* Fallback to prevent layout shift */
+  transition: height 0.5s ease-in-out !important;
+  overflow: hidden !important;
+}
+
+/* Fix for wrapper jumps during height calculations */
+.swiper-wrapper {
+  transition-timing-function: ease-out !important;
+}
+
+/* Ensure images are properly contained without flicker */
+.powerpoint-container img {
+  max-width: 95% !important; /* Slightly smaller than container to avoid clipping */
+  max-height: 95% !important;
+  object-fit: contain !important;
+}
+
+/* Fix caption transition and gradient flicker */
+.absolute {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%) !important;
+  padding: 15px 10px 10px !important;
+  transition: opacity 0.8s ease-out !important;
+}
+
+/* Ensure navigation buttons are smoothly rendered */
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  will-change: transform;
+  transition: transform 0.3s ease !important;
+}
+
+/* Eliminate animation jank on pagination bullets */
+.swiper-pagination-bullet {
+  transition: all 0.3s ease !important;
+  will-change: transform, opacity;
+}
+
+/* Fix opacity transitions between slides */
+.swiper-container-fade .swiper-slide-active,
+.swiper-container-fade .swiper-slide-active .swiper-slide-active {
+  opacity: 1 !important;
+}
+
+/* Ensure consistent opacity transitions */
+.swiper-container-fade .swiper-slide {
+  transition-property: opacity !important;
+}
+
+/* Reduce jerky movements when touching/dragging */
+.swiper-container-fade .swiper-slide-active {
+  transition-delay: 0.1s;
+}
+
+/* Fix immediate opacity jump issues */
+.swiper-container-fade .swiper-slide-duplicate-active {
+  transition-delay: 0s;
+}
+
+/* Disable transitions during resize to prevent flickering */
+.resizing .swiper-wrapper,
+.resizing .swiper-slide {
+  transition: none !important;
+} 

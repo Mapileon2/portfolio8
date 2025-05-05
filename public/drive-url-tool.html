@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Drive URL Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-4 text-blue-600">Google Drive URL Converter</h1>
+        <p class="mb-4">Convert any Google Drive link to the format that works best with web browsers:</p>
+        
+        <div class="mb-6">
+            <label class="block text-gray-700 mb-2" for="driveUrl">Paste your Google Drive URL:</label>
+            <input type="text" id="driveUrl" class="w-full p-2 border border-gray-300 rounded" 
+                   placeholder="https://drive.google.com/file/d/YOUR_FILE_ID/view">
+            <button onclick="convertUrl()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Convert URL
+            </button>
+        </div>
+        
+        <div id="result" class="hidden">
+            <h2 class="text-xl font-bold mb-2 text-green-600">Converted URL:</h2>
+            <div class="bg-gray-100 p-3 rounded mb-4">
+                <div id="convertedUrl" class="font-mono break-words"></div>
+            </div>
+            
+            <div class="flex space-x-3 mb-4">
+                <button onclick="copyToClipboard()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Copy URL
+                </button>
+                <button onclick="testImage()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Test Image
+                </button>
+            </div>
+            
+            <div class="border-t pt-4 mt-4">
+                <h3 class="text-lg font-bold mb-2">Preview:</h3>
+                <div id="previewContainer" class="flex justify-center">
+                    <img id="previewImage" class="max-w-full h-auto border rounded" alt="Preview will appear here">
+                </div>
+            </div>
+        </div>
+        
+        <div id="errorMsg" class="hidden mt-4 p-3 bg-red-100 text-red-800 rounded"></div>
+        
+        <div class="mt-8 border-t pt-4">
+            <h2 class="text-xl font-bold mb-2">Instructions:</h2>
+            <ol class="list-decimal pl-5 space-y-2">
+                <li>In Google Drive, make sure your image is shared with "Anyone with the link can view"</li>
+                <li>Copy the sharing link from Google Drive</li>
+                <li>Paste it in the input field above and click "Convert URL"</li>
+                <li>Copy the converted URL and use it in your carousel</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function extractGoogleDriveId(url) {
+            if (!url || typeof url !== 'string') return null;
+            
+            // Format: https://drive.google.com/file/d/FILE_ID/view
+            const fileMatch = url.match(/\/file\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (fileMatch) return fileMatch[1];
+            
+            // Format: https://drive.google.com/open?id=FILE_ID
+            const openMatch = url.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (openMatch) return openMatch[1];
+            
+            // Format: https://drive.google.com/uc?export=view&id=FILE_ID
+            const ucMatch = url.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (ucMatch) return ucMatch[1];
+            
+            // Format: https://drive.google.com/d/FILE_ID/
+            const directMatch = url.match(/\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (directMatch) return directMatch[1];
+            
+            return null;
+        }
+        
+        function convertUrl() {
+            const inputUrl = document.getElementById('driveUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('errorMsg');
+            const convertedUrlDiv = document.getElementById('convertedUrl');
+            const previewImage = document.getElementById('previewImage');
+            
+            // Reset
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            previewImage.src = '';
+            
+            // Check if URL is provided
+            if (!inputUrl) {
+                errorDiv.textContent = 'Please enter a Google Drive URL.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Extract file ID
+            const fileId = extractGoogleDriveId(inputUrl);
+            
+            if (!fileId) {
+                errorDiv.textContent = 'Could not extract a valid Google Drive file ID from the URL.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Create the new URL formats
+            const usercontent = `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`;
+            const lh3Format = `https://lh3.googleusercontent.com/d/${fileId}`;
+            const directExport = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            
+            // Show result
+            convertedUrlDiv.textContent = usercontent;
+            resultDiv.classList.remove('hidden');
+            
+            // Set up the preview image
+            previewImage.onerror = function() {
+                // Try alternative format if first one fails
+                if (this.src === usercontent) {
+                    console.log('Usercontent format failed, trying lh3 format');
+                    this.src = lh3Format;
+                } else if (this.src === lh3Format) {
+                    console.log('lh3 format failed, trying direct export format');
+                    this.src = directExport;
+                } else {
+                    console.log('All formats failed');
+                    errorDiv.textContent = 'Failed to load image. Make sure the file is publicly accessible.';
+                    errorDiv.classList.remove('hidden');
+                }
+            };
+            
+            // Start with usercontent format
+            previewImage.src = usercontent;
+        }
+        
+        function copyToClipboard() {
+            const convertedUrl = document.getElementById('convertedUrl').textContent;
+            navigator.clipboard.writeText(convertedUrl).then(() => {
+                alert('URL copied to clipboard!');
+            }, () => {
+                alert('Failed to copy URL. Please copy it manually.');
+            });
+        }
+        
+        function testImage() {
+            const convertedUrl = document.getElementById('convertedUrl').textContent;
+            const testWindow = window.open('', '_blank');
+            testWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Image Test</title>
+                    <style>
+                        body { font-family: Arial; padding: 20px; text-align: center; }
+                        .image-container { margin: 20px auto; max-width: 90%; }
+                        img { max-width: 100%; border: 1px solid #ccc; }
+                        .success { color: green; font-weight: bold; }
+                        .failure { color: red; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Google Drive Image Test</h1>
+                    <div class="url">${convertedUrl}</div>
+                    <div class="image-container">
+                        <img src="${convertedUrl}" onerror="imageError()" onload="imageSuccess()">
+                    </div>
+                    <div id="status">Loading image...</div>
+                    
+                    <script>
+                        function imageSuccess() {
+                            document.getElementById('status').innerHTML = '<span class="success">Image loaded successfully!</span>';
+                        }
+                        
+                        function imageError() {
+                            document.getElementById('status').innerHTML = '<span class="failure">Failed to load image. This URL does not work.</span>';
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+            testWindow.document.close();
+        }
+    </script>
+</body>
+</html> 

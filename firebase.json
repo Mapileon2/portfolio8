@@ -1,0 +1,39 @@
+{
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "database": {
+    "rules": "frontend/database.rules.json"
+  },
+  "firestore": {
+    "rules": "frontend/firestore.rules"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/admin",
+        "destination": "/admin-full.html",
+        "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/admin-full.html",
+        "destination": "/frontend/admin.html"
+      },
+      {
+        "source": "/api/**",
+        "function": "api"
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions"
+  }
+}

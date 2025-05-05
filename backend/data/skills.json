@@ -1,0 +1,26 @@
+[
+  {
+    "category": "Strategy & Vision",
+    "skills": [
+      { "name": "Product Vision", "percentage": 95 },
+      { "name": "Roadmapping", "percentage": 90 },
+      { "name": "OKRs", "percentage": 85 }
+    ]
+  },
+  {
+    "category": "Execution",
+    "skills": [
+      { "name": "Agile Methodologies", "percentage": 92 },
+      { "name": "User Stories", "percentage": 88 },
+      { "name": "Prioritization", "percentage": 90 }
+    ]
+  },
+  {
+    "category": "Analytics",
+    "skills": [
+      { "name": "SQL", "percentage": 85 },
+      { "name": "A/B Testing", "percentage": 80 },
+      { "name": "Data Visualization", "percentage": 75 }
+    ]
+  }
+]

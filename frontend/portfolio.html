@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghibli-Inspired Product Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f8ff;
+            color: #2a4365;
+            overflow-x: hidden;
+        }
+        .ghibli-font {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, #a8d8ea 0%, #e4f1fe 100%);
+        }
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .soot-sprite {
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50%;
+            position: relative;
+        }
+        .soot-sprite::before, .soot-sprite::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            top: 8px;
+        }
+        .soot-sprite::before { left: 6px; }
+        .soot-sprite::after { right: 6px; }
+        .timeline-lantern {
+            width: 40px;
+            height: 60px;
+            background-color: #f8d56b;
+            border-radius: 50% 50% 10% 10%;
+            position: relative;
+            box-shadow: 0 0 20px #f8d56b;
+        }
+        .timeline-lantern::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f8d56b;
+            bottom: -10px;
+            left: 15px;
+            border-radius: 0 0 5px 5px;
+        }
+        .project-book {
+            perspective: 1000px;
+        }
+        .book-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .project-book:hover .book-inner {
+            transform: rotateY(15deg);
+        }
+        .book-spine {
+            position: absolute;
+            width: 15px;
+            height: 100%;
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+            right: -15px;
+            top: 0;
+            transform: rotateY(90deg) translateX(15px);
+            transform-origin: left center;
+        }
+        .kodama {
+            width: 40px;
+            height: 60px;
+            background-color: #a8d8ad;
+            border-radius: 50% 50% 30% 30%;
+            position: relative;
+        }
+        .kodama::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            background-color: #a8d8ad;
+            top: -10px;
+            left: 10px;
+            border-radius: 50% 50% 0 0;
+        }
+        .kodama::after {
+            content: '• •';
+            position: absolute;
+            color: white;
+            font-size: 10px;
+            top: 15px;
+            left: 10px;
+        }
+        .catbus {
+            width: 100px;
+            height: 60px;
+            background-color: #f4a261;
+            border-radius: 30px;
+            position: relative;
+        }
+        .catbus::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #f4a261;
+            border-radius: 50%;
+            top: -10px;
+            left: 20px;
+        }
+        .catbus::after {
+            content: '=^..^=';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            top: 15px;
+            left: 30px;
+        }
+        .dark-mode {
+            background-color: #1a365d;
+            color: #e2e8f0;
+        }
+        .dark-mode .hero-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+        }
+        .dark-mode .bg-white {
+            background-color: #1e293b;
+        }
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark-mode .text-gray-600 {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="darkModeToggle" class="bg-yellow-200 hover:bg-yellow-300 text-gray-800 rounded-full p-2 shadow-lg">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+    <script src="script.js"></script>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white bg-opacity-90 shadow-sm z-40 dark:bg-gray-800 dark:bg-opacity-90">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="ghibli-font text-2xl text-blue-600 dark:text-blue-300">
+                    <span class="text-yellow-500">★</span> Product Journey
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#about" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">About</a>
+                    <a href="#skills" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Skills</a>
+                    <a href="#timeline" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Journey</a>
+                    <a href="#projects" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Projects</a>
+                    <a href="#contact" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Contact</a>
+                    <a href="cv.pdf" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300" download>Download CV</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobileMenuButton" class="text-gray-800 dark:text-gray-300">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-gray-800 py-2 px-4 shadow-lg">
+            <a href="#about" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">About</a>
+            <a href="#skills" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Skills</a>
+            <a href="#timeline" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Journey</a>
+            <a href="#projects" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Projects</a>
+            <a href="#contact" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Contact</a>
+            <a href="cv.pdf" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300" download>Download CV</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden pt-16 dark:bg-gray-900">
+        <div class="absolute top-20 right-20">
+            <div class="soot-sprite floating"></div>
+        </div>
+        <div class="absolute bottom-10 left-10">
+            <div class="kodama floating" style="animation-delay: 1s;"></div>
+        </div>
+        <div class="absolute top-1/3 left-1/4">
+            <div class="catbus floating" style="animation-delay: 2s;"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto text-center px-4 z-10">
+<h1 class="ghibli-font text-5xl md:text-7xl font-bold" style="color: #E6E6FA;">
+                Crafting Products <br>That Spark <span style="color: #FFD700;">Joy & Magic</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-10" style="color: #E6E6FA;">
+                A Product Manager's journey through enchanted user experiences and data-driven storytelling
+            </p>
+            <a href="#about" class="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                Begin the Journey <i class="fas fa-arrow-down ml-2"></i>
+            </a>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent dark:from-gray-900 dark:to-transparent"></div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white dark:bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Story</span>
+            </h2>
+            
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0 md:pr-10 relative">
+                    <div class="bg-blue-100 rounded-3xl p-6 shadow-xl dark:bg-gray-700">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" 
+                                 alt="Profile illustration" 
+                                 class="w-full h-auto rounded-2xl border-4 border-white dark:border-gray-600">
+                            <div class="absolute -bottom-6 -right-6">
+                                <div class="bg-yellow-400 rounded-full p-4 shadow-lg">
+                                    <i class="fas fa-magic text-2xl text-gray-800"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -top-10 -left-10 z-10">
+                        <div class="soot-sprite floating" style="animation-delay: 0.5s;"></div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2">
+                    <h3 class="ghibli-font text-3xl mb-6 text-gray-800 dark:text-gray-200">
+                        Once upon a time...
+                    </h3>
+                    <p class="text-gray-600 mb-6 dark:text-gray-400">
+                        A Product Manager set out to bridge user needs and business goals in the mystical land of technology. With a compass of curiosity and a map of metrics, I navigate through complex problems to deliver solutions that feel like magic.
+                    </p>
+                    <p class="text-gray-600 mb-8 dark:text-gray-400">
+                        My journey began in the enchanted forests of UX design, where I learned to listen to the whispers of users. I then ventured into the mountains of data analysis, discovering patterns in the stars. Now, I craft product strategies that combine both art and science.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-blue-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-route text-blue-600 dark:text-blue-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Roadmap Wizardry</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Turning visions into actionable plans</p>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-yellow-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-users text-yellow-600 dark:text-yellow-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Stargazer Alignment</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Bringing teams together under one sky</p>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-green-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-chart-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Metric Sorcery</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Weaving data into compelling stories</p>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-purple-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-lightbulb text-purple-600 dark:text-purple-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Innovation Alchemy</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Transforming ideas into gold</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Magic Toolbox</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Strategy Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-blue-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-chess-queen text-3xl text-blue-600 dark:text-blue-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Strategy & Vision</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Product Vision</span>
+                                <span class="text-sm text-gray-500">95%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Roadmapping</span>
+                                <span class="text-sm text-gray-500">90%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">OKRs</span>
+                                <span class="text-sm text-gray-500">85%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Execution Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-green-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-hammer text-3xl text-green-600 dark:text-green-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Execution</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Agile Methodologies</span>
+                                <span class="text-sm text-gray-500">92%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">User Stories</span>
+                                <span class="text-sm text-gray-500">88%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Prioritization</span>
+                                <span class="text-sm text-gray-500">90%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analytics Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-purple-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-chart-pie text-3xl text-purple-600 dark:text-purple-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Analytics</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">SQL</span>
+                                <span class="text-sm text-gray-500">85%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">A/B Testing</span>
+                                <span class="text-sm text-gray-500">80%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Data Visualization</span>
+                                <span class="text-sm text-gray-500">75%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tools Section -->
+            <div class="mt-16">
+                <h3 class="ghibli-font text-2xl text-center mb-8 text-gray-800 dark:text-gray-200">Enchanted Tools I Wield</h3>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-jira text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Jira</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-database text-2xl text-green-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">SQL</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-figma text-2xl text-purple-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Figma</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-chart-bar text-2xl text-yellow-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Google Analytics</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-trello text-2xl text-blue-400 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Trello</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-code-branch text-2xl text-gray-500 mr-2 dark:text-gray-300"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Git</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline" class="py-20 bg-white dark:bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Journey</span>
+            </h2>
+            
+            <div class="relative">
+                <!-- Timeline line -->
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-blue-200 transform -translate-x-1/2 dark:bg-gray-600"></div>
+                
+                <!-- Timeline items -->
+                <div class="space-y-16">
+                    <!-- Item 1 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pr-16 mb-8 md:mb-0 text-right">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Senior Product Manager</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Enchanted Tech Inc. • 2021-Present</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Led the development of a magical onboarding experience that reduced time-to-value by 40%. Collaborated with wizards (engineers) and druids (designers) to craft intuitive user journeys.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pl-16">
+                            <div class="bg-gray-100 p-4 rounded-xl inline-block dark:bg-gray-700">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
+                                     alt="Enchanted Tech" 
+                                     class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-600">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pl-16 order-2 md:order-1">
+                            <div class="bg-gray-100 p-4 rounded-xl inline-block dark:bg-gray-700">
+                                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
+                                     alt="Mystical Startup" 
+                                     class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-600">
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-16 order-1 md:order-2 mb-8 md:mb-0">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Product Manager</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Mystical Startup • 2018-2021</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Scaled the product from 0 to 1M users by implementing a crystal-clear vision and data-driven decision making. Worked closely with the dragon (CEO) to align product strategy with business goals.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pr-16 mb-8 md:mb-0 text-right">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Associate PM</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Forest Analytics • 2016-2018</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Learned the ancient arts of analytics and user research. Helped improve retention by 25% by identifying pain points in the user journey through careful observation and data analysis.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pl-16">
+                            <div class="bg-gray-100 p-4 rounded-xl inline-block dark:bg-gray-700">
+                                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
+                                     alt="Forest Analytics" 
+                                     class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-600">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pl-16 order-2 md:order-1">
+                            <div class="bg-gray-100 p-4 rounded-xl inline-block dark:bg-gray-700">
+                                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
+                                     alt="UX Design Academy" 
+                                     class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-600">
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-16 order-1 md:order-2 mb-8 md:mb-0">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">UX Designer</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">UX Design Academy • 2014-2016</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Began my journey by learning to listen to the whispers of users. Created wireframes and prototypes that told compelling stories about user needs and pain points.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Magical Projects</span>
+            </h2>
+            
+            <!-- Loading spinner -->
+            <div id="projectsLoading" class="text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Loading magical projects...</p>
+            </div>
+            
+            <!-- Projects grid (initially empty, filled via JavaScript) -->
+            <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
+                <!-- Projects will be loaded here dynamically -->
+            </div>
+            
+            <!-- Error message (initially hidden) -->
+            <div id="projectsError" class="text-center py-10 hidden">
+                <div class="text-red-500 text-4xl mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">Could not load projects. Please try again later.</p>
+            </div>
+            
+            <div class="text-center mt-16">
+                <button id="viewAllProjectsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-800">
+                    View All Projects <i class="fas fa-sparkles ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-20 bg-white dark:bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Whispering Spirits</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-blue-50 p-8 rounded-2xl shadow-lg relative dark:bg-gray-700">
+                    <div class="absolute -top-6 -left-6">
+                        <div class="kodama"></div>
+                    </div>
+                    <div class="mb-4">
+                        <span class="text-yellow-500">★ ★ ★ ★ ★</span>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 dark:text-gray-300">
+                        "Working with this product manager was like having a guiding spirit through the forest of development. They always knew the right path to take and how to bring the team together."
+                    </p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" 
+                             alt="Emily R." 
+                             class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white dark:border-gray-600">
+                        <div>
+                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Emily R.</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Engineering Manager</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="bg-green-50 p-8 rounded-2xl shadow-lg relative dark:bg-gray-700">
+                    <div class="absolute -top-6 -right-6">
+                        <div class="kodama"></div>
+                    </div>
+                    <div class="mb-4">
+                        <span class="text-yellow-500">★ ★ ★ ★ ★</span>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 dark:text-gray-300">
+                        "Their ability to translate complex technical concepts into simple, magical experiences is unparalleled. The product vision they crafted became our North Star."
+                    </p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" 
+                             alt="Michael T." 
+                             class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white dark:border-gray-600">
+                        <div>
+                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Michael T.</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Design Director</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="bg-purple-50 p-8 rounded-2xl shadow-lg relative dark:bg-gray-700">
+                    <div class="absolute -top-6 -left-6">
+                        <div class="kodama"></div>
+                    </div>
+                    <div class="mb-4">
+                        <span class="text-yellow-500">★ ★ ★ ★ ☆</span>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 dark:text-gray-300">
+                        "The roadmap prioritization framework they developed was like a magic spell that aligned all stakeholders. We went from constant debates to clear decisions."
+                    </p>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" 
+                             alt="Sarah K." 
+                             class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white dark:border-gray-600">
+                        <div>
+                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Sarah K.</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Head of Product</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Send a Message to the Spirit Realm</span>
+            </h2>
+            
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden dark:bg-gray-800">
+                <div class="md:flex">
+                    <div class="md:w-1/2 bg-blue-600 p-10 text-white dark:bg-blue-700">
+                        <h3 class="ghibli-font text-3xl mb-4">Let's Create Magic Together</h3>
+                        <p class="mb-6">
+                            Whether you're looking for a product wizard to join your quest or just want to share thoughts on Ghibli films and product management, I'd love to hear from you!
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-2 rounded-full mr-4 dark:bg-blue-600">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <span>hello@productjourney.com</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-2 rounded-full mr-4 dark:bg-blue-600">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <span>+1 (555) 123-4567</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-2 rounded-full mr-4 dark:bg-blue-600">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <span>San Francisco, CA</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 flex space-x-4">
+                            <a href="#" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 p-10">
+                        <form>
+                            <div class="mb-4">
+                                <label for="name" class="block text-gray-700 mb-2 dark:text-gray-300">Your Name</label>
+                                <input type="text" id="name" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block text-gray-700 mb-2 dark:text-gray-300">Your Email</label>
+                                <input type="email" id="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label for="message" class="block text-gray-700 mb-2 dark:text-gray-300">Your Message</label>
+                                <textarea id="message" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg shadow-lg transform transition hover:scale-105 flex items-center justify-center">
+                                <i class="fas fa-paper-plane mr-2"></i> Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-16">
+                <button class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center mx-auto">
+                    <i class="fas fa-scroll mr-2"></i> Download My Scroll of Achievements
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 dark:bg-gray-950">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="ghibli-font text-2xl mb-6 md:mb-0">
+                    <span class="text-yellow-400">★</span> Product Journey
+                </div>
+                <div class="flex space-x-6 mb-6 md:mb-0">
+                    <a href="#" class="hover:text-yellow-400 transition">Home</a>
+                    <a href="#about" class="hover:text-yellow-400 transition">About</a>
+                    <a href="#projects" class="hover:text-yellow-400 transition">Projects</a>
+                    <a href="#contact" class="hover:text-yellow-400 transition">Contact</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 Product Journey. All rights reserved. Crafted with magic and ♥</p>
+                <p class="mt-2 text-sm">Inspired by the enchanting worlds of Studio Ghibli</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // Easter egg - click on soot sprites
+        document.querySelectorAll('.soot-sprite').forEach(sprite => {
+            sprite.addEventListener('click', function() {
+                const colors = ['#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33A8'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                this.style.backgroundColor = randomColor;
+                
+                // Create a temporary message
+                const message = document.createElement('div');
+                message.textContent = 'Hi there!';
+                message.style.position = 'absolute';
+                message.style.backgroundColor = 'white';
+                message.style.padding = '2px 6px';
+                message.style.borderRadius = '4px';
+                message.style.fontSize = '10px';
+                message.style.top = '-25px';
+                message.style.left = '0';
+                this.appendChild(message);
+                
+                // Remove after 2 seconds
+                setTimeout(() => {
+                    message.remove();
+                }, 2000);
+            });
+        });
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+            authDomain: "projectportfolio-29467.firebaseapp.com",
+            projectId: "projectportfolio-29467",
+            storageBucket: "projectportfolio-29467.appspot.com",
+            messagingSenderId: "506713176316",
+            appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // DOM Elements for Projects section
+        const projectsLoading = document.getElementById('projectsLoading');
+        const projectsGrid = document.getElementById('projectsGrid');
+        const projectsError = document.getElementById('projectsError');
+        const viewAllProjectsBtn = document.getElementById('viewAllProjectsBtn');
+        
+        // Load projects from Firestore
+        function loadProjects() {
+            // Initially show loading spinner and hide other elements
+            projectsLoading.classList.remove('hidden');
+            projectsGrid.classList.add('hidden');
+            projectsError.classList.add('hidden');
+            
+            // Get projects from Firestore, limited to most recent 3
+            db.collection('projects')
+                .orderBy('createdAt', 'desc')
+                .limit(3)
+                .get()
+                .then(snapshot => {
+                    // Hide loading spinner
+                    projectsLoading.classList.add('hidden');
+                    
+                    if (snapshot.empty) {
+                        // If no projects, show error message
+                        projectsError.querySelector('p').textContent = "No projects found. Check back soon!";
+                        projectsError.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    // Clear and show projects grid
+                    projectsGrid.innerHTML = '';
+                    projectsGrid.classList.remove('hidden');
+                    
+                    // Loop through projects and create project cards
+                    snapshot.forEach(doc => {
+                        const project = doc.data();
+                        const projectId = doc.id;
+                        
+                        // Generate stars HTML
+                        let stars = '';
+                        for (let i = 0; i < 5; i++) {
+                            stars += i < project.rating ? '★' : '☆';
+                        }
+                        
+                        // Create project card HTML
+                        const projectCard = document.createElement('div');
+                        projectCard.className = 'project-book';
+                        projectCard.innerHTML = `
+                            <div class="relative h-full">
+                                <div class="book-inner bg-white rounded-xl shadow-xl overflow-hidden h-full dark:bg-gray-800">
+                                    <img src="${project.imageUrl}" 
+                                        alt="${project.title}" 
+                                        class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="ghibli-font text-2xl text-gray-800 mb-2 dark:text-gray-200">${project.title}</h3>
+                                        <p class="text-gray-600 mb-4 dark:text-gray-400">
+                                            ${project.description.length > 100 ? project.description.substring(0, 100) + '...' : project.description}
+                                        </p>
+                                        <div class="flex items-center mb-4">
+                                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">${project.category}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <span class="text-yellow-500">${stars}</span>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">${project.achievement} ${project.achievementMetric}</p>
+                                            </div>
+                                            <a href="case_study.html?id=${projectId}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                                Read Story <i class="fas fa-arrow-right ml-1"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="book-spine"></div>
+                            </div>
+                        `;
+                        
+                        projectsGrid.appendChild(projectCard);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error loading projects:", error);
+                    projectsLoading.classList.add('hidden');
+                    projectsError.classList.remove('hidden');
+                });
+        }
+        
+        // View All Projects button
+        viewAllProjectsBtn.addEventListener('click', function() {
+            // Redirect to a page with all projects or expand the current view
+            // For now, just reloads the current view
+            loadProjects();
+        });
+        
+        // Load projects when page loads
+        document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
+</body>
+</html>

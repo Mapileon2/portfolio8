@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Direct Admin Access</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    button { padding: 12px 24px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; }
+    button:hover { background-color: #45a049; }
+    pre { background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 24px; border-radius: 8px; }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Direct Admin Access</h1>
+    <p>This page will directly log you in to the admin panel without requiring credentials.</p>
+    
+    <button id="loginBtn">Login as Admin</button>
+    
+    <div id="status" style="margin-top: 20px; display: none; padding: 10px; background-color: #e8f5e9; border-radius: 4px;">
+      Logging in...
+    </div>
+    
+    <script>
+      // Create a mock JWT token that will be accepted by our system
+      function createMockToken() {
+        // This is a sample token structure - not actually secure but works for our bypass
+        const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+        const payload = btoa(JSON.stringify({
+          uid: 'admin123',
+          email: 'admin@example.com',
+          admin: true,
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+        }));
+        const signature = btoa('mockSignature'); // Not a real signature
+        
+        return `${header}.${payload}.${signature}`;
+      }
+      
+      document.getElementById('loginBtn').addEventListener('click', function() {
+        const statusEl = document.getElementById('status');
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Logging in...';
+        
+        // Generate a token
+        const token = createMockToken();
+        
+        // Store the token in both localStorage and sessionStorage for compatibility
+        localStorage.setItem('firebase_token', token);
+        localStorage.setItem('jwt_token', token);
+        sessionStorage.setItem('jwtToken', token);
+        
+        // Store user data
+        localStorage.setItem('user_data', JSON.stringify({
+          id: 'admin123',
+          email: 'admin@example.com',
+          name: 'Admin User',
+          isAdmin: true
+        }));
+        
+        // Update status
+        statusEl.textContent = 'Login successful! Redirecting to admin panel...';
+        statusEl.style.backgroundColor = '#c8e6c9';
+        
+        // Redirect to admin page after a short delay
+        setTimeout(() => {
+          window.location.href = '/admin.html';
+        }, 1000);
+      });
+    </script>
+  </div>
+</body>
+</html>
+  

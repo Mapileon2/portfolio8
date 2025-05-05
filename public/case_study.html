@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Case Study...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Swiper JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    
+    <!-- Add our custom carousel CSS -->
+    <link rel="stylesheet" href="carousel.css" />
+    <script src="carousel.js"></script>
+    <script src="swiper-carousel.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@400;600&display=swap');
+        
+        :root {
+            --ghibli-blue: #6bb2e2;
+            --ghibli-green: #a5d6a7;
+            --ghibli-yellow: #fff59d;
+            --ghibli-red: #ef9a9a;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f9f7f0;
+            color: #333;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+        
+        .ghibli-font {
+            font-family: 'Gochi Hand', cursive;
+        }
+        
+        .handwriting {
+            font-family: 'Patrick Hand', cursive;
+        }
+        
+        .ghibli-bg-blue {
+            background-color: var(--ghibli-blue);
+        }
+        
+        .ghibli-bg-green {
+            background-color: var(--ghibli-green);
+        }
+        
+        .ghibli-bg-yellow {
+            background-color: var(--ghibli-yellow);
+        }
+        
+        .ghibli-bg-red {
+            background-color: var(--ghibli-red);
+        }
+        
+        .ghibli-text-blue {
+            color: var(--ghibli-blue);
+        }
+        
+        .ghibli-text-green {
+            color: var(--ghibli-green);
+        }
+        
+        .ghibli-text-yellow {
+            color: var(--ghibli-yellow);
+        }
+        
+        .ghibli-text-red {
+            color: var(--ghibli-red);
+        }
+        
+        .sketch-border {
+            border: 3px dashed #333;
+            border-radius: 8px;
+        }
+        
+        .cloud-bg {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%236bb2e2' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .page-section {
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--ghibli-blue), var(--ghibli-green), var(--ghibli-yellow), var(--ghibli-red));
+        }
+        
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .slide-in {
+            animation: slideIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .delayed-1 {
+            animation-delay: 0.2s;
+        }
+        
+        .delayed-2 {
+            animation-delay: 0.4s;
+        }
+        
+        .delayed-3 {
+            animation-delay: 0.6s;
+        }
+        
+        .delayed-4 {
+            animation-delay: 0.8s;
+        }
+        
+        /* Dark Mode Styles */
+        .dark-mode {
+            background-color: #1a365d;
+            color: #e2e8f0;
+        }
+        .dark-mode .hero-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+        }
+        .dark-mode .bg-white {
+            background-color: #1e293b;
+        }
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark-mode .text-gray-600 {
+            color: #94a3b8;
+        }
+        
+        /* Swiper custom styles */
+        .swiper-gallery {
+            width: 100%;
+            padding-bottom: 40px;
+        }
+        
+        .swiper-slide {
+            transition: transform 0.3s;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .swiper-slide img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .swiper-slide:hover {
+            transform: scale(1.02);
+        }
+        
+        .swiper-button-next,
+        .swiper-button-prev {
+            background: rgba(255, 255, 255, 0.9);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #3b82f6;
+            transition: all 0.3s;
+        }
+        
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+        }
+        
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: #d1d5db;
+            opacity: 0.7;
+        }
+        
+        .swiper-pagination-bullet-active {
+            background: #3b82f6;
+            opacity: 1;
+        }
+        
+        .dark-mode .swiper-button-next,
+        .dark-mode .swiper-button-prev {
+            background: rgba(30, 41, 59, 0.9);
+            color: #60a5fa;
+        }
+        
+        .dark-mode .swiper-button-next:hover,
+        .dark-mode .swiper-button-prev:hover {
+            background: rgba(96, 165, 250, 0.9);
+            color: white;
+        }
+        
+        .dark-mode .swiper-pagination-bullet {
+            background: #4b5563;
+        }
+        
+        .dark-mode .swiper-pagination-bullet-active {
+            background: #60a5fa;
+        }
+    </style>
+</head>
+<body class="relative transition-colors duration-300">
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="darkModeToggle" class="bg-yellow-200 hover:bg-yellow-300 text-gray-800 rounded-full p-2 shadow-lg">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white bg-opacity-90 shadow-sm z-40 dark:bg-gray-800 dark:bg-opacity-90">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="ghibli-font text-2xl text-blue-600 dark:text-blue-300">
+                    <a href="index.html"><span class="text-yellow-500">★</span> Product Journey</a>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Back to Portfolio</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobileMenuButton" class="text-gray-800 dark:text-gray-300">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-gray-800 py-2 px-4 shadow-lg">
+            <a href="index.html" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Back to Portfolio</a>
+        </div>
+    </nav>
+    
+    <!-- Loading State -->
+    <div id="loadingState" class="flex flex-col items-center justify-center min-h-screen">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500 mb-8"></div>
+        <h2 class="text-2xl ghibli-font text-blue-600">Loading Case Study...</h2>
+    </div>
+    
+    <!-- Error State -->
+    <div id="errorState" class="hidden flex flex-col items-center justify-center min-h-screen">
+        <div class="text-red-500 text-6xl mb-6">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4 text-center">Oops! Something went wrong.</h2>
+        <p class="text-gray-600 mb-8 text-center max-w-md">We couldn't find the case study you're looking for.</p>
+        <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Projects
+        </a>
+    </div>
+    
+    <!-- Case Study Content -->
+    <div id="caseStudyContent" class="hidden pt-24">
+        <!-- Hero Section -->
+        <section id="hero" class="page-section cloud-bg flex items-center justify-center">
+            <div class="container mx-auto px-6 flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0 slide-in">
+                    <h1 id="projectTitle" class="text-4xl md:text-6xl font-bold mb-6 ghibli-text-blue ghibli-font"></h1>
+                    <p id="projectDescription" class="text-lg mb-8 text-gray-700"></p>
+                    <div class="flex space-x-4">
+                        <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition transform hover:scale-105 inline-flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Portfolio
+                        </a>
+                        <a id="watchDemoButton" href="#" class="hidden bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition transform hover:scale-105 inline-flex items-center">
+                            <i class="fas fa-play-circle mr-2"></i> Watch Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center slide-in delayed-1">
+                    <div class="relative w-64 h-64 md:w-80 md:h-80 floating">
+                        <img id="projectImage" alt="Project illustration" class="w-full h-full object-contain">
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Dynamic Content -->
+        <div id="dynamicCaseStudyContent"></div>
+        
+        <!-- Default Content (shown if no custom content) -->
+        <section id="defaultContent" class="py-16 bg-white dark:bg-gray-800">
+            <div class="container mx-auto px-6">
+                <div class="max-w-3xl mx-auto">
+                    <div class="bg-blue-50 p-8 rounded-xl shadow-lg dark:bg-gray-700 mb-10">
+                        <h2 class="text-3xl font-bold mb-6 ghibli-font text-blue-700 dark:text-blue-300">Project Details</h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-2">Category</h3>
+                                <p id="projectCategory" class="text-gray-600 dark:text-gray-400"></p>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-2">Key Achievement</h3>
+                                <p id="projectAchievement" class="text-gray-600 dark:text-gray-400"></p>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-2">Rating</h3>
+                                <p id="projectRating" class="text-yellow-500"></p>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-2">Date Added</h3>
+                                <p id="projectDate" class="text-gray-600 dark:text-gray-400"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="text-gray-600 dark:text-gray-400 mb-8">This project doesn't have detailed case study content yet.</p>
+                        <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition inline-flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Portfolio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Add our custom carousel JS -->
+    <script src="carousel.js"></script>
+    
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCp_IaggSU7QgEk7n0SVXKKNcscpWGewxg",
+            authDomain: "projectportfolio-29467.firebaseapp.com",
+            databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+            projectId: "projectportfolio-29467",
+            storageBucket: "projectportfolio-29467.appspot.com",
+            messagingSenderId: "775909689016",
+            appId: "1:775909689016:web:fba3b3c99b78bc3b2a52dd"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        // Helper function to process Google Drive URLs properly
+        function processGoogleDriveUrl(url) {
+            // Use the enhanced processor from carousel.js
+            if (typeof window.processImageUrl === 'function') {
+                return window.processImageUrl(url);
+            }
+            
+            // Fallback to the legacy implementation
+            // Handle different formats of Google Drive URLs
+            let fileId = null;
+            
+            // Format: https://drive.google.com/file/d/FILE_ID/view
+            const fileMatch = url.match(/\/file\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (fileMatch) fileId = fileMatch[1];
+            
+            // Format: https://drive.google.com/open?id=FILE_ID
+            const openMatch = url.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (!fileId && openMatch) fileId = openMatch[1];
+            
+            // Format: https://drive.google.com/uc?export=view&id=FILE_ID
+            const ucMatch = url.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+            if (!fileId && ucMatch) fileId = ucMatch[1];
+            
+            // Format: https://drive.google.com/d/FILE_ID/
+            const directMatch = url.match(/\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+            if (!fileId && directMatch) fileId = directMatch[1];
+            
+            if (fileId) {
+                // For images: use more reliable format for better CORS support
+                return {
+                    thumbnail: `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`,
+                    fullRes: `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`,
+                    download: `https://drive.google.com/uc?export=download&id=${fileId}`,
+                    preview: `https://drive.google.com/file/d/${fileId}/preview`,
+                    // Store the file ID for further processing
+                    fileId: fileId
+                };
+            }
+            
+            // Not a Google Drive URL, return original
+            return { thumbnail: url, fullRes: url, download: url, preview: url };
+        }
+
+        // DOM Elements
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const caseStudyContent = document.getElementById('caseStudyContent');
+        const dynamicCaseStudyContent = document.getElementById('dynamicCaseStudyContent');
+        const defaultContent = document.getElementById('defaultContent');
+        
+        // Get case study ID or project ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseStudyId = urlParams.get('caseId');
+        const projectId = urlParams.get('id');
+        console.log('Debug: URL parameters', { caseStudyId, projectId });
+        
+        // Load case study data
+        if (caseStudyId) {
+            console.log('Debug: loading case study by ID', caseStudyId);
+            // If we have a case study ID, load directly from caseStudies collection
+            loadCaseStudy(caseStudyId);
+        } else if (projectId) {
+            console.log('Debug: checking project for caseStudyId', projectId);
+            // If we only have project ID, check if it has a linked case study
+            db.ref(`projects/${projectId}`).once('value')
+                .then(snapshot => {
+                    console.log('Debug: project snapshot', snapshot.val());
+                    if (snapshot.exists()) {
+                        const project = snapshot.val();
+                        
+                        if (project.caseStudyId) {
+                            // Project has a linked case study, redirect to it
+                            window.location.href = `case_study.html?caseId=${project.caseStudyId}`;
+                        } else {
+                            // No linked case study, try to load legacy content from project
+                            loadLegacyProjectCaseStudy(project, projectId);
+                        }
+                    } else {
+                        loadingState.classList.add('hidden');
+                        errorState.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading project: ", error);
+                    loadingState.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                });
+        } else {
+            loadingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+        }
+        
+        // Function to load a case study from the caseStudies collection
+        function loadCaseStudy(id) {
+            db.ref(`caseStudies/${id}`).once('value')
+                .then(doc => {
+                    console.log('Debug: case study snapshot', doc.val());
+                    loadingState.classList.add('hidden');
+                    
+                    if (doc.exists()) {
+                        const caseStudy = doc.val();
+                        
+                        // Update page title with the standardized field name
+                        document.title = (caseStudy.projectTitle || caseStudy.title || 'Case Study') + " - Case Study";
+                        
+                        // Update hero section with fallbacks for various field names
+                        document.getElementById('projectTitle').textContent = caseStudy.projectTitle || caseStudy.title || 
+                            (caseStudy.sections?.hero?.headline) || 'Untitled Project';
+                        document.getElementById('projectDescription').textContent = caseStudy.projectDescription || 
+                            caseStudy.summary || '';
+                        
+                        // Set image with fallbacks for various field names
+                        const projectImage = document.getElementById('projectImage');
+                        projectImage.src = caseStudy.projectImageUrl || caseStudy.coverImageUrl || 
+                            caseStudy.imageUrl || '/images/placeholder-project.jpg';
+                        projectImage.alt = caseStudy.projectTitle || caseStudy.title || 'Case Study';
+                        projectImage.onerror = function() { 
+                            this.src = '/images/placeholder-project.jpg';
+                        };
+                        
+                        // Update project details with fallbacks
+                        document.getElementById('projectCategory').textContent = caseStudy.projectCategory || 
+                            caseStudy.category || 'Case Study';
+                        document.getElementById('projectAchievement').textContent = caseStudy.projectAchievement || '';
+                        
+                        // Generate stars with fallback
+                        let stars = '';
+                        const rating = caseStudy.projectRating || caseStudy.rating || 5;
+                        for (let i = 0; i < 5; i++) {
+                            if (i < rating) {
+                                stars += '★';
+                            } else {
+                                stars += '☆';
+                            }
+                        }
+                        document.getElementById('projectRating').textContent = stars;
+                        
+                        // Format date
+                        if (caseStudy.createdAt) {
+                            const date = new Date(caseStudy.createdAt);
+                            document.getElementById('projectDate').textContent = date.toLocaleDateString();
+                        } else {
+                            document.getElementById('projectDate').textContent = 'Unknown';
+                        }
+                        
+                        // Check if case study has a video section
+                        setupWatchDemoButton(caseStudy.sections);
+                        
+                        // Render structured case study
+                        if (caseStudy.sections) {
+                            renderStructuredCaseStudy(caseStudy.sections);
+                            defaultContent.classList.add('hidden');
+                        } else if (caseStudy.content && caseStudy.content.trim() !== '') {
+                            // Use custom HTML content if available
+                            dynamicCaseStudyContent.innerHTML = caseStudy.content;
+                            defaultContent.classList.add('hidden');
+                        } else {
+                            // Use default content
+                            dynamicCaseStudyContent.innerHTML = '';
+                            defaultContent.classList.remove('hidden');
+                        }
+                        
+                        caseStudyContent.classList.remove('hidden');
+                    } else {
+                        errorState.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading case study: ", error);
+                    loadingState.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                });
+        }
+        
+        // Function to load legacy case study content from a project
+        function loadLegacyProjectCaseStudy(project, id) {
+            console.log('Debug: loading legacy project case study', { project, id });
+            
+            loadingState.classList.add('hidden');
+            
+            // Update page title
+            document.title = project.title || 'Case Study';
+            
+            // Update hero section
+            document.getElementById('projectTitle').textContent = project.title;
+            document.getElementById('projectDescription').textContent = project.description;
+            document.getElementById('projectImage').src = project.imageUrl;
+            document.getElementById('projectImage').alt = project.title;
+            
+            // Update project details
+            document.getElementById('projectCategory').textContent = project.category;
+            document.getElementById('projectAchievement').textContent = `${project.achievement} ${project.achievementMetric}`;
+            
+            // Generate stars
+            let stars = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < project.rating) {
+                    stars += '★';
+                } else {
+                    stars += '☆';
+                }
+            }
+            document.getElementById('projectRating').textContent = stars;
+            
+            // Format date
+            if (project.createdAt) {
+                const date = new Date(project.createdAt);
+                document.getElementById('projectDate').textContent = date.toLocaleDateString();
+            } else {
+                document.getElementById('projectDate').textContent = 'Unknown';
+            }
+            
+            // Check if project has video URL
+            if (project.videoUrl) {
+                setupWatchDemoButton({ video: { enabled: true, url: project.videoUrl } });
+            }
+            
+            // Check for custom content or structured sections
+            if (project.caseStudySections) {
+                // Render structured content
+                renderStructuredCaseStudy(project.caseStudySections);
+                defaultContent.classList.add('hidden');
+            } else if (project.caseStudyContent && project.caseStudyContent.trim() !== '') {
+                // Use legacy HTML content
+                dynamicCaseStudyContent.innerHTML = project.caseStudyContent;
+                defaultContent.classList.add('hidden');
+            } else {
+                // Use default content
+                dynamicCaseStudyContent.innerHTML = '';
+                defaultContent.classList.remove('hidden');
+            }
+            
+            caseStudyContent.classList.remove('hidden');
+        }
+        
+        // Function to generate carousel HTML using Swiper.js
+        function generateCarouselHtml(images) {
+            if (!images || images.length === 0) return '<p>No images to display.</p>';
+            
+            const carouselHtml = `
+                <div class="swiper-gallery compact-gallery">
+                    <div class="swiper-wrapper">
+                        ${images.map((imageUrl, index) => {
+                            // Process the image URL for better compatibility
+                            const processor = typeof window.processImageUrl === 'function' ? 
+                                window.processImageUrl : processGoogleDriveUrl;
+                                
+                            const processedUrl = processor(imageUrl);
+                            
+                            // Log for debugging
+                            console.log(`Processing gallery image ${index}:`, imageUrl);
+                            console.log("Processed result:", processedUrl);
+                            
+                            // Extract file ID directly if available or try to parse it from the URL
+                            const fileId = processedUrl.fileId || 
+                                          (typeof window.extractGoogleDriveId === 'function' ? 
+                                            window.extractGoogleDriveId(imageUrl) : null);
+                            
+                            // Use the best available URL with fallbacks
+                            let thumbnailUrl;
+                            let fullImageUrl;
+                            
+                            if (fileId) {
+                                // If it's a Google Drive image, use the newer direct format
+                                thumbnailUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`;
+                                fullImageUrl = thumbnailUrl;
+                            } else {
+                                // Otherwise use regular processed URLs
+                                thumbnailUrl = processedUrl.thumbnail || 
+                                             processedUrl.directUrl || 
+                                             imageUrl;
+                                             
+                                fullImageUrl = processedUrl.fullRes || 
+                                            processedUrl.directUrl || 
+                                            imageUrl;
+                            }
+                            
+                            return `
+                                <div class="swiper-slide compact-slide" style="--slide-index: ${index}">
+                                    <div class="image-container">
+                                        <img 
+                                            src="${thumbnailUrl}" 
+                                            alt="Project Image ${index + 1}" 
+                                            data-full-img="${fullImageUrl}"
+                                            data-file-id="${fileId || ''}"
+                                            data-original-url="${imageUrl}"
+                                            onclick="openLightbox('${fullImageUrl}', '${imageUrl}')"
+                                            onerror="this.classList.add('error-image'); if(typeof window.setupGoogleDriveImageFallback === 'function') window.setupGoogleDriveImageFallback(this, '${imageUrl}');"
+                                            class="adaptive-image"
+                                        />
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            `;
+            
+            return carouselHtml;
+        }
+
+        // Function to render structured case study
+        function renderStructuredCaseStudy(sections) {
+            let html = '';
+            
+            // Render each enabled section
+            
+            // Hero Section already exists in the main template
+            
+            // Image Gallery Section (moved to first position)
+            if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
+                html += `
+                <section id="gallery" class="py-16 bg-gray-50 dark:bg-gray-900">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Image Gallery</h2>`;
+                
+                // Store the original images array for reference
+                const galleryImages = [...sections.gallery.images];
+                
+                // Process images to ensure they have proper URLs and captions
+                const processedImages = galleryImages.map(image => {
+                    // Handle both string and object formats
+                    if (typeof image === 'string') {
+                        return { url: image, caption: '' };
+                    } else if (image && image.url) {
+                        return { url: image.url, caption: image.caption || '' };
+                    }
+                    return null;
+                }).filter(img => img !== null);
+                
+                // Try to use the enhanced Swiper carousel if available
+                if (typeof window.generateSwiperCarouselHtml === 'function') {
+                    html += window.generateSwiperCarouselHtml(processedImages);
+                } else if (typeof window.generateCarouselHtml === 'function') {
+                    html += generateCarouselHtml(processedImages);
+                } else {
+                    // Basic fallback
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                    processedImages.forEach(image => {
+                        html += `
+                        <div class="relative overflow-hidden rounded-lg shadow-lg">
+                            <img src="${image.url}" alt="${image.caption}" class="w-full h-64 object-cover cursor-pointer" onclick="openLightbox('${image.url}')">
+                            ${image.caption ? `<div class="bg-black bg-opacity-50 text-white p-2 absolute bottom-0 left-0 right-0 text-center">${image.caption}</div>` : ''}
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                html += `
+                    </div>
+                </section>`;
+            }
+            
+            // Overview Section (second position)
+            if (sections.overview && sections.overview.enabled) {
+                let metricsHTML = '';
+                if (sections.overview.metrics) {
+                    const metrics = sections.overview.metrics.split('\n').filter(line => line.trim() !== '');
+                    metrics.forEach(metric => {
+                        const parts = metric.split(':');
+                        if (parts.length === 2) {
+                            metricsHTML += `
+                            <div class="bg-blue-50 p-4 rounded-lg text-center dark:bg-blue-900">
+                                <div class="text-sm text-gray-600 dark:text-gray-400">${parts[0].trim()}</div>
+                                <div class="text-3xl font-bold text-blue-600 dark:text-blue-300">${parts[1].trim()}</div>
+                            </div>`;
+                        }
+                    });
+                }
+                
+                html += `
+                <section id="overview" class="py-16 bg-white dark:bg-gray-800">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.overview.title || 'Project Overview'}</h2>
+                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.overview.summary || ''}</p>
+                            ${metricsHTML ? `
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                                ${metricsHTML}
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            // Problem Statement Section (third position, fixed spelling)
+            if (sections.problem && sections.problem.enabled) {
+                html += `
+                <section id="problem" class="py-16 bg-gray-50 dark:bg-gray-900">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold text-center text-red-600 mb-8 ghibli-font dark:text-red-400">${sections.problem.title || 'Problem Statement'}</h2>
+                            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800">
+                                <p class="text-gray-700 text-lg dark:text-gray-300">${sections.problem.description || ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            // Process/Research Section (fourth position, fixed spelling)
+            if (sections.process && sections.process.enabled) {
+                html += `
+                <section id="process" class="py-16 bg-white dark:bg-gray-800">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold text-center text-green-600 mb-8 ghibli-font dark:text-green-400">${sections.process.title || 'Research & Process'}</h2>
+                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.process.description || ''}</p>
+                            ${sections.process.steps ? `
+                            <div class="space-y-6 mt-8">
+                                ${sections.process.steps.split('\n').filter(step => step.trim() !== '').map((step, index) => `
+                                <div class="flex">
+                                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-green-100 rounded-full text-green-700 text-xl font-bold dark:bg-green-900 dark:text-green-300">${index + 1}</div>
+                                    <div class="ml-4">
+                                        <p class="text-gray-700 dark:text-gray-300">${step}</p>
+                                    </div>
+                                </div>`).join('')}
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            // Showcase Section (fifth position)
+            if (sections.showcase && sections.showcase.enabled) {
+                html += `
+                <section id="showcase" class="py-16 bg-gray-50 dark:bg-gray-900">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold text-center text-purple-600 mb-8 ghibli-font dark:text-purple-400">${sections.showcase.title || 'Solution Showcase'}</h2>
+                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.showcase.description || ''}</p>
+                            
+                            ${sections.showcase.features ? `
+                            <div class="grid md:grid-cols-2 gap-6 mt-8">
+                                ${sections.showcase.features.split('\n').filter(feature => feature.trim() !== '').map(feature => `
+                                <div class="bg-white p-6 rounded-xl shadow-lg dark:bg-gray-800">
+                                    <div class="flex items-start">
+                                        <div class="bg-purple-100 p-3 rounded-full dark:bg-purple-900">
+                                            <i class="fas fa-check text-purple-600 dark:text-purple-300"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-gray-700 dark:text-gray-300">${feature}</p>
+                                        </div>
+                                    </div>
+                                </div>`).join('')}
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            // Document/Slides Section (sixth position)
+            if (sections.document && sections.document.enabled && sections.document.url) {
+                // Prepare embed and download URLs for Google Drive
+                let embedUrl = sections.document.url;
+                let downloadUrl = sections.document.url;
+                const driveMatch = sections.document.url.match(/\/d\/([A-Za-z0-9_-]+)/);
+                if (driveMatch) {
+                    embedUrl = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+                    downloadUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+                }
+                html += `
+                <section id="document" class="py-16 bg-white dark:bg-gray-800">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Document / Slides</h2>
+                        <div class="max-w-4xl mx-auto">
+                            <div class="overflow-hidden rounded-lg shadow-lg">
+                                <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            <div class="text-center mt-4">
+                                <a href="${downloadUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800">Download Document</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            // YouTube Demo Video Section (seventh position)
+            if (sections.video && sections.video.enabled && sections.video.url) {
+                let vid = '';
+                if (sections.video.url.includes('watch?v=')) {
+                    vid = sections.video.url.split('v=')[1].split('&')[0];
+                } else if (sections.video.url.includes('youtu.be/')) {
+                    vid = sections.video.url.split('youtu.be/')[1].split('?')[0];
+                }
+                if (vid) {
+                    const embedUrl = `https://www.youtube.com/embed/${vid}`;
+                    html += `
+                    <section id="video" class="py-16 bg-gray-50 dark:bg-gray-900">
+                        <div class="container mx-auto px-6">
+                            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Demo Video</h2>
+                            <div class="max-w-4xl mx-auto overflow-hidden rounded-lg shadow-lg">
+                                <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </section>`;
+                }
+            }
+            
+            // Reflection Section (eighth position, fixed spelling)
+            if (sections.reflection && sections.reflection.enabled) {
+                html += `
+                <section id="reflection" class="py-16 bg-white dark:bg-gray-800">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.reflection.title || 'Reflection & Learnings'}</h2>
+                            <div class="bg-blue-50 p-8 rounded-xl shadow-lg dark:bg-gray-700">
+                                <p class="text-gray-700 mb-6 text-lg dark:text-gray-300">${sections.reflection.content || ''}</p>
+                                ${sections.reflection.learnings ? `
+                                <h3 class="text-xl font-bold text-blue-600 mb-4 dark:text-blue-300">Key Learnings</h3>
+                                <ul class="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
+                                    ${sections.reflection.learnings.split('\n').filter(learning => learning.trim() !== '').map(learning => `
+                                    <li>${learning}</li>`).join('')}
+                                </ul>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </section>`;
+            }
+            
+            dynamicCaseStudyContent.innerHTML = html;
+            
+            // Initialize Swiper Gallery
+            if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
+                // Wait for DOM to update
+                setTimeout(() => {
+                    try {
+                        // Try to use our enhanced Swiper initialization if available
+                        if (typeof window.initializeSwiperCarousels === 'function') {
+                            window.initializeSwiperCarousels();
+                            console.log("Enhanced Swiper carousels initialized");
+                        } else {
+                            // Fall back to original Swiper initialization
+                            new Swiper('.swiper-gallery', {
+                                slidesPerView: 1,
+                                spaceBetween: 10,
+                                pagination: {
+                                    el: '.swiper-pagination',
+                                    clickable: true,
+                                },
+                                navigation: {
+                                    nextEl: '.swiper-button-next',
+                                    prevEl: '.swiper-button-prev',
+                                },
+                                autoplay: {
+                                    delay: 4000,
+                                    disableOnInteraction: false,
+                                },
+                                breakpoints: {
+                                    640: {
+                                        slidesPerView: 1,
+                                        spaceBetween: 20,
+                                    },
+                                    768: {
+                                        slidesPerView: 2,
+                                        spaceBetween: 20,
+                                    },
+                                    1024: {
+                                        slidesPerView: 3,
+                                        spaceBetween: 20,
+                                    },
+                                },
+                            });
+                            console.log("Standard Swiper gallery initialized successfully");
+                        }
+                    } catch (error) {
+                        console.error("Error initializing Swiper gallery:", error);
+                        // Attempt to initialize using our custom carousel as fallback
+                        if (typeof initializeCarousels === 'function') {
+                            initializeCarousels();
+                        }
+                    }
+                }, 500); // Give DOM time to update
+            }
+        }
+        
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Add lightbox for full-size image viewing
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        
+        function openLightbox(imgSrc, originalUrl) {
+            lightboxImg.src = imgSrc;
+            
+            // Store the original URL for debugging purposes
+            if (originalUrl) {
+                lightboxImg.setAttribute('data-original-url', originalUrl);
+            } else {
+                lightboxImg.setAttribute('data-original-url', imgSrc);
+            }
+            
+            // Setup error handling for lightbox image
+            lightboxImg.onerror = function() {
+                console.error("Failed to load lightbox image:", imgSrc);
+                
+                // Try alternative format if it's a Google Drive URL
+                if (typeof window.extractGoogleDriveId === 'function') {
+                    const fileId = window.extractGoogleDriveId(originalUrl || imgSrc);
+                    if (fileId) {
+                        // Use the newer usercontent format
+                        const newSrc = `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`;
+                        console.log("Trying new usercontent format:", newSrc);
+                        this.src = newSrc;
+                        return; // Exit early since we've set a new source
+                    }
+                }
+                
+                // Legacy fallback
+                const driveMatch = (originalUrl || imgSrc).match(/\/d\/([A-Za-z0-9_-]+)/);
+                if (driveMatch) {
+                    const fileId = driveMatch[1];
+                    const altSrc = `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`;
+                    console.log("Trying alternative format:", altSrc);
+                    this.src = altSrc;
+                } else {
+                    this.src = 'https://via.placeholder.com/800x450?text=Image+Failed+to+Load';
+                }
+            };
+            
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+        
+        function closeLightbox() {
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = ''; // Re-enable scrolling
+        }
+        
+        // Close lightbox when clicking outside the image
+        lightbox.addEventListener('click', function(e) {
+            if (e.target !== lightboxImg) {
+                closeLightbox();
+            }
+        });
+
+        // Function to test the current lightbox image URL
+        function testCurrentImage() {
+            const img = document.getElementById('lightbox-img');
+            if (!img || !img.src) {
+                alert("No image is currently being displayed in the lightbox.");
+                return;
+            }
+            
+            // Current image info
+            const currentSrc = img.src;
+            const originalUrl = img.getAttribute('data-original-url') || currentSrc;
+            
+            console.log("==== Image Debug Info ====");
+            console.log("Current displayed URL:", currentSrc);
+            console.log("Original source URL:", originalUrl);
+            
+            // Create debug panel directly in the page
+            const debugPanel = document.createElement('div');
+            debugPanel.style.position = 'fixed';
+            debugPanel.style.top = '50%';
+            debugPanel.style.left = '50%';
+            debugPanel.style.transform = 'translate(-50%, -50%)';
+            debugPanel.style.backgroundColor = 'white';
+            debugPanel.style.padding = '20px';
+            debugPanel.style.borderRadius = '10px';
+            debugPanel.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
+            debugPanel.style.zIndex = '9999';
+            debugPanel.style.maxWidth = '80%';
+            debugPanel.style.maxHeight = '80%';
+            debugPanel.style.overflow = 'auto';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.style.position = 'absolute';
+            closeBtn.style.top = '10px';
+            closeBtn.style.right = '10px';
+            closeBtn.style.padding = '5px 10px';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => debugPanel.remove();
+            debugPanel.appendChild(closeBtn);
+            
+            // Add header
+            const header = document.createElement('h3');
+            header.textContent = 'Image Diagnostic Tool';
+            header.style.marginBottom = '15px';
+            debugPanel.appendChild(header);
+            
+            // Current image info section
+            const infoSection = document.createElement('div');
+            infoSection.innerHTML = `
+                <h4>Current Image Info</h4>
+                <p><strong>Display URL:</strong> ${currentSrc}</p>
+                <p><strong>Original URL:</strong> ${originalUrl}</p>
+            `;
+            debugPanel.appendChild(infoSection);
+            
+            // Let's try different URL formats for Google Drive
+            let fileId = null;
+            
+            // Extract file ID if it's a Google Drive URL
+            if (originalUrl.includes('drive.google.com')) {
+                // Format: https://drive.google.com/file/d/FILE_ID/view
+                const fileMatch = originalUrl.match(/\/file\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+                if (fileMatch) fileId = fileMatch[1];
+                
+                // Format: https://drive.google.com/open?id=FILE_ID
+                const openMatch = originalUrl.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+                if (!fileId && openMatch) fileId = openMatch[1];
+                
+                // Format: https://drive.google.com/uc?export=view&id=FILE_ID
+                const ucMatch = originalUrl.match(/[?&]id=([A-Za-z0-9_-]+)(?:&|$)/);
+                if (!fileId && ucMatch) fileId = ucMatch[1];
+                
+                // Format: https://drive.google.com/d/FILE_ID/
+                const directMatch = originalUrl.match(/\/d\/([A-Za-z0-9_-]+)(?:\/|\?|$)/);
+                if (!fileId && directMatch) fileId = directMatch[1];
+                
+                if (fileId) {
+                    const alternativeSection = document.createElement('div');
+                    alternativeSection.innerHTML = `
+                        <h4>Google Drive Alternative URLs</h4>
+                        <p><strong>File ID:</strong> ${fileId}</p>
+                    `;
+                    debugPanel.appendChild(alternativeSection);
+                    
+                    // Add alternative formats to try
+                    const altFormats = [
+                        {
+                            name: "Drive Usercontent Format (Latest & Best)",
+                            url: `https://drive.usercontent.google.com/download?id=${fileId}&export=view&authuser=0`
+                        },
+                        {
+                            name: "lh3 Format (Alternative)",
+                            url: `https://lh3.googleusercontent.com/d/${fileId}`
+                        },
+                        {
+                            name: "Direct Export Format",
+                            url: `https://drive.google.com/uc?export=view&id=${fileId}`
+                        },
+                        {
+                            name: "Thumbnail Format",
+                            url: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`
+                        },
+                        {
+                            name: "Preview Format (Embed)",
+                            url: `https://drive.google.com/file/d/${fileId}/preview`
+                        }
+                    ];
+                    
+                    // Create test images for each format
+                    const testSection = document.createElement('div');
+                    testSection.style.marginTop = '20px';
+                    testSection.innerHTML = '<h4>Test Alternative URLs</h4>';
+                    debugPanel.appendChild(testSection);
+                    
+                    altFormats.forEach(format => {
+                        const formatContainer = document.createElement('div');
+                        formatContainer.style.marginBottom = '15px';
+                        formatContainer.style.padding = '10px';
+                        formatContainer.style.border = '1px solid #ddd';
+                        formatContainer.style.borderRadius = '5px';
+                        
+                        const formatHeader = document.createElement('div');
+                        formatHeader.innerHTML = `<strong>${format.name}</strong>`;
+                        formatHeader.style.marginBottom = '5px';
+                        formatContainer.appendChild(formatHeader);
+                        
+                        const urlDisplay = document.createElement('div');
+                        urlDisplay.textContent = format.url;
+                        urlDisplay.style.fontSize = '12px';
+                        urlDisplay.style.wordBreak = 'break-all';
+                        urlDisplay.style.marginBottom = '10px';
+                        formatContainer.appendChild(urlDisplay);
+                        
+                        // Create test image
+                        const testImg = document.createElement('img');
+                        testImg.src = format.url;
+                        testImg.style.maxWidth = '100%';
+                        testImg.style.maxHeight = '150px';
+                        testImg.style.display = 'block';
+                        testImg.style.marginTop = '10px';
+                        testImg.style.border = '1px solid #ccc';
+                        
+                        // Status indicator
+                        const statusEl = document.createElement('div');
+                        statusEl.textContent = 'Loading...';
+                        statusEl.style.marginTop = '5px';
+                        formatContainer.appendChild(statusEl);
+                        
+                        // Add image to container
+                        formatContainer.appendChild(testImg);
+                        
+                        // Handle load events
+                        testImg.onload = function() {
+                            statusEl.textContent = '✅ Loaded successfully';
+                            statusEl.style.color = 'green';
+                            
+                            // Add use button
+                            const useBtn = document.createElement('button');
+                            useBtn.textContent = 'Use This URL';
+                            useBtn.style.marginTop = '10px';
+                            useBtn.style.padding = '5px 10px';
+                            useBtn.style.backgroundColor = '#4CAF50';
+                            useBtn.style.color = 'white';
+                            useBtn.style.border = 'none';
+                            useBtn.style.borderRadius = '4px';
+                            useBtn.style.cursor = 'pointer';
+                            useBtn.onclick = () => {
+                                img.src = format.url;
+                                debugPanel.remove();
+                            };
+                            formatContainer.appendChild(useBtn);
+                        };
+                        
+                        testImg.onerror = function() {
+                            statusEl.textContent = '❌ Failed to load';
+                            statusEl.style.color = 'red';
+                            testImg.style.display = 'none';
+                        };
+                        
+                        testSection.appendChild(formatContainer);
+                    });
+                    
+                    // Add recommendations section
+                    const recsSection = document.createElement('div');
+                    recsSection.style.marginTop = '20px';
+                    recsSection.innerHTML = `
+                        <h4>Recommendations</h4>
+                        <ol>
+                            <li>Make sure the file is set to "Anyone with the link can view" in Google Drive</li>
+                            <li>Try the "Drive Usercontent Format" first - this is the latest and most reliable format</li>
+                            <li>If you're entering Google Drive URLs manually, use the format: <code>https://drive.usercontent.google.com/download?id=YOUR_FILE_ID&export=view&authuser=0</code></li>
+                            <li>For Google Drive images, it may take a few minutes after sharing for them to become accessible</li>
+                            <li>If all formats fail, download the image and upload it directly to your hosting</li>
+                        </ol>
+                    `;
+                    debugPanel.appendChild(recsSection);
+                }
+            }
+            
+            // Add to document
+            document.body.appendChild(debugPanel);
+        }
+
+        // Add Swiper.js listener to case study database updates
+        db.ref('caseStudies').on('value', snapshot => {
+            console.log("Case studies updated, checking for galleries to reinitialize");
+            setTimeout(() => {
+                // Try to use our enhanced Swiper initialization if available
+                if (typeof window.initializeSwiperCarousels === 'function') {
+                    window.initializeSwiperCarousels();
+                    console.log("Enhanced Swiper carousels reinitialized after database update");
+                } else {
+                    // Fall back to original Swiper initialization
+                    // Reinitialize any swiper instances that may have been added
+                    const swiperElements = document.querySelectorAll('.swiper-gallery:not(.swiper-initialized)');
+                    if (swiperElements.length > 0) {
+                        console.log(`Found ${swiperElements.length} uninitiated Swiper galleries, initializing...`);
+                        swiperElements.forEach(element => {
+                            try {
+                                new Swiper(element, {
+                                    slidesPerView: 1,
+                                    spaceBetween: 10,
+                                    pagination: {
+                                        el: '.swiper-pagination',
+                                        clickable: true,
+                                    },
+                                    navigation: {
+                                        nextEl: '.swiper-button-next',
+                                        prevEl: '.swiper-button-prev',
+                                    },
+                                    autoplay: {
+                                        delay: 4000,
+                                        disableOnInteraction: false,
+                                    },
+                                    breakpoints: {
+                                        640: {
+                                            slidesPerView: 1,
+                                            spaceBetween: 20,
+                                        },
+                                        768: {
+                                            slidesPerView: 2,
+                                            spaceBetween: 20,
+                                        },
+                                        1024: {
+                                            slidesPerView: 3,
+                                            spaceBetween: 20,
+                                        },
+                                    },
+                                });
+                            } catch (error) {
+                                console.error("Error initializing dynamic Swiper gallery:", error);
+                            }
+                        });
+                    }
+                }
+            }, 1000);
+        }, error => {
+            console.error('Error in real-time update:', error);
+        });
+
+        // Setup Watch Demo button
+        function setupWatchDemoButton(sections) {
+            const watchDemoButton = document.getElementById('watchDemoButton');
+            
+            // Check if video section exists and has URL
+            if (sections && sections.video && sections.video.enabled && sections.video.url) {
+                const videoUrl = sections.video.url;
+                let videoYoutubeUrl = '';
+                
+                // Parse YouTube URL and create proper link
+                if (videoUrl.includes('watch?v=')) {
+                    const videoId = videoUrl.split('v=')[1].split('&')[0];
+                    videoYoutubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                } else if (videoUrl.includes('youtu.be/')) {
+                    const videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+                    videoYoutubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                }
+                
+                if (videoYoutubeUrl) {
+                    // Show button and set up click handler for direct YouTube link
+                    watchDemoButton.classList.remove('hidden');
+                    watchDemoButton.setAttribute('href', videoYoutubeUrl);
+                    watchDemoButton.setAttribute('target', '_blank');
+                    watchDemoButton.setAttribute('rel', 'noopener noreferrer');
+                } else {
+                    // Link to video section if not a valid YouTube URL
+                    watchDemoButton.classList.remove('hidden');
+                    watchDemoButton.setAttribute('href', '#video');
+                    watchDemoButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.getElementById('video').scrollIntoView({ behavior: 'smooth' });
+                    });
+                }
+            } else {
+                // Hide button if no video
+                watchDemoButton.classList.add('hidden');
+            }
+        }
+    </script>
+
+    <!-- Add lightbox for full-size image viewing -->
+    <div id="lightbox" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="lightbox-img" class="max-w-[90%] max-h-[90%] object-contain" src="" alt="Full size image">
+        <div class="absolute bottom-4 left-4 flex gap-2">
+            <button onclick="testCurrentImage()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">
+                Debug Image
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Case study page fully loaded");
+            
+            // Process images after content is loaded
+            if (window.processGoogleDriveImages) {
+                console.log("Running Google Drive image processor");
+                window.processGoogleDriveImages();
+            } else {
+                console.warn("Google Drive image processor not found!");
+            }
+            
+            // Call setupCarousels if available (from carousel.js)
+            if (window.setupCarousels) {
+                console.log("Running carousel setup");
+                window.setupCarousels();
+            } else {
+                console.warn("Carousel setup function not found!");
+            }
+            
+            // Additional debug - log all image sources on the page
+            const allImages = document.querySelectorAll('img');
+            console.log(`Found ${allImages.length} images on the case study page`);
+            const imageSrcs = Array.from(allImages).map(img => {
+                return {
+                    src: img.getAttribute('src'),
+                    dataSrc: img.getAttribute('data-src'),
+                    alt: img.getAttribute('alt'),
+                    parent: img.parentElement ? img.parentElement.className : 'none',
+                    visible: img.getBoundingClientRect().height > 0
+                };
+            });
+            console.log("Image details:", imageSrcs);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,48 @@
+/* CSS to forcefully disable all editing UI */
+[contenteditable="true"] {
+  user-select: text !important;
+  -webkit-user-select: text !important; 
+  pointer-events: auto !important;
+  cursor: text !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  content-visibility: auto !important;
+  contenteditable: false !important;
+}
+
+.edit-inline-btn, 
+.edit-section-btn, 
+[id*="edit"], 
+[class*="edit-"],
+button[data-section],
+[class*="saving"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  z-index: -999 !important;
+  pointer-events: none !important;
+  clip: rect(0, 0, 0, 0) !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Target buttons with text "Saving" or "Edit" */
+button, 
+a[role="button"],
+.btn,
+[class*="btn"] {
+  &:contains('Saving'),
+  &:contains('Edit'),
+  &:contains('Save') {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+} 

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carousel Upload Test</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .card { margin-bottom: 20px; }
+    #response-container { background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; margin-top: 20px; white-space: pre-wrap; font-family: monospace; }
+    .progress { margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Carousel Upload Test</h1>
+    <p>Use this page to test uploading images to the carousel server without the full admin panel.</p>
+    
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        Direct File Upload
+      </div>
+      <div class="card-body">
+        <form id="direct-upload-form">
+          <div class="mb-3">
+            <label for="image" class="form-label">Select Image</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+          </div>
+          <div class="mb-3">
+            <label for="caption" class="form-label">Caption</label>
+            <input type="text" class="form-control" id="caption" name="caption" placeholder="Enter image caption">
+          </div>
+          <div class="mb-3">
+            <label for="order" class="form-label">Display Order</label>
+            <input type="number" class="form-control" id="order" name="order" value="1">
+          </div>
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+          </div>
+          <button type="submit" class="btn btn-primary">Upload Image</button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        Test API Connection
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <button id="test-carousel-api" class="btn btn-info">Test Carousel API</button>
+          <button id="test-signature-api" class="btn btn-secondary ms-2">Test Signature API</button>
+          <button id="load-images" class="btn btn-success ms-2">Load Existing Images</button>
+        </div>
+      </div>
+    </div>
+    
+    <h3>API Response</h3>
+    <div id="response-container">No requests made yet</div>
+    
+    <div id="images-container" class="mt-4">
+      <!-- Images will be displayed here -->
+    </div>
+  </div>
+  
+  <script>
+    // Get DOM elements
+    const form = document.getElementById('direct-upload-form');
+    const progressBar = document.querySelector('.progress');
+    const progressBarInner = document.querySelector('.progress-bar');
+    const responseContainer = document.getElementById('response-container');
+    const imagesContainer = document.getElementById('images-container');
+    const testApiBtn = document.getElementById('test-carousel-api');
+    const testSignatureBtn = document.getElementById('test-signature-api');
+    const loadImagesBtn = document.getElementById('load-images');
+    
+    // Helper to display response
+    function showResponse(title, data) {
+      responseContainer.innerHTML = `<strong>${title}:</strong>\n${
+        typeof data === 'object' ? JSON.stringify(data, null, 2) : data
+      }`;
+    }
+    
+    // Direct upload form submission
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const imageFile = document.getElementById('image').files[0];
+      if (!imageFile) {
+        showResponse('Error', 'Please select an image file');
+        return;
+      }
+      
+      const caption = document.getElementById('caption').value || 'Carousel Image';
+      const order = document.getElementById('order').value || '1';
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('caption', caption);
+      formData.append('order', order);
+      formData.append('folder', 'portfolio/carousel');
+      
+      // Show progress bar
+      progressBar.style.display = 'block';
+      progressBarInner.style.width = '0%';
+      
+      try {
+        // Use XMLHttpRequest for upload progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        // Track progress
+        xhr.upload.addEventListener('progress', function(event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            progressBarInner.style.width = percentComplete + '%';
+            progressBarInner.textContent = percentComplete + '%';
+          }
+        });
+        
+        // Set up promise to handle response
+        const uploadPromise = new Promise((resolve, reject) => {
+          xhr.open('POST', 'http://localhost:5002/api/carousel-images');
+          
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch (e) {
+                reject(new Error('Invalid JSON response from server'));
+              }
+            } else {
+              reject(new Error(`HTTP Error: ${xhr.status} ${xhr.statusText}`));
+            }
+          };
+          
+          xhr.onerror = function() {
+            reject(new Error('Network error occurred'));
+          };
+          
+          xhr.send(formData);
+        });
+        
+        // Wait for upload to complete
+        progressBarInner.style.width = '100%';
+        progressBarInner.textContent = 'Processing...';
+        
+        const response = await uploadPromise;
+        showResponse('Upload Successful', response);
+        
+        // Reset form
+        form.reset();
+        
+        // Load the images again to show the new one
+        loadImages();
+      } catch (error) {
+        showResponse('Upload Error', error.message);
+      } finally {
+        // Hide progress bar after a delay
+        setTimeout(() => {
+          progressBar.style.display = 'none';
+        }, 2000);
+      }
+    });
+    
+    // Test API connection
+    testApiBtn.addEventListener('click', async function() {
+      try {
+        const response = await fetch('http://localhost:5002/api/status');
+        const data = await response.json();
+        showResponse('API Status', data);
+      } catch (error) {
+        showResponse('API Error', error.message);
+      }
+    });
+    
+    // Test signature API
+    testSignatureBtn.addEventListener('click', async function() {
+      try {
+        const response = await fetch('http://localhost:5002/api/upload-signature?folder=portfolio/carousel&service=cloudinary');
+        const data = await response.json();
+        showResponse('Signature API', data);
+      } catch (error) {
+        showResponse('Signature API Error', error.message);
+      }
+    });
+    
+    // Load existing images
+    async function loadImages() {
+      try {
+        const response = await fetch('http://localhost:5002/api/carousel-images');
+        const images = await response.json();
+        
+        showResponse('Loaded Images', `Found ${images.length} images`);
+        
+        // Display images
+        imagesContainer.innerHTML = '<h4>Existing Carousel Images</h4>';
+        
+        if (images.length === 0) {
+          imagesContainer.innerHTML += '<p>No carousel images found</p>';
+        } else {
+          const row = document.createElement('div');
+          row.className = 'row';
+          
+          images.forEach(image => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 mb-4';
+            col.innerHTML = `
+              <div class="card">
+                <img src="${image.url}" class="card-img-top" alt="${image.caption || 'Carousel image'}">
+                <div class="card-body">
+                  <h5 class="card-title">${image.caption || 'No caption'}</h5>
+                  <p class="card-text">Order: ${image.order || 0}</p>
+                  <button class="btn btn-sm btn-danger delete-btn" data-id="${image.id}">Delete</button>
+                </div>
+              </div>
+            `;
+            row.appendChild(col);
+          });
+          
+          imagesContainer.appendChild(row);
+          
+          // Add delete handlers
+          document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+              if (confirm('Are you sure you want to delete this image?')) {
+                const id = this.getAttribute('data-id');
+                try {
+                  const response = await fetch(`http://localhost:5002/api/carousel-images/${id}`, {
+                    method: 'DELETE'
+                  });
+                  const data = await response.json();
+                  showResponse('Delete Result', data);
+                  loadImages(); // Reload images
+                } catch (error) {
+                  showResponse('Delete Error', error.message);
+                }
+              }
+            });
+          });
+        }
+      } catch (error) {
+        showResponse('Load Images Error', error.message);
+        imagesContainer.innerHTML = '<div class="alert alert-danger">Error loading images</div>';
+      }
+    }
+    
+    loadImagesBtn.addEventListener('click', loadImages);
+    
+    // Auto-load images on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait a moment to make sure servers are ready
+      setTimeout(loadImages, 1000);
+    });
+  </script>
+</body>
+</html> 

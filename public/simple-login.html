@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .success {
+            color: green;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Login Test</h1>
+    <p>This is a direct API login test that bypasses Firebase completely.</p>
+    
+    <div class="card">
+        <h2>Login</h2>
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        <div id="successMessage" class="success" style="display: none;"></div>
+        
+        <form id="loginForm">
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="admin@example.com" required>
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" value="password123" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h2>API Response</h2>
+        <pre id="responseData">No response yet</pre>
+    </div>
+    
+    <div class="card">
+        <h2>Debug Log</h2>
+        <pre id="debugLog"></pre>
+    </div>
+    
+    <script>
+        // Debug logging function
+        function log(message) {
+            const timestamp = new Date().toISOString().substr(11, 8);
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            const debugLog = document.getElementById('debugLog');
+            debugLog.textContent = logMessage + '\n' + debugLog.textContent;
+            console.log(logMessage);
+        }
+        
+        // Display error
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            log(`ERROR: ${message}`);
+        }
+        
+        // Display success
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            log(`SUCCESS: ${message}`);
+        }
+        
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log(`Attempting login with email: ${email}`);
+            
+            try {
+                // Direct API call
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                // Get the raw response text
+                const rawResponse = await response.text();
+                log(`Received raw response: ${rawResponse}`);
+                
+                // Display the raw response
+                document.getElementById('responseData').textContent = rawResponse;
+                
+                // Try to parse as JSON
+                let data;
+                try {
+                    data = JSON.parse(rawResponse);
+                } catch (parseError) {
+                    showError(`Failed to parse response as JSON: ${parseError.message}`);
+                    return;
+                }
+                
+                if (!response.ok) {
+                    showError(data.error || 'Login failed with status ' + response.status);
+                    return;
+                }
+                
+                // Check if we got a token
+                if (data.token) {
+                    log(`Login successful, received token`);
+                    showSuccess('Login successful! Token received.');
+                    
+                    // Store token in localStorage
+                    localStorage.setItem('simple_token', data.token);
+                    if (data.user) {
+                        localStorage.setItem('simple_user', JSON.stringify(data.user));
+                    }
+                    
+                    // Add a redirect button
+                    const form = document.getElementById('loginForm');
+                    const redirectBtn = document.createElement('button');
+                    redirectBtn.textContent = 'Go to Admin Panel';
+                    redirectBtn.type = 'button';
+                    redirectBtn.style.marginLeft = '10px';
+                    redirectBtn.onclick = function() {
+                        window.location.href = '/admin.html';
+                    };
+                    form.querySelector('button').after(redirectBtn);
+                } else {
+                    showError('Login response did not contain a token');
+                }
+            } catch (error) {
+                showError(`Request failed: ${error.message}`);
+            }
+        });
+        
+        // Log initialization
+        log('Simple login test page loaded');
+    </script>
+</body>
+</html> 

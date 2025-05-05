@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magical Journeys Admin | Portfolio Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+  <link rel="stylesheet" href="carousel.css">
+  
+  <!-- Firebase API fallback for hosting environment -->
+  <script src="/js/firebase-data-fallback.js"></script>
+  
+  <style>
+    body { 
+      background-color: #f7fafc; 
+      font-family: Arial, sans-serif;
+      padding-bottom: 40px;
+    }
+    .admin-container { 
+      max-width: 1200px; 
+      margin: 40px auto; 
+    }
+    .card { 
+      margin-bottom: 2rem; 
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress {
+      height: 25px;
+    }
+    .image-gallery {
+      min-height: 200px;
+    }
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-magic"></i> Magical Journeys Admin</h1>
+        <div>
+          <a href="/admin-full.html" class="btn btn-outline-light me-2">
+            <i class="fas fa-arrow-left"></i> Back to Admin Panel
+          </a>
+          <button id="refresh-btn" class="btn btn-light">
+            <i class="fas fa-sync-alt"></i> Refresh Images
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container admin-container">
+    <div class="row mb-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title">Manage Carousel Images</h2>
+            <p class="card-text">
+              These images will appear in the magical journey carousel on your homepage.
+              Add, edit, or remove images to customize your portfolio's visual experience.
+            </p>
+            
+            <button id="add-new-image-btn" class="btn btn-primary btn-lg">
+              <i class="fas fa-plus"></i> Add New Image
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="alerts-container"></div>
+    
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Carousel Images</h3>
+      </div>
+      <div class="card-body">
+        <div id="carousel-images-container" class="image-gallery">
+          <!-- Images will be loaded here -->
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Loading carousel images...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h3 class="mb-0">Display Settings</h3>
+          </div>
+          <div class="card-body">
+            <form id="carousel-settings-form">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="carousel-title" class="form-label">Carousel Title</label>
+                  <input type="text" class="form-control" id="carousel-title" placeholder="Magical Journey">
+                </div>
+                <div class="col-md-6">
+                  <label for="carousel-speed" class="form-label">Animation Speed (ms)</label>
+                  <input type="number" class="form-control" id="carousel-speed" placeholder="5000">
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="carousel-autoplay" checked>
+                    <label class="form-check-label" for="carousel-autoplay">Enable Autoplay</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="carousel-indicators" checked>
+                    <label class="form-check-label" for="carousel-indicators">Show Indicators</label>
+                  </div>
+                </div>
+              </div>
+              <div class="text-end">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Load Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  
+  <script>
+    // Initialize Firebase (same config as in admin.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+      authDomain: "projectportfolio-29467.firebaseapp.com",
+      databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+      projectId: "projectportfolio-29467",
+      storageBucket: "projectportfolio-29467.appspot.com",
+      messagingSenderId: "506713176316",
+      appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+    };
+    
+    try {
+      firebase.initializeApp(firebaseConfig);
+      console.log('Firebase initialized successfully');
+    } catch (e) {
+      console.log('Firebase initialization error', e.message);
+    }
+    
+    // Store the original fetch function
+    const originalFetch = window.fetch;
+    
+    // Override fetch to add auth token
+    window.fetch = function(url, options) {
+      console.log(`📡 Fetch request to: ${url}`);
+      
+      // Create new options object with the same properties
+      const newOptions = options ? { ...options } : {};
+      
+      // Add headers if they don't exist
+      if (!newOptions.headers) {
+        newOptions.headers = {};
+      }
+      
+      // Convert headers to plain object if it's a Headers instance
+      if (newOptions.headers instanceof Headers) {
+        const plainHeaders = {};
+        for (const [key, value] of newOptions.headers.entries()) {
+          plainHeaders[key] = value;
+        }
+        newOptions.headers = plainHeaders;
+      }
+      
+      // Get the auth token
+      const token = localStorage.getItem('firebase_token') || 
+                  localStorage.getItem('jwt_token') ||
+                  sessionStorage.getItem('jwtToken');
+      
+      // Add auth token to request if available
+      if (token && newOptions.headers) {
+        newOptions.headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      // Use original fetch with the new options
+      return originalFetch(url, newOptions)
+        .then(response => {
+          console.log(`📡 Received response from ${url}:`, response.status);
+          return response;
+        })
+        .catch(error => {
+          console.error(`❌ Error fetching from ${url}:`, error);
+          throw error;
+        });
+    };
+    
+    // Check authentication
+    function checkAuth() {
+      console.log('Checking authentication status');
+      
+      // First check for stored JWT token
+      const token = localStorage.getItem('firebase_token') || 
+                   localStorage.getItem('jwt_token') ||
+                   sessionStorage.getItem('jwtToken');
+      
+      if (token) {
+        console.log('JWT token found, proceeding without Firebase validation');
+        // We have a token, so consider the user authenticated
+        loadPage();
+        return;
+      }
+      
+      // If no token, check Firebase authentication
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          console.log('User authenticated via Firebase', { email: user.email });
+          // Continue loading the page
+          loadPage();
+        } else {
+          console.log('No authentication found, redirecting to login');
+          redirectToLogin();
+        }
+      });
+    }
+    
+    // Redirect to login page
+    function redirectToLogin() {
+      console.log('Not authenticated, redirecting to login page');
+      window.location.href = '/admin-login.html';
+    }
+    
+    // Load page content
+    function loadPage() {
+      // Add event listeners
+      document.getElementById('add-new-image-btn').addEventListener('click', showUploadForm);
+      document.getElementById('refresh-btn').addEventListener('click', loadCarouselImages);
+      
+      // Load images
+      loadCarouselImages();
+      
+      // Load settings
+      loadCarouselSettings();
+    }
+    
+    // Load carousel settings
+    async function loadCarouselSettings() {
+      try {
+        const response = await fetch('/api/carousel-settings');
+        const settings = await response.json();
+        
+        // Fill settings form
+        document.getElementById('carousel-title').value = settings.title || 'Magical Journey';
+        document.getElementById('carousel-speed').value = settings.speed || 5000;
+        document.getElementById('carousel-autoplay').checked = settings.autoplay !== false;
+        document.getElementById('carousel-indicators').checked = settings.indicators !== false;
+      } catch (error) {
+        console.error('Error loading carousel settings:', error);
+        showAlert('warning', 'Could not load carousel settings. Using defaults.');
+      }
+    }
+    
+    // Save carousel settings
+    document.getElementById('carousel-settings-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const settings = {
+        title: document.getElementById('carousel-title').value,
+        speed: parseInt(document.getElementById('carousel-speed').value) || 5000,
+        autoplay: document.getElementById('carousel-autoplay').checked,
+        indicators: document.getElementById('carousel-indicators').checked
+      };
+      
+      try {
+        const response = await fetch('/api/carousel-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        
+        if (response.ok) {
+          showAlert('success', 'Carousel settings saved successfully');
+        } else {
+          throw new Error('Failed to save settings');
+        }
+      } catch (error) {
+        console.error('Error saving carousel settings:', error);
+        showAlert('danger', 'Error saving carousel settings');
+      }
+    });
+    
+    // Show alert message
+    function showAlert(type, message) {
+      const alertsContainer = document.getElementById('alerts-container');
+      
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.setAttribute('role', 'alert');
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      alertsContainer.appendChild(alertDiv);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => alertDiv.remove(), 300);
+      }, 5000);
+    }
+    
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+  
+  <!-- Our custom Magical Journeys JS -->
+  <script src="/js/magical-journeys.js"></script>
+</body>
+</html> 

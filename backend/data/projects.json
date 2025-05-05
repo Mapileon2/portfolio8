@@ -1,0 +1,26 @@
+[
+  {
+    "title": "The Secret World of User Onboarding",
+    "description": "Transformed a confusing initiation ritual into a delightful journey through the enchanted forest of our product.",
+    "tags": ["Lead PM"],
+    "rating": "★★★★★",
+    "result": "40% faster onboarding",
+    "storyLink": "case study 1.html"
+  },
+  {
+    "title": "Crystal Ball Analytics Dashboard",
+    "description": "Created a magical looking glass that reveals insights hidden in the data mists, empowering teams to make informed decisions.",
+    "tags": ["Product Lead"],
+    "rating": "★★★★☆",
+    "result": "30% more insights",
+    "storyLink": "case-study.html"
+  },
+  {
+    "title": "The Flying Delivery App",
+    "description": "Designed a mobile experience that makes ordering feel like sending a message with a paper airplane - simple, joyful, and magical.",
+    "tags": ["UX/PM"],
+    "rating": "★★★★★",
+    "result": "4.8/5 rating",
+    "storyLink": "case-study.html"
+  }
+]

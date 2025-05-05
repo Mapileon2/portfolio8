@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio - Redirecting...</title>
+    <meta http-equiv="refresh" content="0; url=portfolio.html">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f7f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .loader {
+        border: 8px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 8px solid #6bb2e2;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      p {
+        margin-top: 20px;
+        color: #333;
+      }
+      .links {
+        margin-top: 20px;
+      }
+      .links a {
+        display: inline-block;
+        margin: 0 10px;
+        color: #3182ce;
+        text-decoration: none;
+      }
+      .links a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="text-align: center;">
+      <div class="loader"></div>
+      <p>Redirecting to portfolio...</p>
+      <div class="links">
+        <a href="portfolio.html">Click here if not redirected</a>
+        <a href="admin.html">Admin Login</a>
+      </div>
+    </div>
+    <script>
+      // Backup JavaScript redirect if meta refresh fails
+      setTimeout(function() {
+        window.location.href = 'portfolio.html';
+      }, 2000);
+    </script>
+  </body>
+</html>

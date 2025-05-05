@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Cloudinary Upload Widget -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+  <style>
+    body { 
+      background-color: #f7fafc; 
+      font-family: Arial, sans-serif;
+    }
+    .admin-container { 
+      max-width: 1200px; 
+      margin: 40px auto; 
+    }
+    .card { 
+      margin-bottom: 2rem; 
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .login-form {
+      max-width: 400px;
+      margin: 100px auto;
+    }
+    .admin-panel {
+      display: none;
+    }
+    .login-status {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+    .full-admin-banner {
+      background-color: #4CAF50;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .full-admin-banner a {
+      display: inline-block;
+      background-color: white;
+      color: #4CAF50;
+      padding: 8px 20px;
+      margin-top: 10px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    .full-admin-banner a:hover {
+      background-color: #f1f1f1;
+      transform: scale(1.05);
+    }
+    #debug-info {
+      font-size: 12px;
+      padding: 10px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="full-admin-banner">
+      <h3>Need more features?</h3>
+      <p>This is a simplified admin panel. For full functionality (projects, skills, timeline, testimonials, case studies, etc.), use our complete admin panel.</p>
+      <a href="/admin-full.html" class="btn">Access Full Admin Panel</a>
+    </div>
+    
+    <!-- Login Form -->
+    <div id="login-section" class="login-form">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Portfolio Admin Login</h3>
+        </div>
+        <div class="card-body">
+          <div class="login-status text-danger" id="login-error" style="display: none;"></div>
+          <div class="alert alert-info">
+            <p>Please use the main login page: <a href="/admin-login.html" class="alert-link">Go to Login</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loader" class="loader">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading admin panel...</p>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="admin-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Portfolio Admin Panel</h1>
+        <button id="logout-btn" class="btn btn-danger">Logout</button>
+      </div>
+
+      <div class="alert alert-success">
+        <h4>Welcome to the Admin Panel!</h4>
+        <p>You've successfully logged in. From here you can manage your portfolio content.</p>
+        <hr>
+        <p class="mb-0">Need more functionality? <a href="/admin-full.html" class="alert-link">Switch to the full admin panel</a></p>
+      </div>
+
+      <!-- Admin Tabs -->
+      <ul class="nav nav-tabs mb-4" id="adminTabs">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" href="#dashboard">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#projects">Projects</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#skills">Skills</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#content">Content</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#carousel">Magical Carousel</a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Dashboard</h5>
+              <p>Welcome to your portfolio admin dashboard. Use the tabs above to navigate to different sections.</p>
+              <div class="row mt-4">
+                <div class="col-md-4">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body">
+                      <h5 class="card-title">Projects</h5>
+                      <p class="card-text">Manage your portfolio projects</p>
+                      <a href="#projects" class="btn btn-light" data-bs-toggle="tab">View Projects</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-success text-white">
+                    <div class="card-body">
+                      <h5 class="card-title">Skills</h5>
+                      <p class="card-text">Update your skills and expertise</p>
+                      <a href="#skills" class="btn btn-light" data-bs-toggle="tab">View Skills</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-info text-white">
+                    <div class="card-body">
+                      <h5 class="card-title">Content</h5>
+                      <p class="card-text">Edit website content and sections</p>
+                      <a href="#content" class="btn btn-light" data-bs-toggle="tab">Edit Content</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Tab -->
+        <div class="tab-pane fade" id="projects">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Projects Management</h5>
+              <p>Add, edit, or remove projects from your portfolio.</p>
+              <!-- Projects content will be loaded here -->
+              <div class="text-center py-5">
+                <p>Projects will be loaded here from the server.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills Tab -->
+        <div class="tab-pane fade" id="skills">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Skills Management</h5>
+              <p>Update your skills, technologies, and expertise.</p>
+              <!-- Skills content will be loaded here -->
+              <div class="text-center py-5">
+                <p>Skills will be loaded here from the server.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Tab -->
+        <div class="tab-pane fade" id="content">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Content Management</h5>
+              <p>Edit your portfolio content and sections.</p>
+              <!-- Content management will be added here -->
+              <div class="text-center py-5">
+                <p>Content editing tools will be loaded here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Magical Carousel Tab -->
+        <div class="tab-pane fade" id="carousel">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Magical Carousel Management</h5>
+              <p>Manage the images that appear in the magical journey carousel on your homepage.</p>
+              
+              <div class="mb-4">
+                <button id="add-carousel-image-btn" class="btn btn-primary" onclick="showCarouselForm()">
+                  <i class="fas fa-plus"></i> Add New Carousel Image
+                </button>
+                <a href="/magical-journeys.html" class="btn btn-success ms-2">
+                  <i class="fas fa-external-link-alt"></i> Open Enhanced Carousel Manager
+                </a>
+              </div>
+              
+              <div class="alert alert-info">
+                <strong>Pro Tip:</strong> For a better experience with full features, use the <a href="/magical-journeys.html" class="alert-link">Enhanced Carousel Manager</a>.
+              </div>
+              
+              <div class="table-responsive">
+                <table id="carousel-images-table" class="table table-bordered">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Image</th>
+                      <th>Caption</th>
+                      <th>Order</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Carousel images will be loaded here -->
+                    <tr>
+                      <td colspan="4" class="text-center">Loading carousel images...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Carousel Image Form Modal -->
+          <div id="carousel-image-form-container" class="card mt-4" style="display: none;">
+            <div class="card-header bg-primary text-white">
+              <h5 id="carousel-image-form-title" class="mb-0">Add Carousel Image</h5>
+            </div>
+            <div class="card-body">
+              <form id="carousel-image-form">
+                <input type="hidden" id="carousel-image-id">
+                <input type="hidden" id="carousel-image-url">
+                <input type="hidden" id="carousel-image-public-id">
+                <input type="hidden" id="carousel-image-width">
+                <input type="hidden" id="carousel-image-height">
+                
+                <div class="mb-3">
+                  <label for="carousel-image-caption" class="form-label">Caption</label>
+                  <input type="text" class="form-control" id="carousel-image-caption" placeholder="Enter a caption for this image">
+                </div>
+                
+                <div class="mb-3">
+                  <label for="carousel-image-order" class="form-label">Display Order</label>
+                  <input type="number" class="form-control" id="carousel-image-order" placeholder="Order (lower numbers appear first)">
+                </div>
+                
+                <div class="mb-4">
+                  <label class="form-label">Image Preview</label>
+                  <div>
+                    <img id="carousel-image-preview" class="img-thumbnail mb-3 hidden" style="max-height: 200px; max-width: 100%;">
+                  </div>
+                  
+                  <div id="carousel-upload-container">
+                    <p>Upload a new image (any size, format supported)</p>
+                    <div class="d-flex flex-column gap-2">
+                      <button type="button" id="carousel-upload-widget-btn" class="btn btn-primary">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload with Cloudinary
+                      </button>
+                      <div class="text-center">- or -</div>
+                      <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="carousel-direct-upload" accept="image/*" style="display:none">
+                        <label class="btn btn-secondary w-100" for="carousel-direct-upload">
+                          <i class="fas fa-upload"></i> Select From Device
+                        </label>
+                      </div>
+                      <div id="upload-progress" class="progress mt-2 d-none">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                  <button type="button" id="cancel-carousel-image-btn" class="btn btn-outline-secondary me-2">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save Carousel Image</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Debug Info -->
+    <div id="debug-info"></div>
+
+    <!-- API Test Controls -->
+    <div id="api-test-panel" class="card mt-4 mb-4" style="display: none;">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">API Connection Test</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <button id="test-carousel-api" class="btn btn-primary">Test Carousel API Connection</button>
+          <button id="test-upload-signature" class="btn btn-info ms-2">Test Upload Signature</button>
+        </div>
+        <div class="alert alert-info" id="api-test-result">
+          Click a button to test API connectivity
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Don't override the entire API_BASE
+    // Instead, we'll intercept specific API calls in the fetch function
+    
+    // Store the original fetch function
+    const originalFetch = window.fetch;
+    
+    // Override fetch to redirect ONLY carousel-related endpoints
+    window.fetch = function(url, options) {
+      console.log(`📡 Fetch request to: ${url}`);
+      
+      // Check if this is a carousel-related endpoint
+      if (typeof url === 'string' && 
+         (url.includes('/api/carousel-images') || 
+          url.includes('/api/upload-signature'))) {
+        // Redirect to our specialized carousel server
+        const newUrl = url.replace('/api/', 'http://localhost:5002/api/');
+        console.log(`📸 Redirecting request to specialized server: ${newUrl}`);
+        
+        // Create new options object with the same properties
+        const newOptions = options ? { ...options } : {};
+        
+        // Ensure CORS mode is set
+        if (!newOptions.mode) {
+          newOptions.mode = 'cors';
+        }
+        
+        try {
+          return originalFetch(newUrl, newOptions)
+            .then(response => {
+              console.log(`📡 Received response from ${newUrl}:`, response.status);
+              return response;
+            })
+            .catch(error => {
+              console.error(`❌ Error fetching from ${newUrl}:`, error);
+              throw error;
+            });
+        } catch (error) {
+          console.error(`❌ Exception in fetch override:`, error);
+          throw error;
+        }
+      }
+      
+      // Use original fetch for all other requests
+      return originalFetch(url, options);
+    };
+    
+    // Enable debug mode
+    const DEBUG = true;
+    
+    // Debug logging function
+    function log(message, data) {
+      if (!DEBUG) return;
+      
+      console.log(message, data || '');
+      const debugInfo = document.getElementById('debug-info');
+      if (!debugInfo) return;
+      
+      debugInfo.style.display = 'block';
+      
+      const timestamp = new Date().toISOString().substr(11, 8);
+      const formattedMessage = data 
+        ? `[${timestamp}] ${message}: ${JSON.stringify(data)}` 
+        : `[${timestamp}] ${message}`;
+      
+      debugInfo.innerHTML += formattedMessage + '<br>';
+      debugInfo.scrollTop = debugInfo.scrollHeight;
+    }
+    
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+      authDomain: "projectportfolio-29467.firebaseapp.com",
+      databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+      projectId: "projectportfolio-29467",
+      storageBucket: "projectportfolio-29467.appspot.com",
+      messagingSenderId: "506713176316",
+      appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+    };
+    
+    try {
+      firebase.initializeApp(firebaseConfig);
+      log('Firebase initialized successfully');
+    } catch (e) {
+      log('Firebase initialization error', e.message);
+    }
+    
+    // DOM elements
+    const loginSection = document.getElementById('login-section');
+    const loader = document.getElementById('loader');
+    const adminPanel = document.getElementById('admin-panel');
+    const logoutBtn = document.getElementById('logout-btn');
+    const loginError = document.getElementById('login-error');
+    
+    // Check authentication status
+    function checkAuth() {
+      log('Checking authentication status');
+      
+      // Show loader
+      loginSection.style.display = 'none';
+      loader.style.display = 'block';
+      adminPanel.style.display = 'none';
+      
+      // Check for Firebase auth
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          log('User authenticated via Firebase', { email: user.email });
+          showAdminPanel();
+        } else {
+          // Check for stored token
+          const token = localStorage.getItem('firebase_token');
+          log('Checking for stored token', { hasToken: !!token });
+          
+          if (token) {
+            // Try to sign in with stored token
+            firebase.auth().signInWithCustomToken(token)
+              .then(function() {
+                log('Successfully signed in with stored token');
+                showAdminPanel();
+              })
+              .catch(function(error) {
+                log('Error signing in with token', error.message);
+                redirectToLogin();
+              });
+          } else {
+            // No authentication found
+            redirectToLogin();
+          }
+        }
+      });
+    }
+    
+    // Show admin panel
+    function showAdminPanel() {
+      loginSection.style.display = 'none';
+      loader.style.display = 'none';
+      adminPanel.style.display = 'block';
+      log('Admin panel displayed');
+    }
+    
+    // Redirect to login page
+    function redirectToLogin() {
+      log('Not authenticated, redirecting to login page');
+      window.location.href = '/admin-login.html';
+    }
+    
+    // Handle logout
+    logoutBtn.addEventListener('click', function() {
+      log('Logout requested');
+      
+      firebase.auth().signOut()
+        .then(function() {
+          log('Successfully signed out');
+          localStorage.removeItem('firebase_token');
+          localStorage.removeItem('user_data');
+          window.location.href = '/admin-login.html';
+        })
+        .catch(function(error) {
+          log('Error signing out', error.message);
+          // Still redirect to login page
+          window.location.href = '/admin-login.html';
+        });
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      log('Document loaded');
+      checkAuth();
+      
+      // Check if we're on a page that needs carousel images
+      if (document.getElementById('carousel-images-table')) {
+        loadCarouselImages();
+      }
+      
+      console.log('DOM loaded, debugging carousel image button');
+      
+      // Debug carousel image button
+      const addImageBtn = document.getElementById('add-carousel-image-btn');
+      console.log('Add Image Button found:', !!addImageBtn);
+      
+      if (addImageBtn) {
+        console.log('Setting up click handler for add-carousel-image-btn');
+        addImageBtn.addEventListener('click', function() {
+          console.log('🖱️ Add carousel image button clicked!');
+          
+          // Get the form container element
+          const formContainer = document.getElementById('carousel-image-form-container');
+          console.log('Form container found:', !!formContainer);
+          console.log('Form container current display:', formContainer ? formContainer.style.display : 'N/A');
+          
+          // Show the form by setting display to block
+          if (formContainer) {
+            formContainer.style.display = 'block';
+            console.log('Set form container display to block');
+            console.log('Form container display after change:', formContainer.style.display);
+            
+            // Reset form fields
+            document.getElementById('carousel-image-id').value = '';
+            document.getElementById('carousel-image-caption').value = '';
+            document.getElementById('carousel-image-order').value = '';
+            document.getElementById('carousel-image-url').value = '';
+            document.getElementById('carousel-image-public-id').value = '';
+            
+            // Show upload container, hide preview
+            const preview = document.getElementById('carousel-image-preview');
+            if (preview) {
+              preview.style.display = 'none';
+              console.log('Image preview hidden');
+            }
+            
+            const uploadContainer = document.getElementById('carousel-upload-container');
+            if (uploadContainer) {
+              uploadContainer.style.display = 'block';
+              console.log('Upload container shown');
+            }
+          } else {
+            console.error('❌ Could not find carousel-image-form-container element!');
+          }
+        });
+      } else {
+        console.error('❌ Could not find add-carousel-image-btn element!');
+      }
+
+      // Add debug panel toggle
+      const debugToggle = document.createElement('button');
+      debugToggle.className = 'btn btn-sm btn-secondary position-fixed';
+      debugToggle.style.bottom = '10px';
+      debugToggle.style.left = '10px';
+      debugToggle.innerText = 'Show Debug Tools';
+      debugToggle.addEventListener('click', function() {
+        const debugInfo = document.getElementById('debug-info');
+        const apiTestPanel = document.getElementById('api-test-panel');
+        
+        if (debugInfo.style.display === 'block') {
+          debugInfo.style.display = 'none';
+          apiTestPanel.style.display = 'none';
+          this.innerText = 'Show Debug Tools';
+        } else {
+          debugInfo.style.display = 'block';
+          apiTestPanel.style.display = 'block';
+          this.innerText = 'Hide Debug Tools';
+        }
+      });
+      document.body.appendChild(debugToggle);
+      
+      // Add API test buttons functionality
+      document.getElementById('test-carousel-api')?.addEventListener('click', async function() {
+        const resultEl = document.getElementById('api-test-result');
+        resultEl.className = 'alert alert-info';
+        resultEl.textContent = 'Testing carousel API connection...';
+        
+        try {
+          const res = await fetch('/api/carousel-images');
+          const data = await res.json();
+          
+          console.log('API test response:', data);
+          resultEl.className = 'alert alert-success';
+          resultEl.textContent = `Successfully connected to carousel API. Found ${data.length} images.`;
+        } catch (error) {
+          console.error('API test error:', error);
+          resultEl.className = 'alert alert-danger';
+          resultEl.textContent = `Error connecting to carousel API: ${error.message}`;
+        }
+      });
+      
+      document.getElementById('test-upload-signature')?.addEventListener('click', async function() {
+        const resultEl = document.getElementById('api-test-result');
+        resultEl.className = 'alert alert-info';
+        resultEl.textContent = 'Testing upload signature API...';
+        
+        try {
+          const res = await fetch('/api/upload-signature?folder=test&service=cloudinary', {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+          });
+          const data = await res.json();
+          
+          console.log('Signature API test response:', data);
+          resultEl.className = 'alert alert-success';
+          resultEl.textContent = `Successfully connected to signature API. Received valid signature data.`;
+        } catch (error) {
+          console.error('Signature API test error:', error);
+          resultEl.className = 'alert alert-danger';
+          resultEl.textContent = `Error connecting to signature API: ${error.message}`;
+        }
+      });
+    });
+
+    // Add Cloudinary Widget Status check
+    const cloudinaryAvailable = typeof cloudinary !== 'undefined';
+    console.log('Cloudinary widget available:', cloudinaryAvailable);
+    if (!cloudinaryAvailable) {
+      console.error('⚠️ WARNING: Cloudinary widget not loaded. Image uploads may not work.');
+    }
+
+    // Enhanced direct file upload for carousel images
+    document.getElementById('carousel-direct-upload')?.addEventListener('change', async function(e) {
+      console.log('Direct file upload triggered');
+      if (!e.target.files || e.target.files.length === 0) {
+        console.log('No files selected');
+        return;
+      }
+      
+      const file = e.target.files[0];
+      console.log('Selected file:', file.name, file.type, file.size);
+      const token = getAuthToken();
+      
+      // Show progress bar
+      const progressBar = document.querySelector('#upload-progress');
+      const progressBarInner = progressBar.querySelector('.progress-bar');
+      progressBar.classList.remove('d-none');
+      progressBarInner.style.width = '0%';
+      progressBarInner.setAttribute('aria-valuenow', 0);
+      
+      try {
+        // Create a FormData object to send the file
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('folder', 'portfolio/carousel');
+        formData.append('caption', 'Carousel Image');
+        
+        console.log('Sending direct upload to carousel server');
+        
+        // Use XMLHttpRequest for better progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        // Set up progress tracking
+        xhr.upload.addEventListener('progress', function(event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            console.log(`Upload progress: ${percentComplete}%`);
+            progressBarInner.style.width = percentComplete + '%';
+            progressBarInner.setAttribute('aria-valuenow', percentComplete);
+          }
+        });
+        
+        // Create a Promise to handle the XHR request
+        const uploadPromise = new Promise((resolve, reject) => {
+          xhr.open('POST', '/api/carousel-images/upload');
+          
+          // Set headers including authorization if available
+          if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          }
+          
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch (e) {
+                reject(new Error('Invalid JSON response from server'));
+              }
+            } else {
+              reject(new Error(`HTTP Error: ${xhr.status} ${xhr.statusText}`));
+            }
+          };
+          
+          xhr.onerror = function() {
+            reject(new Error('Network error occurred'));
+          };
+          
+          xhr.send(formData);
+        });
+        
+        // Show processing message at 100%
+        progressBarInner.style.width = '100%';
+        progressBarInner.innerHTML = 'Processing...';
+        
+        // Wait for upload to complete
+        const response = await uploadPromise;
+        console.log('Upload successful:', response);
+        
+        // Update the form with the response data
+        document.getElementById('carousel-image-preview').src = response.url;
+        document.getElementById('carousel-image-preview').style.display = 'block';
+        document.getElementById('carousel-image-url').value = response.url;
+        document.getElementById('carousel-image-public-id').value = response.publicId || '';
+        document.getElementById('carousel-image-width').value = response.width || '';
+        document.getElementById('carousel-image-height').value = response.height || '';
+        
+        // Hide the upload container
+        document.getElementById('carousel-upload-container').style.display = 'none';
+        
+        // Show success notification
+        alert('Image uploaded successfully!');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        
+        // Reset progress bar
+        progressBarInner.style.width = '0%';
+        
+        // Show error message
+        alert('Failed to upload image. Error: ' + error.message);
+      } finally {
+        // Hide progress bar after a short delay
+        setTimeout(() => {
+          progressBar.classList.add('d-none');
+        }, 1000);
+      }
+    });
+
+    // Initialize Cloudinary upload widget for carousel images
+    document.getElementById('carousel-upload-widget-btn')?.addEventListener('click', function() {
+      console.log('🖱️ Cloudinary upload widget button clicked!');
+      
+      // Check if Cloudinary is available
+      if (typeof cloudinary === 'undefined') {
+        console.error('❌ Cloudinary widget is not available! Make sure the Cloudinary script is loaded.');
+        alert('Error: Cloudinary upload service is not available. Please refresh the page or contact support.');
+        return;
+      }
+      
+      console.log('Fetching upload signature from:', `${API_BASE}/upload-signature?folder=portfolio/carousel&service=cloudinary`);
+      
+      // Generate timestamp and signature for Cloudinary
+      fetch(`${API_BASE}/upload-signature?folder=portfolio/carousel&service=cloudinary`, {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      })
+      .then(res => {
+        console.log('Signature response status:', res.status);
+        if (!res.ok) {
+          throw new Error(`Failed to get upload signature: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Got upload signature data:', data);
+        
+        if (!data.cloudName || !data.apiKey || !data.signature) {
+          throw new Error('Missing required Cloudinary credentials');
+        }
+        
+        const uploadOptions = {
+          cloudName: data.cloudName,
+          apiKey: data.apiKey,
+          uploadSignature: data.signature,
+          uploadPreset: 'portfolio_carousel',
+          folder: 'portfolio/carousel',
+          timestamp: data.timestamp,
+          // Remove cropping constraint to allow any image size/ratio
+          cropping: false,
+          // Add more upload sources for versatility
+          sources: ['local', 'url', 'camera', 'dropbox', 'google_drive', 'facebook', 'instagram'],
+          // Remove file size limitations
+          maxFileSize: 50000000, // 50MB max file size
+          // Allow multiple images to be uploaded
+          multiple: false,
+          // Add support for more file types
+          resourceType: 'auto',
+          // Customize UI with better colors and messaging
+          styles: {
+            palette: { window: '#F5F5F5', sourceBg: '#FFFFFF', windowBorder: '#4299E1', tabIcon: '#4299E1', inactiveTabIcon: '#CCCCCC', menuIcons: '#4299E1', link: '#4299E1', action: '#2B6CB0', inProgress: '#3182CE', complete: '#48BB78', error: '#E53E3E', textDark: '#2D3748', textLight: '#FFFFFF' },
+            fonts: { default: { active: true } }
+          },
+          text: {
+            en: {
+              local: {
+                dd_title_single: 'Drag and drop your carousel image here',
+                dd_title_multi: 'Drag and drop your carousel images here',
+                drop_title_single: 'Drop your carousel image here',
+                drop_title_multi: 'Drop your carousel images here'
+              }
+            }
+          }
+        };
+
+        console.log('Creating Cloudinary upload widget with options:', uploadOptions);
+        
+        try {
+          const widget = cloudinary.createUploadWidget(uploadOptions, (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              alert('Error uploading image. Please try again.');
+              return;
+            }
+            
+            console.log('Cloudinary widget event:', result?.event, result?.info);
+            
+            if (result && result.event === 'success') {
+              const imageData = result.info;
+              console.log('Successfully uploaded image:', imageData);
+              
+              // Set the form values
+              document.getElementById('carousel-image-preview').src = imageData.secure_url;
+              document.getElementById('carousel-image-preview').style.display = 'block';
+              document.getElementById('carousel-image-url').value = imageData.secure_url;
+              document.getElementById('carousel-image-public-id').value = imageData.public_id;
+              document.getElementById('carousel-image-width').value = imageData.width;
+              document.getElementById('carousel-image-height').value = imageData.height;
+              
+              // Hide the upload container
+              document.getElementById('carousel-upload-container').style.display = 'none';
+              
+              // Show success notification
+              alert('Image uploaded successfully!');
+            }
+            
+            // Handle queue complete event to support multiple uploads
+            if (result && result.event === 'queues-end') {
+              console.log('All uploads completed');
+            }
+            
+            // Handle close event
+            if (result && result.event === 'close') {
+              console.log('Widget closed without uploading');
+            }
+          });
+          
+          console.log('Opening Cloudinary widget...');
+          widget.open();
+        } catch (err) {
+          console.error('Error creating or opening Cloudinary widget:', err);
+          alert('Failed to initialize upload widget: ' + err.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error getting upload signature:', error);
+        alert('Failed to initialize upload widget: ' + error.message);
+      });
+    });
+
+    // Add this function to explicitly control the form display
+    function showCarouselForm() {
+      console.log('🖱️ Show carousel form function called');
+      
+      // Get the form container
+      const formContainer = document.getElementById('carousel-image-form-container');
+      console.log('Form container found:', !!formContainer);
+      
+      if (formContainer) {
+        // Make sure the display style is explicitly set to block
+        formContainer.style.display = 'block';
+        formContainer.style.visibility = 'visible';
+        console.log('Form container display style set to:', formContainer.style.display);
+        
+        // Reset form fields
+        document.getElementById('carousel-image-id').value = '';
+        document.getElementById('carousel-image-caption').value = '';
+        document.getElementById('carousel-image-order').value = '';
+        document.getElementById('carousel-image-url').value = '';
+        document.getElementById('carousel-image-public-id').value = '';
+        
+        // Show upload container, hide preview
+        const preview = document.getElementById('carousel-image-preview');
+        if (preview) {
+          preview.style.display = 'none';
+        }
+        
+        const uploadContainer = document.getElementById('carousel-upload-container');
+        if (uploadContainer) {
+          uploadContainer.style.display = 'block';
+        }
+        
+        // Scroll to the form container
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        console.error('❌ Could not find carousel-image-form-container element!');
+        alert('Error: Form container not found. Please refresh the page and try again.');
+      }
+    }
+
+    // Add this debug helper to check which elements are present
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM fully loaded. Checking carousel elements:');
+      console.log('- add-carousel-image-btn:', !!document.getElementById('add-carousel-image-btn'));
+      console.log('- carousel-image-form-container:', !!document.getElementById('carousel-image-form-container'));
+      console.log('- carousel-image-form:', !!document.getElementById('carousel-image-form'));
+      console.log('- carousel-upload-widget-btn:', !!document.getElementById('carousel-upload-widget-btn'));
+      console.log('- carousel-direct-upload:', !!document.getElementById('carousel-direct-upload'));
+      
+      // Add fallback click handler for the button
+      const addBtn = document.getElementById('add-carousel-image-btn');
+      if (addBtn) {
+        console.log('Adding explicit click handler to add button');
+        addBtn.addEventListener('click', function(e) {
+          console.log('Add button clicked via event listener');
+          e.preventDefault(); // Prevent any default behavior
+          showCarouselForm(); // Call our explicit function
+        });
+      }
+      
+      // Try to load carousel images on startup
+      if (document.getElementById('carousel-images-table')) {
+        console.log('Attempting to load carousel images...');
+        try {
+          // Use fetch directly rather than a function that might not be defined
+          fetch('/api/carousel-images')
+            .then(response => {
+              console.log('Carousel images API response status:', response.status);
+              return response.json();
+            })
+            .then(data => {
+              console.log('Loaded carousel images:', data.length || 0);
+              const tbody = document.querySelector('#carousel-images-table tbody');
+              if (tbody) {
+                tbody.innerHTML = '';
+                if (data && data.length) {
+                  // Render images
+                  data.forEach(image => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                      <td><img src="${image.url}" alt="${image.caption || 'Carousel image'}" style="max-height: 100px;"></td>
+                      <td>${image.caption || 'No caption'}</td>
+                      <td>${image.order || 0}</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary edit-carousel-image" data-id="${image.id}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-carousel-image" data-id="${image.id}">Delete</button>
+                      </td>
+                    `;
+                    tbody.appendChild(tr);
+                  });
+                } else {
+                  // No images found
+                  tbody.innerHTML = '<tr><td colspan="4" class="text-center">No carousel images found. Add your first image!</td></tr>';
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Error loading carousel images:', error);
+              const tbody = document.querySelector('#carousel-images-table tbody');
+              if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading carousel images. Please try again.</td></tr>';
+              }
+            });
+        } catch (e) {
+          console.error('Exception while trying to load carousel images:', e);
+        }
+      }
+    });
+  </script>
+</body>
+</html> 

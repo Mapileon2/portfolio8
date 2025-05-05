@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Consultant Portfolio | Arpan's Product Journey</title>
+    <!-- Firebase blocker script - must load before anything else -->
+    <script>
+      // Immediately block Firebase to prevent JWT errors 
+      (function() {
+        window.FORCE_LOCAL_STORAGE_ONLY = true;
+        localStorage.setItem('useLocalStorageOnly', 'true');
+        
+        // Create a proxy for the firebase object to intercept any initialization attempts
+        window.firebaseInitBlocker = {
+          initializeApp: function() {
+            console.log('Firebase initialization blocked globally');
+            return {
+              database: () => ({
+                ref: () => ({
+                  orderByChild: () => ({
+                    once: () => Promise.resolve({ val: () => null })
+                  }),
+                  once: () => Promise.resolve({ val: () => null })
+                })
+              }),
+              auth: () => ({
+                onAuthStateChanged: (callback) => callback(null)
+              })
+            };
+          }
+        };
+        
+        // Prepare to intercept firebase global object
+        Object.defineProperty(window, 'firebase', {
+          get: function() { return window.firebaseInitBlocker; },
+          set: function(newFirebase) {
+            console.log('Attempt to set firebase object intercepted');
+            window.firebaseInitBlocker = Object.assign({}, newFirebase, {
+              initializeApp: window.firebaseInitBlocker.initializeApp
+            });
+            return window.firebaseInitBlocker;
+          },
+          configurable: true
+        });
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {},
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Swiper JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="carousel.css">
+    <!-- Direct carousel fix - load before other scripts -->
+    <script src="/js/direct-carousel-fix.js"></script>
+    
+    <!-- Firebase API fallback for hosting environment -->
+    <script src="/js/firebase-data-fallback.js"></script>
+    
+    <script src="carousel.js"></script>
+    <script src="swiper-carousel.js"></script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f8ff;
+            color: #2a4365;
+            overflow-x: hidden;
+        }
+        .ghibli-font {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .soot-sprite {
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50%;
+            position: relative;
+        }
+        .soot-sprite::before, .soot-sprite::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            top: 8px;
+        }
+        .soot-sprite::before { left: 6px; }
+        .soot-sprite::after { right: 6px; }
+        .timeline-lantern {
+            width: 40px;
+            height: 60px;
+            background-color: #f8d56b;
+            border-radius: 50% 50% 10% 10%;
+            position: relative;
+            box-shadow: 0 0 20px #f8d56b;
+        }
+        .timeline-lantern::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f8d56b;
+            bottom: -10px;
+            left: 15px;
+            border-radius: 0 0 5px 5px;
+        }
+        .project-book {
+            perspective: 1000px;
+        }
+        .book-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .project-book:hover .book-inner {
+            transform: rotateY(15deg);
+        }
+        .book-spine {
+            position: absolute;
+            width: 15px;
+            height: 100%;
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+            right: -15px;
+            top: 0;
+            transform: rotateY(90deg) translateX(15px);
+            transform-origin: left center;
+        }
+        .kodama {
+            width: 40px;
+            height: 60px;
+            background-color: #a8d8ad;
+            border-radius: 50% 50% 30% 30%;
+            position: relative;
+        }
+        .kodama::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            background-color: #a8d8ad;
+            top: -10px;
+            left: 10px;
+            border-radius: 50% 50% 0 0;
+        }
+        .kodama::after {
+            content: '• •';
+            position: absolute;
+            color: white;
+            font-size: 10px;
+            top: 15px;
+            left: 10px;
+        }
+        .catbus {
+            width: 100px;
+            height: 60px;
+            background-color: #f4a261;
+            border-radius: 30px;
+            position: relative;
+        }
+        .catbus::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #f4a261;
+            border-radius: 50%;
+            top: -10px;
+            left: 20px;
+        }
+        .catbus::after {
+            content: '=^..^=';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            top: 15px;
+            left: 30px;
+        }
+        /* Slideshow styles */
+        .slide {
+            display: none;
+            animation-duration: 1s;
+        }
+        .fade {
+            animation-name: fade;
+            animation-duration: 1.5s;
+        }
+        @keyframes fade {
+            from {opacity: 0.4}
+            to {opacity: 1}
+        }
+        .active-slide {
+            display: block;
+        }
+        .dot.active {
+            background-color: #4b5563;
+        }
+        .dark .dot.active {
+            background-color: #9ca3af;
+        }
+        /* Swiper styles for the magical scenery slideshow */
+        .swiper-magical {
+            width: 100%;
+            height: 500px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .swiper-slide {
+            position: relative;
+        }
+        
+        .swiper-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: #d1d5db;
+            opacity: 0.7;
+        }
+        
+        .swiper-pagination-bullet-active {
+            background: #3b82f6;
+            opacity: 1;
+        }
+        
+        .swiper-button-next, 
+        .swiper-button-prev {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            backdrop-filter: blur(3px);
+            transition: all 0.3s;
+        }
+        
+        .swiper-button-next:after, 
+        .swiper-button-prev:after {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .swiper-button-next:hover, 
+        .swiper-button-prev:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .dark-mode .swiper-pagination-bullet {
+            background: #4b5563;
+        }
+        
+        .dark-mode .swiper-pagination-bullet-active {
+            background: #60a5fa;
+        }
+        
+        /* Add this to hide any edit buttons that might be dynamically added */
+        .edit-inline-btn, .edit-section-btn {
+            display: none !important;
+        }
+    </style>
+    <link rel="stylesheet" href="edit-disable.css">
+    <!-- Load the carousel fix CSS -->
+    <link rel="stylesheet" href="/css/fix-carousel.css">
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-white transition-colors duration-300">
+    <!-- We don't need this anymore since we load it earlier -->
+    <!-- <script src="js/direct-carousel-fix.js"></script> -->
+
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="darkModeToggle" class="bg-yellow-200 hover:bg-yellow-300 text-gray-800 rounded-full p-2 shadow-lg">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white bg-opacity-90 shadow-sm z-40 dark:bg-gray-800 dark:bg-opacity-90">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="ghibli-font text-2xl text-blue-600 dark:text-blue-300">
+                    <span class="text-yellow-500">★</span> Arpan's Product Journey
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#about" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">About</a>
+                    <a href="#skills" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Skills</a>
+                    <a href="#timeline" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Journey</a>
+                    <a href="#projects" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Projects</a>
+                    <a href="#contact" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Contact</a>
+                    <div class="relative">
+                        <button id="desktopDropdownBtn" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300 flex items-center">
+                            Download CV <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div id="desktopDropdown" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden dark:bg-gray-800">
+                            <a href="cv-indian.pdf" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center" download>
+                                <i class="fas fa-download mr-2 text-blue-500"></i> Indian Version
+                            </a>
+                            <a href="cv-global.pdf" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center" download>
+                                <i class="fas fa-download mr-2 text-blue-500"></i> Global Format
+                            </a>
+                            <a href="cv-europass.pdf" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center" download>
+                                <i class="fas fa-download mr-2 text-blue-500"></i> Europass CV
+                            </a>
+                        </div>
+                    </div>
+                    <a href="admin.html" class="text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Admin Panel</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobileMenuButton" class="text-gray-800 dark:text-gray-300">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-gray-800 py-2 px-4 shadow-lg">
+            <a href="#about" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">About</a>
+            <a href="#skills" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Skills</a>
+            <a href="#timeline" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Journey</a>
+            <a href="#projects" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Projects</a>
+            <a href="#contact" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Contact</a>
+            <div class="py-2">
+                <button id="mobileDropdownBtn" class="flex items-center text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">
+                    Download CV <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </button>
+                <div id="mobileDropdown" class="hidden pl-4 mt-2">
+                    <a href="cv-indian.pdf" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300 flex items-center" download>
+                        <i class="fas fa-download mr-2 text-blue-500"></i> Indian Version
+                    </a>
+                    <a href="cv-global.pdf" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300 flex items-center" download>
+                        <i class="fas fa-download mr-2 text-blue-500"></i> Global Format
+                    </a>
+                    <a href="cv-europass.pdf" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300 flex items-center" download>
+                        <i class="fas fa-download mr-2 text-blue-500"></i> Europass CV
+                    </a>
+                </div>
+            </div>
+            <a href="admin.html" class="block py-2 text-gray-800 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300">Admin Panel</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-16 bg-gradient-to-b from-blue-200 to-blue-100 dark:from-gray-800 dark:to-gray-900">
+        <div class="absolute top-20 right-20">
+            <div class="soot-sprite floating"></div>
+        </div>
+        <div class="absolute bottom-10 left-10">
+            <div class="kodama floating" style="animation-delay: 1s;"></div>
+        </div>
+        <div class="absolute top-1/3 left-1/4">
+            <div class="catbus floating" style="animation-delay: 2s;"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto text-center px-4 z-10">
+            <h1 class="ghibli-font text-5xl md:text-7xl font-bold text-indigo-100 dark:text-gray-100">
+                Crafting Products <br>That Spark <span class="text-yellow-400">Joy & Magic</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-10 text-indigo-200 dark:text-gray-300">
+                A Product Manager's journey through enchanted user experiences and data-driven storytelling
+            </p>
+            <a href="#about" class="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                Begin the Journey <i class="fas fa-arrow-down ml-2"></i>
+            </a>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-900 dark:to-transparent"></div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white dark:bg-gray-800" style="position:relative;">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Story</span>
+            </h2>
+            
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0 md:pr-10 relative">
+                    <div class="bg-blue-100 rounded-3xl p-6 shadow-xl dark:bg-gray-700">
+                        <div class="relative">
+                            <img src="images/IMG_20230307_172356-EDIT.jpg" 
+                                 alt="Profile at Indian Institute of Management" 
+                                 class="w-full h-auto rounded-2xl border-4 border-white dark:border-gray-600">
+                            <div class="absolute -bottom-6 -right-6">
+                                <div class="bg-yellow-400 rounded-full p-4 shadow-lg">
+                                    <i class="fas fa-magic text-2xl text-gray-800"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -top-10 -left-10 z-10">
+                        <div class="soot-sprite floating" style="animation-delay: 0.5s;"></div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2">
+                    <h3 class="ghibli-font text-3xl mb-6 text-gray-800 dark:text-gray-200">
+                        Once upon a time...
+                    </h3>
+                    <div class="text-gray-600 space-y-4 dark:text-gray-400">
+                        <p>
+                            In the ever-shifting landscape of business, where challenges loom like towering mountains and opportunities sparkle like hidden gems, a Management Consultant set forth on a mission: to turn complexity into clarity, data into direction, and strategy into success.
+                        </p>
+                        <p>
+                            Armed with the sword of strategic problem-solving, the shield of data analysis, and the map of actionable insights, I navigate the intricate pathways of decision-making, helping leaders and organizations find their way through uncertainty.
+                        </p>
+                        <p>
+                            I believe in the power of fact-based decision-making and value-driven strategies—not just as concepts, but as the very foundation of transformation. My quest? To deliver high-impact consulting solutions that empower business leaders, stakeholders, and organizations to tackle their most pressing challenges with confidence.
+                        </p>
+                        <p>
+                            Guided by continuous learning, analytical rigor, and innovation, I draw upon a deep understanding of business strategy, financial analysis, and market dynamics to craft solutions that don't just work—they drive real, lasting impact.
+                        </p>
+                        <p>
+                            Each project is a new chapter, each challenge a new adventure. Let's embark on this journey together—where data meets strategy, and insights lead to success.
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-8">
+                        <div class="bg-blue-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-blue-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-route text-blue-600 dark:text-blue-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Roadmap Wizardry</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Turning visions into actionable plans</p>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-yellow-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-users text-yellow-600 dark:text-yellow-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Strategy Alignment</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Bringing teams together under one sky</p>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-green-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-chart-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Metric Sorcery</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Weaving data into compelling stories</p>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-xl flex items-center dark:bg-gray-700">
+                            <div class="bg-purple-100 p-3 rounded-full mr-4 dark:bg-gray-600">
+                                <i class="fas fa-lightbulb text-purple-600 dark:text-purple-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Innovation Alchemy</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Transforming ideas into gold</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-20 bg-gray-50 dark:bg-gray-900" style="position:relative;">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Magic Toolbox</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Strategy Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-blue-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-chess-queen text-3xl text-blue-600 dark:text-blue-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Strategy & Vision</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Product Vision</span>
+                                <span class="text-sm text-gray-500">95%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Roadmapping</span>
+                                <span class="text-sm text-gray-500">90%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">OKRs</span>
+                                <span class="text-sm text-gray-500">85%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Execution Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-green-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-hammer text-3xl text-green-600 dark:text-green-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Execution</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Agile Methodologies</span>
+                                <span class="text-sm text-gray-500">92%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">User Stories</span>
+                                <span class="text-sm text-gray-500">88%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Prioritization</span>
+                                <span class="text-sm text-gray-500">90%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analytics Column -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg dark:bg-gray-800">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-purple-100 p-4 rounded-full dark:bg-gray-700">
+                            <i class="fas fa-chart-pie text-3xl text-purple-600 dark:text-purple-300"></i>
+                        </div>
+                    </div>
+                    <h3 class="ghibli-font text-2xl text-center mb-4 text-gray-800 dark:text-gray-200">Analytics</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">SQL</span>
+                                <span class="text-sm text-gray-500">85%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">A/B Testing</span>
+                                <span class="text-sm text-gray-500">80%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Data Visualization</span>
+                                <span class="text-sm text-gray-500">75%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tools Section -->
+            <div class="mt-16">
+                <h3 class="ghibli-font text-2xl text-center mb-8 text-gray-800 dark:text-gray-200">Enchanted Tools I Wield</h3>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-jira text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Jira</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-database text-2xl text-green-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">SQL</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-figma text-2xl text-purple-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Figma</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-chart-bar text-2xl text-yellow-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Google Analytics</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-th text-2xl text-blue-400 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Miro</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-file-word text-2xl text-blue-600 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">MS 365</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-project-diagram text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Alteryx</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-chart-pie text-2xl text-yellow-600 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Power BI</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fab fa-python text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Python</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800">
+                        <i class="fas fa-code-branch text-2xl text-gray-500 mr-2 dark:text-gray-300"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Git</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline" class="py-20 bg-white dark:bg-gray-800" style="position:relative;">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">My Journey</span>
+            </h2>
+            
+            <div class="relative">
+                <!-- Timeline line -->
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-blue-200 transform -translate-x-1/2 dark:bg-gray-600"></div>
+                
+                <!-- Timeline items -->
+                <div class="space-y-16">
+                    <!-- Item 1 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pr-16 mb-8 md:mb-0 text-right">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Consultant</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Capgemini India • 2023-Present</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Consultant at Capgemini leading ERP transformations, P&L management, and digital initiatives; expertise in governance, operations analytics, market analysis, and driving margin growth, efficiency, and AI-led customer service enhancements.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-16 order-1 md:order-2 mb-8 md:mb-0">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Summer Intern Consultant - Enterprise Growth Group</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Tata Consultancy Services • 2022</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Summer Intern at TCS, developed a retail strategy framework addressing store cannibalization; conducted primary research across formats and designed actionable solutions using a 7-parameter, 30+ sub-parameter model.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 md:pr-16 mb-8 md:mb-0 text-right">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">Market Research Live Project</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Merkle Sokrati - Internship • Dec 2021 - Jan 2022</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Conducted competitive analysis and brand mapping for India-based beauty retailers; analyzed customer behavior, addressed trust barriers, and recommended strategies to enhance brand credibility and optimize digital engagement.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="relative flex flex-col md:flex-row items-center">
+                        <div class="hidden md:block absolute left-1/2 -translate-x-1/2">
+                            <div class="timeline-lantern"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-16 order-1 md:order-2 mb-8 md:mb-0">
+                            <div class="bg-blue-50 p-6 rounded-2xl shadow-lg dark:bg-gray-700">
+                                <h3 class="ghibli-font text-2xl text-blue-700 mb-2 dark:text-blue-300">AT&T - Internship</h3>
+                                <p class="text-gray-600 font-medium mb-2 dark:text-gray-400">Jun 2020 - Jul 2020</p>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    Conducted market research, collaborated globally, and developed strategic insights for emerging markets; enhanced leadership skills through mentorship sessions, live Q&As, and presentations to senior professionals and industry experts.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-20 bg-gray-50 dark:bg-gray-900" style="position:relative;">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Magical Projects</span>
+            </h2>
+            
+            <!-- Loading spinner -->
+            <div id="projectsLoading" class="text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Loading magical projects...</p>
+            </div>
+            
+            <!-- Projects grid (initially empty, filled via JavaScript) -->
+            <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
+                <!-- Projects will be loaded here dynamically -->
+            </div>
+            
+            <!-- Error message (initially hidden) -->
+            <div id="projectsError" class="text-center py-10 hidden">
+                <div class="text-red-500 text-4xl mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">Could not load projects. Please try again later.</p>
+            </div>
+            
+            <div class="text-center mt-16">
+                <button id="viewAllProjectsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-800">
+                    View All Projects <i class="fas fa-wand-magic-sparkles ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Magical Scenery Slideshow Section -->
+    <section id="magical-scenery" class="py-20 bg-white dark:bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Magical Journeys</span>
+            </h2>
+            
+            <div class="swiper swiper-magical max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl">
+                <!-- Slides -->
+                <div class="swiper-wrapper">
+                    <!-- Slide 1 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/IMG_20220904_104615.jpg" alt="Magical Journey Image 1" onerror="this.src='https://picsum.photos/800/400?random=1'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 1</h3>
+                            <p class="text-white/90">Description for journey step 1</p>
+                        </div>
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/IMG_1078.jpg" alt="Magical Journey Image 2" onerror="this.src='https://picsum.photos/800/400?random=2'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 2</h3>
+                            <p class="text-white/90">Description for journey step 2</p>
+                        </div>
+                    </div>
+                    <!-- Slide 3 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/1000010842.jpg" alt="Magical Journey Image 3" onerror="this.src='https://picsum.photos/800/400?random=3'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 3</h3>
+                            <p class="text-white/90">Description for journey step 3</p>
+                        </div>
+                    </div>
+                    <!-- Slide 4 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/1000010856.webp" alt="Magical Journey Image 4" onerror="this.src='https://picsum.photos/800/400?random=4'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 4</h3>
+                            <p class="text-white/90">Description for journey step 4</p>
+                        </div>
+                    </div>
+                    <!-- Slide 5 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/1.jpg" alt="Magical Journey Image 5" onerror="this.src='https://picsum.photos/800/400?random=5'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 5</h3>
+                            <p class="text-white/90">Description for journey step 5</p>
+                        </div>
+                    </div>
+                    <!-- Slide 6 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/DSC_0180 (1).jpg" alt="Magical Journey Image 6" onerror="this.src='https://picsum.photos/800/400?random=6'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 6</h3>
+                            <p class="text-white/90">Description for journey step 6</p>
+                        </div>
+                    </div>
+                    <!-- Slide 7 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/Screenshot 2025-04-29 024650.png" alt="Magical Journey Image 7" onerror="this.src='https://picsum.photos/800/400?random=7'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 7</h3>
+                            <p class="text-white/90">Description for journey step 7</p>
+                        </div>
+                    </div>
+                    <!-- Slide 8 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/sggs.png" alt="Magical Journey Image 8" onerror="this.src='https://picsum.photos/800/400?random=8'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 8</h3>
+                            <p class="text-white/90">Description for journey step 8</p>
+                        </div>
+                    </div>
+                    <!-- Slide 9 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/FB_IMG_1562819585021.jpg" alt="Magical Journey Image 9" onerror="this.src='https://picsum.photos/800/400?random=9'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 9</h3>
+                            <p class="text-white/90">Description for journey step 9</p>
+                        </div>
+                    </div>
+                    <!-- Slide 10 -->
+                    <div class="swiper-slide">
+                        <img src="images/Image carousel/FB_IMG_1562819589936.jpg" alt="Magical Journey Image 10" onerror="this.src='https://picsum.photos/800/400?random=10'; this.classList.add('fallback-image');">
+                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 class="text-white text-2xl font-bold ghibli-font">Journey Step 10</h3>
+                            <p class="text-white/90">Description for journey step 10</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add navigation buttons -->
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                
+                <!-- Add pagination -->
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="ghibli-font text-4xl text-center mb-16 text-blue-700 dark:text-blue-300">
+                <span class="border-b-4 border-yellow-400 pb-2">Let's Connect</span>
+            </h2>
+            
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden dark:bg-gray-800">
+                <div class="md:flex">
+                    <div class="md:w-full bg-blue-600 p-10 text-white dark:bg-blue-700">
+                        <h3 class="ghibli-font text-3xl mb-4">Let's Create Magic Together</h3>
+                        <p class="mb-6">
+                            The journey doesn't end here. I'm always looking for new quests — whether it's leading strategy for a new market, building products that delight users, or solving problems that matter.
+                            <br><br>
+                            And if you just want to chat about innovative projects, creative ideas, or spreadsheets that sing — I'm in.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-2 rounded-full mr-4 dark:bg-blue-600">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <a href="mailto:arpanguria68@gmail.com" class="hover:underline">arpanguria68@gmail.com</a>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-2 rounded-full mr-4 dark:bg-blue-600">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <span>Bengaluru, IN</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 flex space-x-4">
+                            <a href="https://www.linkedin.com/in/arpan-guria/" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="https://github.com/arpang12" class="bg-white text-blue-600 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-200">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-16">
+                <button class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center mx-auto">
+                    <i class="fas fa-download mr-2"></i> Download My Scroll of Achievements
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 dark:bg-gray-950">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="ghibli-font text-2xl mb-6 md:mb-0">
+                    <span class="text-yellow-400">★</span> Arpan's Product Journey
+                </div>
+                <div class="flex space-x-6 mb-6 md:mb-0">
+                    <a href="#" class="hover:text-yellow-400 transition">Home</a>
+                    <a href="#about" class="hover:text-yellow-400 transition">About</a>
+                    <a href="#projects" class="hover:text-yellow-400 transition">Projects</a>
+                    <a href="#contact" class="hover:text-yellow-400 transition">Contact</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="https://www.linkedin.com/in/arpan-guria/" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://github.com/arpang12" class="bg-gray-700 hover:bg-gray-600 p-3 rounded-full transition">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2025 Arpan's Product Journey. All rights reserved. Crafted with magic and ♥</p>
+                <p class="mt-2 text-sm">Inspired by the enchanting worlds of Studio Ghibli</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            const htmlElement = document.documentElement;
+            htmlElement.classList.toggle('dark');
+            
+            const icon = this.querySelector('i');
+            if (htmlElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            const icon = document.querySelector('#darkModeToggle i');
+            if (icon) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Desktop dropdown toggle - click instead of hover
+        document.getElementById('desktopDropdownBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('desktopDropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', function() {
+            const desktopDropdown = document.getElementById('desktopDropdown');
+            if (!desktopDropdown.classList.contains('hidden')) {
+                desktopDropdown.classList.add('hidden');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        document.getElementById('desktopDropdown').addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Mobile dropdown toggle
+        document.getElementById('mobileDropdownBtn').addEventListener('click', function() {
+            const dropdown = document.getElementById('mobileDropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // Easter egg - click on soot sprites
+        document.querySelectorAll('.soot-sprite').forEach(sprite => {
+            sprite.addEventListener('click', function() {
+                const colors = ['#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33A8'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                this.style.backgroundColor = randomColor;
+                
+                // Create a temporary message
+                const message = document.createElement('div');
+                message.textContent = 'Hi there!';
+                message.style.position = 'absolute';
+                message.style.backgroundColor = 'white';
+                message.style.padding = '2px 6px';
+                message.style.borderRadius = '4px';
+                message.style.top = '-25px';
+                message.style.left = '0';
+                this.appendChild(message);
+                
+                // Remove after 2 seconds
+                setTimeout(() => {
+                    message.remove();
+                }, 2000);
+            });
+        });
+    </script>
+
+    <!-- Load Firebase Realtime Database -->
+    <!-- We load these scripts but our blocker will intercept them -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script>
+      // This will be intercepted by our blocker
+      const firebaseConfig = {
+        apiKey: "AIzaSyBr8ZruVUy_bHlnQRR-J_D5swyKQobkCWg",
+        authDomain: "projectportfolio-29467.firebaseapp.com",
+        databaseURL: "https://projectportfolio-29467-default-rtdb.firebaseio.com",
+        projectId: "projectportfolio-29467",
+        storageBucket: "projectportfolio-29467.appspot.com",
+        messagingSenderId: "506713176316",
+        appId: "1:506713176316:web:f2dea75b7c84e4fc20bdad"
+      };
+      
+      // If Firebase initialization is attempted, it will be intercepted
+      try {
+        console.log('Firebase initialization intercepted globally');
+        if (window.firebase && window.firebase.initializeApp) {
+          window.firebase.initializeApp(firebaseConfig);
+        }
+      } catch (error) {
+        console.log('Firebase initialization was intercepted', error);
+      }
+      
+      // Client-side time synchronization to fix JWT issues - this function is kept for compatibility
+      async function synchronizeClientTime() {
+        return false; // We're not actually doing this anymore
+      }
+      
+      // Initialize Firebase with error handling and retry - this function is kept for compatibility
+      async function initializeFirebase(retryCount = 0) {
+        console.log('Bypassing Firebase initialization, using localStorage only');
+        tryLoadFromLocalStorage();
+      }
+      
+      // Function to load data from localStorage - this is our main approach now
+      function tryLoadFromLocalStorage() {
+        console.log('Using localStorage as primary data source');
+        const localImages = JSON.parse(localStorage.getItem('carouselImages') || '[]');
+        if (localImages.length > 0) {
+          console.log(`Found ${localImages.length} carousel images in localStorage`);
+        } else {
+          console.log('No carousel images found in localStorage');
+        }
+      }
+      
+      // Always use localStorage
+      tryLoadFromLocalStorage();
+    </script>
+    <script src="script.js"></script>
+    
+    <!-- Auth check script to restrict admin content -->
+    <script src="js/auth-check.js"></script>
+    
+    <!-- Google Drive link converter for carousel images -->
+    <script src="js/google-drive-converter.js"></script>
+    
+    <!-- Immediate fix for edit functionality -->
+    <script>
+      // Ensure this runs immediately and constantly to prevent edit UI
+      (function() {
+        // First run immediately
+        removeEditUI();
+        
+        // Then keep checking periodically
+        setInterval(removeEditUI, 500);
+        
+        function removeEditUI() {
+          // Remove all edit buttons
+          document.querySelectorAll('.edit-inline-btn, .edit-section-btn, [class*="edit"], [id*="edit"], button[data-section]').forEach(btn => {
+            if (btn) {
+              btn.style.display = 'none';
+              btn.remove();
+            }
+          });
+          
+          // Remove contenteditable
+          document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+            element.removeAttribute('contenteditable');
+          });
+          
+          // Find elements with "Saving..." text and remove them
+          document.querySelectorAll('button, [class*="btn"]').forEach(el => {
+            if (el.innerText && el.innerText.includes('Saving')) {
+              el.style.display = 'none';
+              el.remove();
+            }
+          });
+        }
+      })();
+    </script>
+    <!-- Carousel fix script - not needed anymore since we load it at the top -->
+    <!-- <script src="js/carousel-fix.js"></script> -->
+    <!-- Client-side carousel fix for better user experience -->
+    <script src="js/carousel-fix-client.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Swiper
+        var swiper = new Swiper(".swiper-magical", {
+          effect: "slide",
+          grabCursor: true,
+          centeredSlides: false,
+          slidesPerView: 1,
+          spaceBetween: 30,
+          loop: true,
+          pagination: {
+            el: ".swiper-pagination",
+            clickable: true
+          },
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+          autoplay: {
+            delay: 5000,
+            disableOnInteraction: false,
+          },
+          virtual: {
+            enabled: false
+          },
+          watchSlidesProgress: true,
+          speed: 800,
+          preventInteractionOnTransition: false,
+          observer: true,
+          observeParents: true,
+          preloadImages: true,
+          updateOnImagesReady: true,
+          on: {
+            init: function() {
+              document.querySelectorAll('.swiper-slide img').forEach(img => {
+                img.classList.add('adaptive-carousel-image');
+                img.style.objectFit = 'contain';
+              });
+            },
+            slideChangeTransitionStart: function() {
+              const activeSlide = this.slides[this.activeIndex];
+              if (activeSlide) {
+                activeSlide.style.transition = 'opacity 0.4s ease';
+              }
+            }
+          }
+        });
+
+        // Store swiper options for potential re-initialization
+        document.querySelector('.swiper-magical').swiperOptions = {
+          effect: "slide",
+          grabCursor: true,
+          centeredSlides: false,
+          slidesPerView: 1,
+          spaceBetween: 30,
+          loop: true,
+          pagination: {
+            el: ".swiper-pagination",
+            clickable: true
+          },
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+          autoplay: {
+            delay: 5000,
+            disableOnInteraction: false,
+          },
+          virtual: {
+            enabled: false
+          },
+          watchSlidesProgress: true,
+          speed: 800,
+          preventInteractionOnTransition: false,
+          observer: true,
+          observeParents: true,
+          preloadImages: true,
+          updateOnImagesReady: true,
+          on: {
+            init: function() {
+              document.querySelectorAll('.swiper-slide img').forEach(img => {
+                img.classList.add('adaptive-carousel-image');
+                img.style.objectFit = 'contain';
+              });
+            }
+          },
+        };
+        
+        // Add event listener to ensure images are properly loaded
+        document.querySelectorAll('.swiper-magical img').forEach(img => {
+          img.addEventListener('load', function() {
+            if (swiper) swiper.update();
+          });
+          
+          img.addEventListener('error', function() {
+            if (this.src !== 'https://picsum.photos/800/400') {
+              this.src = 'https://picsum.photos/800/400';
+            }
+          });
+        });
+        
+        // Initialize carousel via the PortfolioCarousel module
+        if (window.PortfolioCarousel) {
+          window.PortfolioCarousel.init();
+          window.PortfolioCarousel.hideCaptions();
+        } else {
+          setTimeout(fixCarouselDirectly, 500);
+        }
+      });
+    </script>
+    <!-- Add error recovery script -->
+    <script>
+      // Error recovery for carousel
+      window.addEventListener('error', function(event) {
+        if (event.target && event.target.tagName === 'IMG') {
+          console.log('Recovering from image load error:', event.target.src);
+          
+          // Apply a fallback image and add a special class
+          if (!event.target.classList.contains('fallback-image')) {
+            const randomId = Math.floor(Math.random() * 100);
+            event.target.src = 'https://picsum.photos/800/400?random=' + randomId;
+            event.target.classList.add('fallback-image');
+            
+            // Prevent the default error behavior
+            event.preventDefault();
+          }
+        }
+      }, true);
+    </script>
+</body>
+</html>
