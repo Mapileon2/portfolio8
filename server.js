@@ -352,30 +352,105 @@ app.delete('/api/projects/:id', authMiddleware, requireAdmin, async (req, res) =
 
 // Create a new case study (public - intentionally unprotected for admin panel testing)
 app.post('/api/case-studies', async (req, res) => {
-  console.log('📝 POST /api/case-studies received, body =', req.body);
+  console.log('📝 POST /api/case-studies received');
+  
   try {
-    const ref = await rtdb.ref('caseStudies').push({
-      ...req.body,
-      createdAt: Date.now()
+    // Validate request body
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('Invalid request body:', req.body);
+      return res.status(400).json({ error: 'Invalid request format. Request body must be a JSON object.' });
+    }
+    
+    console.log('Request body (keys):', Object.keys(req.body));
+    
+    // Ensure required fields exist
+    if (!req.body.projectTitle && !req.body.title) {
+      return res.status(400).json({ error: 'Missing required fields. At least title is required.' });
+    }
+    
+    // Create standardized case study object with required fields
+    const caseStudyData = {
+      projectTitle: req.body.projectTitle || req.body.title || 'Untitled Project',
+      projectDescription: req.body.projectDescription || req.body.subtitle || req.body.summary || '',
+      projectImageUrl: req.body.projectImageUrl || req.body.imageUrl || '',
+      projectCategory: req.body.projectCategory || req.body.category || 'Case Study',
+      projectRating: req.body.projectRating || 5,
+      projectAchievement: req.body.projectAchievement || '',
+      createdAt: req.body.createdAt || Date.now(),
+      updatedAt: Date.now(),
+      ...req.body  // Keep all original fields as well
+    };
+    
+    // Push to Firebase
+    const ref = await rtdb.ref('caseStudies').push(caseStudyData);
+    console.log(`📊 Created case study with ID: ${ref.key}`);
+    
+    // Return success with ID and data
+    return res.status(201).json({ 
+      id: ref.key, 
+      ...caseStudyData
     });
-    res.status(201).json({ id: ref.key, ...req.body });
   } catch (error) {
     console.error('Error creating case study in Firebase:', error);
-    res.status(500).json({ error: 'Failed to create case study' });
+    return res.status(500).json({ 
+      error: 'Failed to create case study', 
+      details: error.message 
+    });
   }
 });
 
 // Update a case study (public - intentionally unprotected for admin panel testing)
 app.put('/api/case-studies/:id', async (req, res) => {
   try {
-    await rtdb.ref(`caseStudies/${req.params.id}`).update({
-      ...req.body,
-      updatedAt: Date.now()
+    const caseId = req.params.id;
+    console.log(`📝 PUT /api/case-studies/${caseId} received`);
+    
+    // Validate request body
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('Invalid request body:', req.body);
+      return res.status(400).json({ error: 'Invalid request format. Request body must be a JSON object.' });
+    }
+    
+    console.log('Request body (keys):', Object.keys(req.body));
+    
+    // Check if the case study exists
+    const snapshot = await rtdb.ref(`caseStudies/${caseId}`).once('value');
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: 'Case study not found' });
+    }
+    
+    // Create update object with standardized fields
+    const updateData = {
+      // Add standard fields if provided in request
+      ...(req.body.projectTitle && { projectTitle: req.body.projectTitle }),
+      ...(req.body.projectDescription && { projectDescription: req.body.projectDescription }),
+      ...(req.body.projectImageUrl && { projectImageUrl: req.body.projectImageUrl }),
+      ...(req.body.projectCategory && { projectCategory: req.body.projectCategory }),
+      ...(req.body.projectRating && { projectRating: req.body.projectRating }),
+      ...(req.body.projectAchievement && { projectAchievement: req.body.projectAchievement }),
+      
+      // Always update timestamp
+      updatedAt: Date.now(),
+      
+      // Include all other fields from request body
+      ...req.body
+    };
+    
+    // Update in Firebase
+    await rtdb.ref(`caseStudies/${caseId}`).update(updateData);
+    console.log(`📊 Updated case study: ${caseId}`);
+    
+    // Return the updated case study
+    return res.json({ 
+      id: caseId, 
+      ...updateData 
     });
-    res.json({ id: req.params.id, ...req.body });
   } catch (error) {
     console.error('Error updating case study in Firebase:', error);
-    res.status(500).json({ error: 'Failed to update case study' });
+    return res.status(500).json({ 
+      error: 'Failed to update case study', 
+      details: error.message 
+    });
   }
 });
 
@@ -502,7 +577,7 @@ app.post('/api/carousel-images', upload.single('image'), async (req, res) => {
 });
 
 // Update carousel image metadata (public - intentionally unprotected for admin panel testing)
-app.put('/api/carousel-images/:id', async (req, res) => {
+app.put('/api/carousel-images/:id', upload.single('image'), async (req, res) => {
   try {
     console.log(`📊 PUT /api/carousel-images/${req.params.id} - Updating carousel image`);
     
@@ -512,20 +587,72 @@ app.put('/api/carousel-images/:id', async (req, res) => {
       const ref = rtdb.ref(`carouselImages/${req.params.id}`);
       const snapshot = await ref.once('value');
       
-      if (snapshot.exists()) {
-        // Get current data and merge with updates
-        const currentData = snapshot.val();
-        const updates = {
-          ...currentData,
-          ...req.body,
-          updatedAt: Date.now()
+      if (!snapshot.exists()) {
+        return res.status(404).json({ error: 'Carousel image not found' });
+      }
+      
+      // Get current data
+      const currentData = snapshot.val();
+      
+      // Handle file upload if provided
+      let imageInfo = null;
+      if (req.file) {
+        console.log('📊 File included in update, uploading to Cloudinary');
+        
+        // Upload the new image
+        const uploadOptions = {
+          folder: req.body.folder || 'portfolio/carousel',
+          resource_type: 'auto',
+          overwrite: true,
+          transformation: [
+            { width: 1920, crop: "limit" },
+            { quality: "auto:best" }
+          ]
         };
         
-        // Update in Firebase
-        await ref.update(updates);
-        updatedImage = { id: req.params.id, ...updates };
-        console.log(`📊 Updated carousel image in Firebase: ${req.params.id}`);
+        imageInfo = await imageService.uploadImage(
+          req.file.path,
+          'carousel',
+          uploadOptions.folder,
+          req.body.metadata || {}
+        );
+        
+        // Clean up the temporary file
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+        
+        // Delete the old image if we have its publicId
+        if (currentData.publicId) {
+          try {
+            await imageService.deleteImage(currentData.publicId, currentData.service || 'cloudinary');
+          } catch (deleteError) {
+            console.error('Error deleting old image:', deleteError);
+            // Continue anyway
+          }
+        }
       }
+      
+      // Prepare update data
+      const updates = {
+        ...currentData,
+        ...req.body,
+        // If we have new image info, update the image fields
+        ...(imageInfo && {
+          url: imageInfo.url,
+          publicId: imageInfo.publicId,
+          width: imageInfo.width,
+          height: imageInfo.height,
+          service: imageInfo.service || 'cloudinary',
+          thumbnail: imageService.getResizedImageUrl(imageInfo.url, 300, 200, { crop: 'fill' })
+        }),
+        updatedAt: Date.now()
+      };
+      
+      // Update in Firebase
+      await ref.update(updates);
+      updatedImage = { id: req.params.id, ...updates };
+      console.log(`📊 Updated carousel image in Firebase: ${req.params.id}`);
     } catch (fbError) {
       console.error('Error updating carousel image in Firebase:', fbError);
     }
@@ -544,7 +671,20 @@ app.put('/api/carousel-images/:id', async (req, res) => {
     res.json(updatedImage);
   } catch (error) {
     console.error('Error updating carousel image:', error);
-    res.status(500).json({ error: 'Failed to update carousel image' });
+    
+    // Clean up the temporary file if it exists
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupError) {
+        console.error('Error cleaning up temporary file:', cleanupError);
+      }
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to update carousel image',
+      details: error.message
+    });
   }
 });
 
@@ -687,39 +827,78 @@ app.put('/api/carousel-settings', async (req, res) => {
 
 // Upload image (unprotected - intentionally public for admin panel testing)
 app.post('/api/upload', upload.single('image'), async (req, res) => {
-  console.log('📤 POST /api/upload, file =', req.file && req.file.path, ', body =', req.body);
+  console.log('📤 POST /api/upload received');
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file provided' });
+  }
+  
+  console.log('File uploaded:', req.file.path);
+  console.log('Request body:', req.body);
+  
   try {
     const { folder, imageType, metadata } = req.body;
     
     // Parse metadata if it's a string
-    const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+    let parsedMetadata;
+    try {
+      parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+    } catch (parseError) {
+      console.warn('Error parsing metadata JSON, using empty object instead:', parseError);
+      parsedMetadata = {};
+    }
+    
+    // Use appropriate folder based on image type
+    const effectiveImageType = imageType || 'project';
+    const effectiveFolder = folder || `portfolio/${effectiveImageType}`;
     
     // Force Cloudinary for case study images
-    const effectiveImageType = imageType || 'project';
     const targetService = effectiveImageType.includes('case') ? 'cloudinary' : null;
     
-    // Upload the image
+    console.log(`📊 Uploading image for type: ${effectiveImageType}, to folder: ${effectiveFolder}, service: ${targetService || 'default'}`);
+    
+    // Upload the image with better error handling
     const result = await imageService.uploadImage(
       req.file.path,
       effectiveImageType,
-      folder || 'portfolio/images',
+      effectiveFolder,
       parsedMetadata || {},
       targetService
     );
     
-    // Clean up the temporary file
-    fs.unlinkSync(req.file.path);
+    console.log('📊 Upload successful:', result.url);
     
-    res.json(result);
+    // Clean up the temporary file
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+      console.log('📊 Temporary file cleaned up');
+    }
+    
+    res.json({
+      url: result.url,
+      publicId: result.publicId,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      service: result.service || 'cloudinary'
+    });
   } catch (error) {
     console.error('Error uploading image:', error);
     
     // Clean up the temporary file if it exists
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+      try {
+        fs.unlinkSync(req.file.path);
+        console.log('📊 Temporary file cleaned up after error');
+      } catch (cleanupError) {
+        console.error('Error cleaning up temporary file:', cleanupError);
+      }
     }
     
-    res.status(500).json({ error: 'Failed to upload image' });
+    res.status(500).json({ 
+      error: 'Failed to upload image',
+      details: error.message
+    });
   }
 });
 
@@ -792,25 +971,6 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (error) {
     console.error('Error during login:', error);
     res.status(500).json({ error: 'Authentication failed' });
-  }
-});
-
-// Change admin password (protected)
-app.put('/api/admin/change-password', authMiddleware, requireAdmin, async (req, res) => {
-  const { email, newPassword } = req.body;
-  if (!email || !newPassword) {
-    return res.status(400).json({ error: 'Email and newPassword are required' });
-  }
-  try {
-    // Fetch user by email
-    const userRecord = await auth.getUserByEmail(email);
-    // Update password
-    await auth.updateUser(userRecord.uid, { password: newPassword });
-    console.log(`Admin password changed for email: ${email}`);
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Error changing admin password:', error);
-    res.status(500).json({ error: 'Failed to update password' });
   }
 });
 

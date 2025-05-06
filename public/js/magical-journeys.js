@@ -174,8 +174,8 @@ async function uploadCarouselImage(e) {
             let url = '/api/carousel-images';
             if (isUpdate) {
                 url = `/api/carousel-images/${idInput.value}`;
-                // For update with file, we use POST 
-                xhr.open('POST', url);
+                // For update with file, we use PUT not POST
+                xhr.open('PUT', url);
             } else {
                 xhr.open('POST', url);
             }
@@ -374,9 +374,23 @@ async function editCarouselImage(id) {
             // If no new file is selected, send an update request
             if (!fileInput.files || fileInput.files.length === 0) {
                 try {
+                    // Get authentication token if available
+                    const token = localStorage.getItem('firebase_token') || 
+                                localStorage.getItem('jwt_token') ||
+                                sessionStorage.getItem('jwtToken');
+                    
+                    // Set headers including auth if available
+                    const headers = { 
+                        'Content-Type': 'application/json' 
+                    };
+                    
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    
                     const response = await fetch(`/api/carousel-images/${id}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: headers,
                         body: JSON.stringify({
                             caption: captionInput.value || 'Carousel Image',
                             order: parseInt(orderInput.value) || 1
@@ -413,8 +427,20 @@ async function deleteCarouselImage(id) {
     }
     
     try {
+        // Get authentication token if available
+        const token = localStorage.getItem('firebase_token') || 
+                    localStorage.getItem('jwt_token') ||
+                    sessionStorage.getItem('jwtToken');
+        
+        // Set headers including auth if available
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const response = await fetch(`/api/carousel-images/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: headers
         });
         
         if (response.ok) {
