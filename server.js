@@ -15,24 +15,13 @@ const { auth, rtdb } = require('./firebase-admin');
 const config = require('./deploy-config');
 const setupCors = require('./cors-fix');
 const setupSectionsAPI = require('./sections-api');
+const os = require('os');
 
 const app = express();
 const PORT = config.mainServer.port;
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage(); // Use memory storage for Vercel compatibility
 const upload = multer({ storage });
 
 // Middleware
@@ -483,7 +472,7 @@ app.post('/api/carousel-images', upload.single('image'), async (req, res) => {
     
     // Enhanced logging for debugging
     console.log('Request body:', req.body);
-    console.log('File uploaded:', req.file ? req.file.path : 'No file');
+    console.log('File received:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'No file');
     
     // Check if we have direct Cloudinary info
     let imageInfo;
@@ -509,20 +498,48 @@ app.post('/api/carousel-images', upload.single('image'), async (req, res) => {
         transformation: [
           { width: 1920, crop: "limit" }, // Limit width while maintaining aspect ratio
           { quality: "auto:best" } // Optimal quality
-        ],
-        context: req.body.metadata || {}
+        ]
       };
       
-      imageInfo = await imageService.uploadImage(
-      req.file.path,
-      'carousel',
-        uploadOptions.folder,
-        uploadOptions
-    );
-    
-      // Clean up the temporary file
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      // For Vercel compatibility: create temporary file path for uploads
+      // or pass buffer directly to the upload service
+      const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${req.file.originalname}`);
+      
+      try {
+        // Write buffer to temporary file
+        fs.writeFileSync(tempFilePath, req.file.buffer);
+        
+        // Upload using the temporary file path
+        imageInfo = await imageService.uploadImage(
+          tempFilePath,         // file path instead of buffer
+          'carousel',           // image type
+          uploadOptions.folder, // folder
+          uploadOptions.context || {}  // metadata (fix: was passing entire uploadOptions object)
+        );
+        
+        // Clean up temp file
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+      } catch (uploadError) {
+        console.error('Error during file upload:', uploadError);
+        
+        // Fallback: Try direct buffer upload if cloudinary supports it
+        if (uploadError.message && uploadError.message.includes('ENOENT')) {
+          console.log('📊 Fallback: Trying direct buffer upload');
+          
+          // Some services support buffer upload directly
+          imageInfo = await imageService.uploadBuffer(
+            req.file.buffer,
+            req.file.originalname,
+            'carousel',
+            uploadOptions.folder,
+            uploadOptions.context || {}
+          );
+        } else {
+          // Re-throw if it's not a file system error
+          throw uploadError;
+        }
       }
     } else {
       return res.status(400).json({ error: 'No image provided' });
@@ -598,6 +615,7 @@ app.put('/api/carousel-images/:id', upload.single('image'), async (req, res) => 
       let imageInfo = null;
       if (req.file) {
         console.log('📊 File included in update, uploading to Cloudinary');
+        console.log('File received:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'No file');
         
         // Upload the new image
         const uploadOptions = {
@@ -610,16 +628,41 @@ app.put('/api/carousel-images/:id', upload.single('image'), async (req, res) => 
           ]
         };
         
-        imageInfo = await imageService.uploadImage(
-          req.file.path,
-          'carousel',
-          uploadOptions.folder,
-          req.body.metadata || {}
-        );
-        
-        // Clean up the temporary file
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+        // For Vercel compatibility: create temporary file path or use buffer directly
+        try {
+          // Try temp file approach first
+          const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${req.file.originalname}`);
+          fs.writeFileSync(tempFilePath, req.file.buffer);
+          
+          imageInfo = await imageService.uploadImage(
+            tempFilePath,
+            'carousel',
+            uploadOptions.folder,
+            req.body.metadata || {}
+          );
+          
+          // Clean up the temporary file
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+          }
+        } catch (uploadError) {
+          console.error('Error during file upload:', uploadError);
+          
+          // Fallback to direct buffer upload
+          if (uploadError.message && uploadError.message.includes('ENOENT')) {
+            console.log('📊 Fallback: Trying direct buffer upload for update');
+            
+            imageInfo = await imageService.uploadBuffer(
+              req.file.buffer,
+              req.file.originalname,
+              'carousel',
+              uploadOptions.folder,
+              req.body.metadata || {}
+            );
+          } else {
+            // Re-throw if it's not a file system error
+            throw uploadError;
+          }
         }
         
         // Delete the old image if we have its publicId
@@ -833,7 +876,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     return res.status(400).json({ error: 'No image file provided' });
   }
   
-  console.log('File uploaded:', req.file.path);
+  console.log('File received:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'No file');
   console.log('Request body:', req.body);
   
   try {
@@ -858,21 +901,49 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     console.log(`📊 Uploading image for type: ${effectiveImageType}, to folder: ${effectiveFolder}, service: ${targetService || 'default'}`);
     
     // Upload the image with better error handling
-    const result = await imageService.uploadImage(
-      req.file.path,
-      effectiveImageType,
-      effectiveFolder,
-      parsedMetadata || {},
-      targetService
-    );
+    let result;
+    
+    // For Vercel compatibility: try temporary file first, then direct buffer upload
+    try {
+      // Create a temporary file from the buffer
+      const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${req.file.originalname}`);
+      fs.writeFileSync(tempFilePath, req.file.buffer);
+      
+      result = await imageService.uploadImage(
+        tempFilePath,
+        effectiveImageType,
+        effectiveFolder,
+        parsedMetadata || {},
+        targetService
+      );
+      
+      // Clean up temp file
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+        console.log('📊 Temporary file cleaned up');
+      }
+    } catch (uploadError) {
+      console.error('Error during file upload via temp file:', uploadError);
+      
+      if (uploadError.message && uploadError.message.includes('ENOENT')) {
+        console.log('📊 Fallback: Trying direct buffer upload');
+        
+        // Some services support buffer upload directly
+        result = await imageService.uploadBuffer(
+          req.file.buffer,
+          req.file.originalname,
+          effectiveImageType,
+          effectiveFolder,
+          parsedMetadata || {},
+          targetService
+        );
+      } else {
+        // Re-throw if it's not a file system error
+        throw uploadError;
+      }
+    }
     
     console.log('📊 Upload successful:', result.url);
-    
-    // Clean up the temporary file
-    if (fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-      console.log('📊 Temporary file cleaned up');
-    }
     
     res.json({
       url: result.url,
@@ -884,16 +955,6 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     });
   } catch (error) {
     console.error('Error uploading image:', error);
-    
-    // Clean up the temporary file if it exists
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log('📊 Temporary file cleaned up after error');
-      } catch (cleanupError) {
-        console.error('Error cleaning up temporary file:', cleanupError);
-      }
-    }
     
     res.status(500).json({ 
       error: 'Failed to upload image',

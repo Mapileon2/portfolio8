@@ -90,6 +90,73 @@ const imageService = {
     }
   },
   
+  // Upload an image directly from buffer (for serverless environments like Vercel)
+  uploadBuffer: async (buffer, fileName, imageType = 'project', folder = '', metadata = {}, forceService = null) => {
+    // Allow service to be forced for specific uploads
+    const service = forceService || getServiceForImageType(imageType);
+    
+    if (service === 'cloudinary') {
+      // Prepare a stream from the buffer
+      const streamifier = require('streamifier');
+      const stream = streamifier.createReadStream(buffer);
+      
+      // Create a promise to handle the stream upload
+      return new Promise((resolve, reject) => {
+        const uploadOptions = {
+          folder: folder || `portfolio/${imageType}`,
+          resource_type: 'auto',
+          overwrite: true
+        };
+        
+        // Add any custom metadata
+        if (metadata) {
+          uploadOptions.context = metadata;
+        }
+        
+        // Upload stream to Cloudinary
+        const uploadStream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+          if (error) {
+            console.error('Cloudinary stream upload error:', error);
+            return reject(error);
+          }
+          
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+            service: 'cloudinary'
+          });
+        });
+        
+        stream.pipe(uploadStream);
+      });
+    } else {
+      // Upload to ImageKit directly from buffer
+      try {
+        const result = await imagekit.upload({
+          file: buffer,
+          fileName: fileName,
+          folder: folder || `portfolio/${imageType}`,
+          tags: Object.values(metadata || {}).join(',')
+        });
+        
+        return {
+          url: result.url,
+          publicId: result.fileId,
+          width: result.width,
+          height: result.height,
+          format: path.extname(fileName).substring(1),
+          service: 'imagekit'
+        };
+      } catch (error) {
+        console.error('ImageKit buffer upload error:', error);
+        throw error;
+      }
+    }
+  },
+  
   // Delete an image from the appropriate service
   deleteImage: async (publicId, service) => {
     try {
