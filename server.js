@@ -795,6 +795,25 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Change admin password (protected)
+app.put('/api/admin/change-password', authMiddleware, requireAdmin, async (req, res) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) {
+    return res.status(400).json({ error: 'Email and newPassword are required' });
+  }
+  try {
+    // Fetch user by email
+    const userRecord = await auth.getUserByEmail(email);
+    // Update password
+    await auth.updateUser(userRecord.uid, { password: newPassword });
+    console.log(`Admin password changed for email: ${email}`);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error changing admin password:', error);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
 // Server status endpoint - simplified for faster response
 app.get('/api/status', (req, res) => {
   res.json({ status: 'online' });
