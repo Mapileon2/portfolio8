@@ -565,9 +565,10 @@
                         </div>
                     </div>
                     
-                    <!-- Add Figma Section after Links Section -->
+                    <!-- Links Section ends -->
+                    
                     <!-- Figma Prototype Section -->
-                    <div id="figmaContent" class="section-container mb-8">
+                    <div id="figmaContent" class="section-container mb-8" style="display:none;">
                         <div class="bg-pink-50 p-6 rounded-xl dark:bg-gray-700">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-300">Figma Prototype</h2>
@@ -1199,7 +1200,7 @@
                 };
             }
             
-            // Add Figma section to data gathering in the form submission
+            // Gather Figma inputs
             if (formData.sections.figma && formData.sections.figma.enabled) {
                 formData.sections.figma.url = document.querySelector('[name="figmaUrl"]').value;
                 formData.sections.figma.caption = document.querySelector('[name="figmaCaption"]').value;
