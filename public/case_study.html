@@ -959,6 +959,29 @@
                     </section>`;
                 }
                 
+                // Figma Prototype Section
+                if (sections.figma && sections.figma.enabled && sections.figma.url) {
+                    console.log('Debug: Rendering Figma section');
+                    html += `
+                    <section id="figma" class="py-16 bg-pink-50 dark:bg-gray-900">
+                        <div class="container mx-auto px-6">
+                            <h2 class="text-3xl font-bold text-center text-pink-600 mb-8 ghibli-font dark:text-pink-400">Interactive Prototype</h2>
+                            <div class="max-w-4xl mx-auto">
+                                <div class="aspect-video overflow-hidden rounded-lg shadow-lg">
+                                    <iframe 
+                                        src="${sections.figma.url}" 
+                                        class="w-full h-full border-0" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                                ${sections.figma.caption ? `
+                                <p class="text-center mt-4 text-gray-700 dark:text-gray-300">${sections.figma.caption}</p>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </section>`;
+                }
+                
                 console.log('Debug: Final HTML generated length:', html.length);
                 dynamicCaseStudyContent.innerHTML = html;
                 

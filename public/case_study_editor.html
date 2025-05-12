@@ -210,6 +210,10 @@
                             <input type="checkbox" id="linksSectionToggle" class="section-toggle mr-2" data-section="links">
                             <label for="linksSectionToggle" class="text-gray-700 dark:text-gray-300">Additional Links</label>
                         </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="figmaSectionToggle" class="section-toggle mr-2" data-section="figma">
+                            <label for="figmaSectionToggle" class="text-gray-700 dark:text-gray-300">Figma Prototype</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -561,6 +565,42 @@
                         </div>
                     </div>
                     
+                    <!-- Add Figma Section after Links Section -->
+                    <!-- Figma Prototype Section -->
+                    <div id="figmaContent" class="section-container mb-8">
+                        <div class="bg-pink-50 p-6 rounded-xl dark:bg-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-300">Figma Prototype</h2>
+                                <button type="button" class="preview-toggle bg-pink-100 hover:bg-pink-200 text-pink-800 px-3 py-1 rounded-lg text-sm dark:bg-pink-900 dark:text-pink-300" data-section="figma">
+                                    Preview <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Figma Embed URL</label>
+                                <input type="text" name="figmaUrl" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://www.figma.com/embed?embed_host=share&url=https://www.figma.com/proto/your-prototype-id">
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Paste your Figma embed URL. You can get this by clicking "Share" in Figma, then "Copy embed code" and extracting the URL from the iframe src.</p>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2 dark:text-gray-300">Figma Caption (optional)</label>
+                                <input type="text" name="figmaCaption" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Example: Interactive prototype of the dashboard">
+                            </div>
+                            <div class="section-preview" id="figma-preview">
+                                <div class="border-t border-pink-200 dark:border-gray-600 pt-4 mt-4">
+                                    <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Preview</h3>
+                                    <div class="bg-white p-4 rounded-lg dark:bg-gray-800">
+                                        <div id="preview-figmaEmbed" class="w-full h-80 border border-gray-200 rounded-lg overflow-hidden">
+                                            <!-- Figma embed will go here -->
+                                            <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-700">
+                                                <p class="text-gray-500 dark:text-gray-400">Figma embed will appear here</p>
+                                            </div>
+                                        </div>
+                                        <p id="preview-figmaCaption" class="text-center mt-2 text-gray-600 dark:text-gray-400"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="flex justify-between mt-8">
                         <button type="button" id="cancelBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg">
                             Cancel
@@ -754,6 +794,11 @@
                             if (sections.links) {
                                 document.querySelector('[name="linksTitle"]').value = sections.links.title || 'Additional Links';
                                 document.querySelector('[name="linksList"]').value = sections.links.items || '';
+                            }
+                            
+                            if (sections.figma) {
+                                document.querySelector('[name="figmaUrl"]').value = sections.figma.url || '';
+                                document.querySelector('[name="figmaCaption"]').value = sections.figma.caption || '';
                             }
                         } else {
                             debugLog('No sections found in case study data');
@@ -964,6 +1009,28 @@
                         linksContainer.appendChild(div);
                     }
                 });
+            } else if (section === 'figma') {
+                const figmaUrl = document.querySelector('[name="figmaUrl"]').value;
+                const figmaCaption = document.querySelector('[name="figmaCaption"]').value;
+                const embedContainer = document.getElementById('preview-figmaEmbed');
+                
+                if (figmaUrl) {
+                    embedContainer.innerHTML = `
+                        <iframe 
+                            src="${figmaUrl}" 
+                            class="w-full h-full border-0" 
+                            allowfullscreen>
+                        </iframe>
+                    `;
+                } else {
+                    embedContainer.innerHTML = `
+                        <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-700">
+                            <p class="text-gray-500 dark:text-gray-400">Please enter a Figma embed URL</p>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('preview-figmaCaption').textContent = figmaCaption;
             }
         }
 
@@ -1130,6 +1197,12 @@
                     title: linksTitle,
                     items: linksList
                 };
+            }
+            
+            // Add Figma section to data gathering in the form submission
+            if (formData.sections.figma && formData.sections.figma.enabled) {
+                formData.sections.figma.url = document.querySelector('[name="figmaUrl"]').value;
+                formData.sections.figma.caption = document.querySelector('[name="figmaCaption"]').value;
             }
             
             // Generate HTML from structured data
@@ -1408,6 +1481,25 @@
                         </div>
                     </section>`;
                 }
+            }
+            
+            // Add Figma section to the HTML generator function
+            // Figma Section
+            if (sections.figma && sections.figma.enabled && sections.figma.url) {
+                html += `
+                <section class="bg-pink-50 p-8 rounded-xl shadow-lg my-8">
+                    <h2 class="text-3xl font-bold text-center ghibli-text-pink handwriting">Interactive Prototype</h2>
+                    <div class="mt-6">
+                        <div class="w-full aspect-video overflow-hidden rounded-lg shadow-md">
+                            <iframe 
+                                src="${sections.figma.url}" 
+                                class="w-full h-full border-0" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        ${sections.figma.caption ? `<p class="text-center mt-4 text-gray-700">${sections.figma.caption}</p>` : ''}
+                    </div>
+                </section>`;
             }
             
             return html;
