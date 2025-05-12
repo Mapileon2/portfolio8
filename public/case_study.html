@@ -469,9 +469,25 @@
         
         // Function to load a case study from the caseStudies collection
         function loadCaseStudy(id) {
+            console.log('Debug: Starting to load case study with ID:', id);
             db.ref(`caseStudies/${id}`).once('value')
                 .then(doc => {
-                    console.log('Debug: case study snapshot', doc.val());
+                    const caseStudyData = doc.val();
+                    console.log('Debug: Raw case study data:', caseStudyData);
+                    
+                    // Log the structure of sections if it exists
+                    if (caseStudyData && caseStudyData.sections) {
+                        console.log('Debug: Sections structure:', Object.keys(caseStudyData.sections));
+                        
+                        // Check each section's enabled status
+                        Object.keys(caseStudyData.sections).forEach(sectionKey => {
+                            const section = caseStudyData.sections[sectionKey];
+                            console.log(`Debug: Section "${sectionKey}" enabled:`, section.enabled);
+                        });
+                    } else {
+                        console.log('Debug: No sections found in case study data');
+                    }
+                    
                     loadingState.classList.add('hidden');
                     
                     if (doc.exists()) {
@@ -525,20 +541,22 @@
                         
                         // Render structured case study
                         if (caseStudy.sections) {
+                            console.log('Debug: Rendering sections with structure:', caseStudy.sections);
                             renderStructuredCaseStudy(caseStudy.sections);
                             defaultContent.classList.add('hidden');
                         } else if (caseStudy.content && caseStudy.content.trim() !== '') {
-                            // Use custom HTML content if available
+                            console.log('Debug: Using custom HTML content, length:', caseStudy.content.length);
                             dynamicCaseStudyContent.innerHTML = caseStudy.content;
                             defaultContent.classList.add('hidden');
                         } else {
-                            // Use default content
+                            console.log('Debug: No sections or content found, showing default content');
                             dynamicCaseStudyContent.innerHTML = '';
                             defaultContent.classList.remove('hidden');
                         }
                         
                         caseStudyContent.classList.remove('hidden');
                     } else {
+                        console.log('Debug: No case study found with ID:', id);
                         errorState.classList.remove('hidden');
                     }
                 })
@@ -681,276 +699,334 @@
 
         // Function to render structured case study
         function renderStructuredCaseStudy(sections) {
+            console.log('Debug: Starting to render structured case study with sections:', sections);
+            
+            // Safety check - make sure sections is valid
+            if (!sections || typeof sections !== 'object') {
+                console.error('Invalid sections object:', sections);
+                return;
+            }
+            
             let html = '';
             
-            // Render each enabled section
-            
-            // Hero Section already exists in the main template
-            
-            // Image Gallery Section (moved to first position)
-            if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
-                html += `
-                <section id="gallery" class="py-16 bg-gray-50 dark:bg-gray-900">
-                    <div class="container mx-auto px-6">
-                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Image Gallery</h2>`;
+            try {
+                // Render each enabled section
                 
-                // Store the original images array for reference
-                const galleryImages = [...sections.gallery.images];
+                // Hero Section already exists in the main template
                 
-                // Process images to ensure they have proper URLs and captions
-                const processedImages = galleryImages.map(image => {
-                    // Handle both string and object formats
-                    if (typeof image === 'string') {
-                        return { url: image, caption: '' };
-                    } else if (image && image.url) {
-                        return { url: image.url, caption: image.caption || '' };
-                    }
-                    return null;
-                }).filter(img => img !== null);
-                
-                // Try to use the enhanced Swiper carousel if available
-                if (typeof window.generateSwiperCarouselHtml === 'function') {
-                    html += window.generateSwiperCarouselHtml(processedImages);
-                } else if (typeof window.generateCarouselHtml === 'function') {
-                    html += generateCarouselHtml(processedImages);
-                } else {
-                    // Basic fallback
-                    html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-                    processedImages.forEach(image => {
-                        html += `
-                        <div class="relative overflow-hidden rounded-lg shadow-lg">
-                            <img src="${image.url}" alt="${image.caption}" class="w-full h-64 object-cover cursor-pointer" onclick="openLightbox('${image.url}')">
-                            ${image.caption ? `<div class="bg-black bg-opacity-50 text-white p-2 absolute bottom-0 left-0 right-0 text-center">${image.caption}</div>` : ''}
-                        </div>`;
-                    });
-                    html += `</div>`;
-                }
-                
-                html += `
-                    </div>
-                </section>`;
-            }
-            
-            // Overview Section (second position)
-            if (sections.overview && sections.overview.enabled) {
-                let metricsHTML = '';
-                if (sections.overview.metrics) {
-                    const metrics = sections.overview.metrics.split('\n').filter(line => line.trim() !== '');
-                    metrics.forEach(metric => {
-                        const parts = metric.split(':');
-                        if (parts.length === 2) {
-                            metricsHTML += `
-                            <div class="bg-blue-50 p-4 rounded-lg text-center dark:bg-blue-900">
-                                <div class="text-sm text-gray-600 dark:text-gray-400">${parts[0].trim()}</div>
-                                <div class="text-3xl font-bold text-blue-600 dark:text-blue-300">${parts[1].trim()}</div>
-                            </div>`;
-                        }
-                    });
-                }
-                
-                html += `
-                <section id="overview" class="py-16 bg-white dark:bg-gray-800">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-4xl mx-auto">
-                            <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.overview.title || 'Project Overview'}</h2>
-                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.overview.summary || ''}</p>
-                            ${metricsHTML ? `
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                                ${metricsHTML}
-                            </div>` : ''}
-                        </div>
-                    </div>
-                </section>`;
-            }
-            
-            // Problem Statement Section (third position, fixed spelling)
-            if (sections.problem && sections.problem.enabled) {
-                html += `
-                <section id="problem" class="py-16 bg-gray-50 dark:bg-gray-900">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-4xl mx-auto">
-                            <h2 class="text-3xl font-bold text-center text-red-600 mb-8 ghibli-font dark:text-red-400">${sections.problem.title || 'Problem Statement'}</h2>
-                            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800">
-                                <p class="text-gray-700 text-lg dark:text-gray-300">${sections.problem.description || ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>`;
-            }
-            
-            // Process/Research Section (fourth position, fixed spelling)
-            if (sections.process && sections.process.enabled) {
-                html += `
-                <section id="process" class="py-16 bg-white dark:bg-gray-800">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-4xl mx-auto">
-                            <h2 class="text-3xl font-bold text-center text-green-600 mb-8 ghibli-font dark:text-green-400">${sections.process.title || 'Research & Process'}</h2>
-                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.process.description || ''}</p>
-                            ${sections.process.steps ? `
-                            <div class="space-y-6 mt-8">
-                                ${sections.process.steps.split('\n').filter(step => step.trim() !== '').map((step, index) => `
-                                <div class="flex">
-                                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-green-100 rounded-full text-green-700 text-xl font-bold dark:bg-green-900 dark:text-green-300">${index + 1}</div>
-                                    <div class="ml-4">
-                                        <p class="text-gray-700 dark:text-gray-300">${step}</p>
-                                    </div>
-                                </div>`).join('')}
-                            </div>` : ''}
-                        </div>
-                    </div>
-                </section>`;
-            }
-            
-            // Showcase Section (fifth position)
-            if (sections.showcase && sections.showcase.enabled) {
-                html += `
-                <section id="showcase" class="py-16 bg-gray-50 dark:bg-gray-900">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-4xl mx-auto">
-                            <h2 class="text-3xl font-bold text-center text-purple-600 mb-8 ghibli-font dark:text-purple-400">${sections.showcase.title || 'Solution Showcase'}</h2>
-                            <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.showcase.description || ''}</p>
-                            
-                            ${sections.showcase.features ? `
-                            <div class="grid md:grid-cols-2 gap-6 mt-8">
-                                ${sections.showcase.features.split('\n').filter(feature => feature.trim() !== '').map(feature => `
-                                <div class="bg-white p-6 rounded-xl shadow-lg dark:bg-gray-800">
-                                    <div class="flex items-start">
-                                        <div class="bg-purple-100 p-3 rounded-full dark:bg-purple-900">
-                                            <i class="fas fa-check text-purple-600 dark:text-purple-300"></i>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-gray-700 dark:text-gray-300">${feature}</p>
-                                        </div>
-                                    </div>
-                                </div>`).join('')}
-                            </div>` : ''}
-                        </div>
-                    </div>
-                </section>`;
-            }
-            
-            // Document/Slides Section (sixth position)
-            if (sections.document && sections.document.enabled && sections.document.url) {
-                // Prepare embed and download URLs for Google Drive
-                let embedUrl = sections.document.url;
-                let downloadUrl = sections.document.url;
-                const driveMatch = sections.document.url.match(/\/d\/([A-Za-z0-9_-]+)/);
-                if (driveMatch) {
-                    embedUrl = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
-                    downloadUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
-                }
-                html += `
-                <section id="document" class="py-16 bg-white dark:bg-gray-800">
-                    <div class="container mx-auto px-6">
-                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Document / Slides</h2>
-                        <div class="max-w-4xl mx-auto">
-                            <div class="overflow-hidden rounded-lg shadow-lg">
-                                <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allowfullscreen></iframe>
-                            </div>
-                            <div class="text-center mt-4">
-                                <a href="${downloadUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800">Download Document</a>
-                            </div>
-                        </div>
-                    </div>
-                </section>`;
-            }
-            
-            // YouTube Demo Video Section (seventh position)
-            if (sections.video && sections.video.enabled && sections.video.url) {
-                let vid = '';
-                if (sections.video.url.includes('watch?v=')) {
-                    vid = sections.video.url.split('v=')[1].split('&')[0];
-                } else if (sections.video.url.includes('youtu.be/')) {
-                    vid = sections.video.url.split('youtu.be/')[1].split('?')[0];
-                }
-                if (vid) {
-                    const embedUrl = `https://www.youtube.com/embed/${vid}`;
+                // Image Gallery Section (moved to first position)
+                if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
+                    console.log('Debug: Rendering gallery section');
                     html += `
-                    <section id="video" class="py-16 bg-gray-50 dark:bg-gray-900">
+                    <section id="gallery" class="py-16 bg-gray-50 dark:bg-gray-900">
                         <div class="container mx-auto px-6">
-                            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Demo Video</h2>
-                            <div class="max-w-4xl mx-auto overflow-hidden rounded-lg shadow-lg">
-                                <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Image Gallery</h2>`;
+                    
+                    // Store the original images array for reference
+                    try {
+                        const galleryImages = [...sections.gallery.images];
+                        console.log('Debug: Gallery images:', galleryImages);
+                        
+                        // Process images to ensure they have proper URLs and captions
+                        const processedImages = galleryImages.map(image => {
+                            // Handle both string and object formats
+                            if (typeof image === 'string') {
+                                return { url: image, caption: '' };
+                            } else if (image && image.url) {
+                                return { url: image.url, caption: image.caption || '' };
+                            }
+                            return null;
+                        }).filter(img => img !== null);
+                        
+                        console.log('Debug: Processed gallery images:', processedImages);
+                        
+                        // Try to use the enhanced Swiper carousel if available
+                        if (typeof window.generateSwiperCarouselHtml === 'function') {
+                            html += window.generateSwiperCarouselHtml(processedImages);
+                        } else if (typeof window.generateCarouselHtml === 'function') {
+                            html += window.generateCarouselHtml(processedImages);
+                        } else {
+                            // Basic fallback
+                            html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                            processedImages.forEach(image => {
+                                html += `
+                                <div class="relative overflow-hidden rounded-lg shadow-lg">
+                                    <img src="${image.url}" alt="${image.caption}" class="w-full h-64 object-cover cursor-pointer" onclick="openLightbox('${image.url}')">
+                                    ${image.caption ? `<div class="bg-black bg-opacity-50 text-white p-2 absolute bottom-0 left-0 right-0 text-center">${image.caption}</div>` : ''}
+                                </div>`;
+                            });
+                            html += `</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Error rendering gallery:', error);
+                        html += `<p class="text-center text-red-500">Error loading gallery images</p>`;
+                    }
+                    
+                    html += `
+                        </div>
+                    </section>`;
+                }
+                
+                // Overview Section (second position)
+                if (sections.overview && sections.overview.enabled) {
+                    console.log('Debug: Rendering overview section');
+                    let metricsHTML = '';
+                    if (sections.overview.metrics) {
+                        try {
+                            const metrics = sections.overview.metrics.split('\n').filter(line => line.trim() !== '');
+                            metrics.forEach(metric => {
+                                const parts = metric.split(':');
+                                if (parts.length === 2) {
+                                    metricsHTML += `
+                                    <div class="bg-blue-50 p-4 rounded-lg text-center dark:bg-blue-900">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">${parts[0].trim()}</div>
+                                        <div class="text-3xl font-bold text-blue-600 dark:text-blue-300">${parts[1].trim()}</div>
+                                    </div>`;
+                                }
+                            });
+                        } catch (error) {
+                            console.error('Error rendering metrics:', error);
+                        }
+                    }
+                    
+                    html += `
+                    <section id="overview" class="py-16 bg-white dark:bg-gray-800">
+                        <div class="container mx-auto px-6">
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.overview.title || 'Project Overview'}</h2>
+                                <p class="text-gray-700 mb-8 text-lg dark:text-gray-300">${sections.overview.summary || ''}</p>
+                                ${metricsHTML ? `
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                                    ${metricsHTML}
+                                </div>` : ''}
                             </div>
                         </div>
                     </section>`;
                 }
-            }
-            
-            // Reflection Section (eighth position, fixed spelling)
-            if (sections.reflection && sections.reflection.enabled) {
-                html += `
-                <section id="reflection" class="py-16 bg-white dark:bg-gray-800">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-4xl mx-auto">
-                            <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.reflection.title || 'Reflection & Learnings'}</h2>
-                            <div class="bg-blue-50 p-8 rounded-xl shadow-lg dark:bg-gray-700">
-                                <p class="text-gray-700 mb-6 text-lg dark:text-gray-300">${sections.reflection.content || ''}</p>
-                                ${sections.reflection.learnings ? `
-                                <h3 class="text-xl font-bold text-blue-600 mb-4 dark:text-blue-300">Key Learnings</h3>
-                                <ul class="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
-                                    ${sections.reflection.learnings.split('\n').filter(learning => learning.trim() !== '').map(learning => `
-                                    <li>${learning}</li>`).join('')}
-                                </ul>` : ''}
+                
+                // Problem Statement Section (third position, fixed spelling)
+                if (sections.problem && sections.problem.enabled) {
+                    console.log('Debug: Rendering problem section');
+                    html += `
+                    <section id="problem" class="py-16 bg-gray-50 dark:bg-gray-900">
+                        <div class="container mx-auto px-6">
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-center text-red-600 mb-8 ghibli-font dark:text-red-400">${sections.problem.title || 'Problem Statement'}</h2>
+                                <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800">
+                                    <p class="text-gray-700 text-lg dark:text-gray-300">${sections.problem.description || ''}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </section>`;
-            }
-            
-            dynamicCaseStudyContent.innerHTML = html;
-            
-            // Initialize Swiper Gallery
-            if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
-                // Wait for DOM to update
-                setTimeout(() => {
-                    try {
-                        // Try to use our enhanced Swiper initialization if available
-                        if (typeof window.initializeSwiperCarousels === 'function') {
-                            window.initializeSwiperCarousels();
-                            console.log("Enhanced Swiper carousels initialized");
-                        } else {
-                            // Fall back to original Swiper initialization
-                            new Swiper('.swiper-gallery', {
-                                slidesPerView: 1,
-                                spaceBetween: 10,
-                                pagination: {
-                                    el: '.swiper-pagination',
-                                    clickable: true,
-                                },
-                                navigation: {
-                                    nextEl: '.swiper-button-next',
-                                    prevEl: '.swiper-button-prev',
-                                },
-                                autoplay: {
-                                    delay: 4000,
-                                    disableOnInteraction: false,
-                                },
-                                breakpoints: {
-                                    640: {
-                                        slidesPerView: 1,
-                                        spaceBetween: 20,
-                                    },
-                                    768: {
-                                        slidesPerView: 2,
-                                        spaceBetween: 20,
-                                    },
-                                    1024: {
-                                        slidesPerView: 3,
-                                        spaceBetween: 20,
-                                    },
-                                },
-                            });
-                            console.log("Standard Swiper gallery initialized successfully");
-                        }
-                    } catch (error) {
-                        console.error("Error initializing Swiper gallery:", error);
-                        // Attempt to initialize using our custom carousel as fallback
-                        if (typeof initializeCarousels === 'function') {
-                            initializeCarousels();
-                        }
+                    </section>`;
+                }
+                
+                // Process/Research Section (fourth position, fixed spelling)
+                if (sections.process && sections.process.enabled) {
+                    console.log('Debug: Rendering process section');
+                    html += `
+                    <section id="process" class="py-16 bg-white dark:bg-gray-800">
+                        <div class="container mx-auto px-6">
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-center text-green-600 mb-8 ghibli-font dark:text-green-400">${sections.process.title || 'Research & Process'}</h2>
+                                
+                                ${sections.process.research ? `
+                                <div class="mb-8">
+                                    <h3 class="text-xl font-bold text-green-600 mb-4 dark:text-green-400">Research</h3>
+                                    <p class="text-gray-700 text-lg dark:text-gray-300">${sections.process.research}</p>
+                                </div>` : ''}
+                                
+                                ${sections.process.insights ? `
+                                <div class="mb-8">
+                                    <h3 class="text-xl font-bold text-green-600 mb-4 dark:text-green-400">Key Insights</h3>
+                                    <p class="text-gray-700 text-lg dark:text-gray-300">${sections.process.insights}</p>
+                                </div>` : ''}
+                                
+                                ${sections.process.steps ? `
+                                <div class="space-y-6 mt-8">
+                                    ${sections.process.steps.split('\n').filter(step => step.trim() !== '').map((step, index) => `
+                                    <div class="flex">
+                                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-green-100 rounded-full text-green-700 text-xl font-bold dark:bg-green-900 dark:text-green-300">${index + 1}</div>
+                                        <div class="ml-4">
+                                            <p class="text-gray-700 dark:text-gray-300">${step}</p>
+                                        </div>
+                                    </div>`).join('')}
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </section>`;
+                }
+                
+                // Showcase Section
+                if (sections.showcase && sections.showcase.enabled) {
+                    console.log('Debug: Rendering showcase section');
+                    html += `
+                    <section id="showcase" class="py-16 bg-purple-50 dark:bg-gray-800">
+                        <div class="container mx-auto px-6">
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-center text-purple-600 mb-8 ghibli-font dark:text-purple-400">${sections.showcase.title || 'Solution Showcase'}</h2>
+                                
+                                ${sections.showcase.solution ? `
+                                <div class="mb-8">
+                                    <p class="text-gray-700 text-lg dark:text-gray-300">${sections.showcase.solution}</p>
+                                </div>` : ''}
+                                
+                                ${sections.showcase.assets ? `
+                                <div class="space-y-4 mt-8">
+                                    ${sections.showcase.assets.split('\n').filter(asset => asset.trim() !== '').map(asset => `
+                                    <div class="flex items-start p-4 bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                                        <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-purple-100 rounded-full text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                            <i class="fas fa-check text-sm"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-gray-700 dark:text-gray-300">${asset}</p>
+                                        </div>
+                                    </div>`).join('')}
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </section>`;
+                }
+                
+                // Document/Slides Section (sixth position)
+                if (sections.document && sections.document.enabled && sections.document.url) {
+                    console.log('Debug: Rendering document section');
+                    // Prepare embed and download URLs for Google Drive
+                    let embedUrl = sections.document.url;
+                    let downloadUrl = sections.document.url;
+                    const driveMatch = sections.document.url.match(/\/d\/([A-Za-z0-9_-]+)/);
+                    if (driveMatch) {
+                        embedUrl = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+                        downloadUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
                     }
-                }, 500); // Give DOM time to update
+                    html += `
+                    <section id="document" class="py-16 bg-white dark:bg-gray-800">
+                        <div class="container mx-auto px-6">
+                            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Document / Slides</h2>
+                            <div class="max-w-4xl mx-auto">
+                                <div class="overflow-hidden rounded-lg shadow-lg">
+                                    <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                                <div class="text-center mt-4">
+                                    <a href="${downloadUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800">Download Document</a>
+                                </div>
+                            </div>
+                        </div>
+                    </section>`;
+                }
+                
+                // YouTube Demo Video Section (seventh position)
+                if (sections.video && sections.video.enabled && sections.video.url) {
+                    console.log('Debug: Rendering video section');
+                    let vid = '';
+                    if (sections.video.url.includes('watch?v=')) {
+                        vid = sections.video.url.split('v=')[1].split('&')[0];
+                    } else if (sections.video.url.includes('youtu.be/')) {
+                        vid = sections.video.url.split('youtu.be/')[1].split('?')[0];
+                    }
+                    if (vid) {
+                        const embedUrl = `https://www.youtube.com/embed/${vid}`;
+                        html += `
+                        <section id="video" class="py-16 bg-gray-50 dark:bg-gray-900">
+                            <div class="container mx-auto px-6">
+                                <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 ghibli-font dark:text-gray-200">Demo Video</h2>
+                                <div class="max-w-4xl mx-auto overflow-hidden rounded-lg shadow-lg">
+                                    <iframe src="${embedUrl}" class="w-full h-96" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        </section>`;
+                    }
+                }
+                
+                // Reflection Section (eighth position, fixed spelling)
+                if (sections.reflection && sections.reflection.enabled) {
+                    console.log('Debug: Rendering reflection section');
+                    html += `
+                    <section id="reflection" class="py-16 bg-white dark:bg-gray-800">
+                        <div class="container mx-auto px-6">
+                            <div class="max-w-4xl mx-auto">
+                                <h2 class="text-3xl font-bold text-center text-blue-700 mb-8 ghibli-font dark:text-blue-300">${sections.reflection.title || 'Reflection & Learnings'}</h2>
+                                <div class="bg-blue-50 p-8 rounded-xl shadow-lg dark:bg-gray-700">
+                                    <p class="text-gray-700 mb-6 text-lg dark:text-gray-300">${sections.reflection.content || ''}</p>
+                                    ${sections.reflection.learnings ? `
+                                    <h3 class="text-xl font-bold text-blue-600 mb-4 dark:text-blue-300">Key Learnings</h3>
+                                    <ul class="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
+                                        ${sections.reflection.learnings.split('\n').filter(learning => learning.trim() !== '').map(learning => `
+                                        <li>${learning}</li>`).join('')}
+                                    </ul>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </section>`;
+                }
+                
+                console.log('Debug: Final HTML generated length:', html.length);
+                dynamicCaseStudyContent.innerHTML = html;
+                
+                // Initialize Swiper Gallery
+                if (sections.gallery && sections.gallery.enabled && sections.gallery.images && sections.gallery.images.length) {
+                    // Wait for DOM to update
+                    setTimeout(() => {
+                        try {
+                            // Try to use our enhanced Swiper initialization if available
+                            if (typeof window.initializeSwiperCarousels === 'function') {
+                                window.initializeSwiperCarousels();
+                                console.log("Enhanced Swiper carousels initialized");
+                            } else {
+                                // Fall back to original Swiper initialization
+                                new Swiper('.swiper-gallery', {
+                                    slidesPerView: 1,
+                                    spaceBetween: 10,
+                                    pagination: {
+                                        el: '.swiper-pagination',
+                                        clickable: true,
+                                    },
+                                    navigation: {
+                                        nextEl: '.swiper-button-next',
+                                        prevEl: '.swiper-button-prev',
+                                    },
+                                    autoplay: {
+                                        delay: 4000,
+                                        disableOnInteraction: false,
+                                    },
+                                    breakpoints: {
+                                        640: {
+                                            slidesPerView: 1,
+                                            spaceBetween: 20,
+                                        },
+                                        768: {
+                                            slidesPerView: 2,
+                                            spaceBetween: 20,
+                                        },
+                                        1024: {
+                                            slidesPerView: 3,
+                                            spaceBetween: 20,
+                                        },
+                                    },
+                                });
+                                console.log("Standard Swiper gallery initialized successfully");
+                            }
+                        } catch (error) {
+                            console.error("Error initializing Swiper gallery:", error);
+                            // Attempt to initialize using our custom carousel as fallback
+                            if (typeof initializeCarousels === 'function') {
+                                initializeCarousels();
+                            }
+                        }
+                    }, 500); // Give DOM time to update
+                }
+            } catch (error) {
+                console.error('Error rendering case study:', error);
+                dynamicCaseStudyContent.innerHTML = `
+                    <div class="py-16 bg-white dark:bg-gray-800">
+                        <div class="container mx-auto px-6 text-center">
+                            <div class="text-red-500 text-6xl mb-6">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-4">Error Rendering Case Study</h2>
+                            <p class="text-gray-600 mb-8">There was a problem displaying this case study content.</p>
+                        </div>
+                    </div>
+                `;
             }
         }
         
@@ -1023,11 +1099,19 @@
             lightbox.classList.add('hidden');
             document.body.style.overflow = ''; // Re-enable scrolling
         }
-        
+
         // Close lightbox when clicking outside the image
-        lightbox.addEventListener('click', function(e) {
-            if (e.target !== lightboxImg) {
-                closeLightbox();
+        document.addEventListener('DOMContentLoaded', function() {
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox) {
+                lightbox.addEventListener('click', function(e) {
+                    const lightboxImg = document.getElementById('lightbox-img');
+                    if (e.target !== lightboxImg) {
+                        closeLightbox();
+                    }
+                });
+            } else {
+                console.error('Lightbox element not found');
             }
         });
 
