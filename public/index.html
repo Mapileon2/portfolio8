@@ -611,48 +611,46 @@
             <!-- Tools Section -->
             <div class="mt-16">
                 <h3 class="ghibli-font text-2xl text-center mb-8 text-gray-800 dark:text-gray-200">Enchanted Tools I Wield</h3>
-                <div class="overflow-x-auto mx-auto max-w-6xl">
-                    <div class="inline-flex flex-nowrap gap-4 md:grid md:grid-cols-5 md:flex-wrap pb-4" style="min-width: 100%;">
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fab fa-jira text-2xl text-blue-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Jira</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-database text-2xl text-green-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">SQL</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fab fa-figma text-2xl text-purple-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Figma</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-chart-bar text-2xl text-yellow-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Google Analytics</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-th text-2xl text-blue-400 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Miro</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-file-word text-2xl text-blue-600 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">MS 365</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-project-diagram text-2xl text-blue-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Alteryx</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-chart-pie text-2xl text-yellow-600 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Power BI</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fab fa-python text-2xl text-blue-500 mr-2"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Python</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800 min-w-max flex-shrink-0">
-                            <i class="fas fa-code-branch text-2xl text-gray-500 mr-2 dark:text-gray-300"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Git</span>
-                        </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-6xl mx-auto" style="width: 100%;" data-protected="true" id="tools-grid">
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fab fa-jira text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Jira</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-database text-2xl text-green-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">SQL</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fab fa-figma text-2xl text-purple-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Figma</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-chart-bar text-2xl text-yellow-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Google Analytics</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-th text-2xl text-blue-400 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Miro</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-file-word text-2xl text-blue-600 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">MS 365</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-project-diagram text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Alteryx</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-chart-pie text-2xl text-yellow-600 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Power BI</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fab fa-python text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Python</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex items-center dark:bg-gray-800" data-tool="true">
+                        <i class="fas fa-code-branch text-2xl text-gray-500 mr-2 dark:text-gray-300"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Git</span>
                     </div>
                 </div>
             </div>
@@ -1298,6 +1296,98 @@
           }
         }
       }, true);
+    </script>
+
+    <!-- Fix for tools section disappearing -->
+    <script>
+      // Make sure tools remain visible - run this repeatedly
+      function ensureToolsVisible() {
+        // Use our specific ID and data attributes to target elements
+        const toolsContainer = document.getElementById('tools-grid');
+        const toolItems = document.querySelectorAll('[data-tool="true"]');
+        
+        if (toolsContainer && toolItems.length > 0) {
+          // Ensure container is visible and properly styled
+          toolsContainer.style.display = 'grid';
+          toolsContainer.style.visibility = 'visible';
+          toolsContainer.style.opacity = '1';
+          toolsContainer.style.height = 'auto';
+          toolsContainer.style.overflow = 'visible';
+          toolsContainer.style.position = 'static';
+          
+          // Ensure each tool item is visible
+          toolItems.forEach(item => {
+            item.style.display = 'flex';
+            item.style.visibility = 'visible';
+            item.style.opacity = '1';
+            item.style.height = 'auto';
+            item.style.width = 'auto';
+            item.style.position = 'static';
+            item.style.transform = 'none';
+          });
+          
+          console.log('Fixed tools visibility -', toolItems.length, 'tools ensured visible');
+        } else {
+          console.log('Tools container or items not found in DOM');
+        }
+      }
+      
+      // Setup MutationObserver to watch for changes to the tools
+      function setupToolsObserver() {
+        const toolsContainer = document.getElementById('tools-grid');
+        if (!toolsContainer) return;
+        
+        // Create observer to detect changes and react
+        const observer = new MutationObserver(function(mutations) {
+          let needsFixing = false;
+          
+          // Check if any changes might have affected visibility
+          mutations.forEach(mutation => {
+            if (mutation.type === 'attributes' && 
+                (mutation.attributeName === 'style' || 
+                 mutation.attributeName === 'class' || 
+                 mutation.attributeName === 'hidden')) {
+              needsFixing = true;
+            }
+            // Also check for removed nodes
+            if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+              needsFixing = true;
+            }
+          });
+          
+          if (needsFixing) {
+            console.log('Detected changes to tools section, fixing...');
+            ensureToolsVisible();
+          }
+        });
+        
+        // Observe the tools container and its children, watching for attribute changes
+        observer.observe(toolsContainer, { 
+          attributes: true, 
+          childList: true,
+          subtree: true,
+          attributeFilter: ['style', 'class', 'hidden']
+        });
+        
+        console.log('Observer set up for tools container');
+      }
+      
+      // Run when DOM is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing tools section protection');
+        ensureToolsVisible();
+        setupToolsObserver();
+        
+        // Then repeatedly check to counter any scripts that might hide them
+        setInterval(ensureToolsVisible, 1000);
+      });
+      
+      // Also run now in case DOM is already loaded
+      ensureToolsVisible();
+      setTimeout(setupToolsObserver, 100); 
+      setTimeout(ensureToolsVisible, 500);
+      setTimeout(ensureToolsVisible, 1500);
+      setTimeout(ensureToolsVisible, 3000);
     </script>
 </body>
 </html>
