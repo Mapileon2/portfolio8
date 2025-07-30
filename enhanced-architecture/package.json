@@ -1,0 +1,67 @@
+{
+  "name": "enhanced-portfolio",
+  "version": "1.0.0",
+  "description": "Enhanced portfolio website with analytics and search",
+  "main": "server.js",
+  "scripts": {
+    "setup": "node setup-dev.js",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "echo 'Server build not needed for development'",
+    "start": "node server.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "nodemon server-dev.js",
+    "dev:client": "vite",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "test": "echo 'Tests not configured yet'"
+  },
+  "keywords": [
+    "portfolio",
+    "analytics",
+    "search",
+    "javascript",
+    "express",
+    "react",
+    "vite"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cloudinary": "^1.41.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "firebase-admin": "^12.0.0",
+    "fuse.js": "^7.0.0",
+    "helmet": "^7.1.0",
+    "lucide-react": "^0.294.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^6.9.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/multer": "^1.4.11",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "nodemon": "^3.1.10",
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
