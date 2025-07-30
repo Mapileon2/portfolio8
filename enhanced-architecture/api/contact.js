@@ -1,94 +1,128 @@
-const express = require('express');
-const ContactService = require('../services/ContactService');
+// Contact form endpoint for Vercel
+const nodemailer = require('nodemailer');
 
-const router = express.Router();
-const contact = new ContactService();
+// Create transporter
+const createTransporter = () => {
+  if (!process.env.SMTP_HOST) {
+    console.log('SMTP not configured, using mock email service');
+    return null;
+  }
 
-// Submit contact form
-router.post('/submit', async (req, res) => {
+  return nodemailer.createTransporter({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+};
+
+module.exports = async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Method not allowed'
+      }
+    });
+    return;
+  }
+
   try {
-    const formData = {
-      ...req.body,
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
+    const { name, email, subject, message, phone, company } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Name, email, and message are required'
+        }
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid email format'
+        }
+      });
+    }
+
+    const contactData = {
+      id: Date.now().toString(),
+      name,
+      email,
+      subject: subject || 'Contact Form Submission',
+      message,
+      phone: phone || '',
+      company: company || '',
+      timestamp: new Date().toISOString(),
+      status: 'new'
     };
 
-    const result = await contact.submitContactForm(formData);
-    res.json(result);
-  } catch (error) {
-    console.error('Error submitting contact form:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get contacts (admin endpoint)
-router.get('/', (req, res) => {
-  try {
-    const { status, limit, offset } = req.query;
-    const options = {
-      status,
-      limit: limit ? parseInt(limit) : undefined,
-      offset: offset ? parseInt(offset) : undefined
-    };
-
-    const result = contact.getContacts(options);
-    res.json(result);
-  } catch (error) {
-    console.error('Error getting contacts:', error);
-    res.status(500).json({ error: 'Failed to get contacts' });
-  }
-});
-
-// Get contact by ID (admin endpoint)
-router.get('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const contactData = contact.getContactById(id);
-    
-    if (!contactData) {
-      return res.status(404).json({ error: 'Contact not found' });
+    // Try to send email
+    const transporter = createTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_USER,
+          to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+          subject: `Portfolio Contact: ${contactData.subject}`,
+          html: `
+            <h2>New Contact Form Submission</h2>
+            <p><strong>Name:</strong> ${contactData.name}</p>
+            <p><strong>Email:</strong> ${contactData.email}</p>
+            <p><strong>Phone:</strong> ${contactData.phone}</p>
+            <p><strong>Company:</strong> ${contactData.company}</p>
+            <p><strong>Subject:</strong> ${contactData.subject}</p>
+            <p><strong>Message:</strong></p>
+            <p>${contactData.message.replace(/\n/g, '<br>')}</p>
+            <p><strong>Submitted:</strong> ${new Date(contactData.timestamp).toLocaleString()}</p>
+          `
+        });
+        console.log('Contact email sent successfully');
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+        // Continue without failing the request
+      }
     }
 
-    res.json(contactData);
+    res.status(200).json({
+      success: true,
+      message: 'Message sent successfully',
+      data: {
+        id: contactData.id,
+        timestamp: contactData.timestamp
+      }
+    });
+
   } catch (error) {
-    console.error('Error getting contact:', error);
-    res.status(500).json({ error: 'Failed to get contact' });
+    console.error('Contact form error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to process contact form'
+      }
+    });
   }
-});
-
-// Update contact status (admin endpoint)
-router.put('/:id/status', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ error: 'Status is required' });
-    }
-
-    const updatedContact = contact.updateContactStatus(id, status);
-    
-    if (!updatedContact) {
-      return res.status(404).json({ error: 'Contact not found' });
-    }
-
-    res.json({ success: true, contact: updatedContact });
-  } catch (error) {
-    console.error('Error updating contact status:', error);
-    res.status(500).json({ error: 'Failed to update contact status' });
-  }
-});
-
-// Get contact statistics (admin endpoint)
-router.get('/stats/summary', (req, res) => {
-  try {
-    const { days = 30 } = req.query;
-    const stats = contact.getContactStats(parseInt(days));
-    res.json(stats);
-  } catch (error) {
-    console.error('Error getting contact stats:', error);
-    res.status(500).json({ error: 'Failed to get contact stats' });
-  }
-});
-
-module.exports = router;
+};
