@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase & JWT Verification</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const FirebaseTest = () => {
+            const [tests, setTests] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [config, setConfig] = useState(null);
+
+            const runConfigCheck = async () => {
+                try {
+                    const response = await fetch('/api/firebase-test/config-check');
+                    const data = await response.json();
+                    setConfig(data.data);
+                } catch (error) {
+                    console.error('Config check failed:', error);
+                }
+            };
+
+            const runHealthCheck = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/firebase-test/health');
+                    const data = await response.json();
+                    
+                    setTests(prev => [...prev, {
+                        name: 'Firebase Health Check',
+                        success: data.success,
+                        data: data.data,
+                        timestamp: new Date().toISOString()
+                    }]);
+                } catch (error) {
+                    setTests(prev => [...prev, {
+                        name: 'Firebase Health Check',
+                        success: false,
+                        error: error.message,
+                        timestamp: new Date().toISOString()
+                    }]);
+                }
+                setLoading(false);
+            };
+
+            const runDatabaseTest = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/firebase-test/test-database');
+                    const data = await response.json();
+                    
+                    setTests(prev => [...prev, {
+                        name: 'Database Operations Test',
+                        success: data.success,
+                        data: data.data,
+                        timestamp: new Date().toISOString()
+                    }]);
+                } catch (error) {
+                    setTests(prev => [...prev, {
+                        name: 'Database Operations Test',
+                        success: false,
+                        error: error.message,
+                        timestamp: new Date().toISOString()
+                    }]);
+                }
+                setLoading(false);
+            };
+
+            useEffect(() => {
+                runConfigCheck();
+            }, []);
+
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="bg-white rounded-lg shadow-lg">
+                        <div className="p-6 border-b border-gray-200">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                🔥 Firebase & JWT Verification
+                            </h1>
+                            <p className="text-gray-600">
+                                Test Firebase initialization and JWT token verification
+                            </p>
+                        </div>
+
+                        {/* Configuration Status */}
+                        {config && (
+                            <div className="p-6 border-b border-gray-200">
+                                <h2 className="text-lg font-semibold mb-4">Configuration Status</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className={`p-4 rounded-lg border ${config.config.isInitialized ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                        <div className="flex items-center space-x-2">
+                                            <div className={`w-3 h-3 rounded-full ${config.config.isInitialized ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                            <span className="font-medium">
+                                                {config.config.isInitialized ? 'Firebase Initialized' : 'Firebase Not Initialized'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            Admin Email: {config.config.adminEmail}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="p-4 rounded-lg border bg-blue-50 border-blue-200">
+                                        <h3 className="font-medium mb-2">Environment Variables</h3>
+                                        <div className="text-sm space-y-1">
+                                            <div>Server: {Object.values(config.environmentVariables.server).filter(Boolean).length}/5 configured</div>
+                                            <div>Client: {Object.values(config.environmentVariables.client).filter(Boolean).length}/4 configured</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Test Controls */}
+                        <div className="p-6 border-b border-gray-200">
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    onClick={runHealthCheck}
+                                    disabled={loading}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                >
+                                    Health Check
+                                </button>
+                                <button
+                                    onClick={runDatabaseTest}
+                                    disabled={loading}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                >
+                                    Database Test
+                                </button>
+                                <button
+                                    onClick={() => setTests([])}
+                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                                >
+                                    Clear Results
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Test Results */}
+                        <div className="p-6">
+                            {loading && (
+                                <div className="text-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                    <p className="mt-2 text-gray-600">Running test...</p>
+                                </div>
+                            )}
+
+                            {tests.length === 0 && !loading ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    Click a test button to start verification
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {tests.map((test, index) => (
+                                        <div
+                                            key={index}
+                                            className={`border rounded-lg p-4 ${test.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
+                                        >
+                                            <div className="flex items-start space-x-3">
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${test.success ? 'bg-green-500' : 'bg-red-500'}`}>
+                                                    <span className="text-white text-xs">
+                                                        {test.success ? '✓' : '✗'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-medium text-gray-900">{test.name}</h3>
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        {test.success ? 'Test passed successfully' : test.error || 'Test failed'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {new Date(test.timestamp).toLocaleString()}
+                                                    </p>
+                                                    
+                                                    {test.data && (
+                                                        <details className="mt-2">
+                                                            <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">
+                                                                View Details
+                                                            </summary>
+                                                            <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+                                                                {JSON.stringify(test.data, null, 2)}
+                                                            </pre>
+                                                        </details>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Instructions */}
+                        <div className="p-6 border-t border-gray-200 bg-gray-50">
+                            <h3 className="font-medium text-gray-900 mb-2">Instructions</h3>
+                            <div className="text-sm text-gray-600 space-y-1">
+                                <p>• <strong>Health Check</strong>: Verifies Firebase initialization and connection</p>
+                                <p>• <strong>Database Test</strong>: Tests read/write operations to Firebase Realtime Database</p>
+                                <p>• Configure environment variables in <code>.env</code> and <code>.env.local</code> files</p>
+                                <p>• Run <code>npm run verify-firebase</code> in terminal for detailed server-side verification</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<FirebaseTest />, document.getElementById('root'));
+    </script>
+</body>
+</html>
