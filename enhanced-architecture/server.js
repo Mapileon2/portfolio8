@@ -10,7 +10,7 @@ require('dotenv').config();
 const AnalyticsService = require('./services/AnalyticsService');
 const SearchService = require('./services/SearchService');
 const ContactService = require('./services/ContactService');
-const FirebaseService = require('./services/FirebaseService');
+const FirebaseService = require('./services/FirebaseServiceProduction');
 const CloudinaryService = require('./services/CloudinaryService');
 
 const app = express();

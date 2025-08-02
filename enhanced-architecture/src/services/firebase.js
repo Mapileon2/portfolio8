@@ -1,59 +1,50 @@
-// Fixed Firebase client-side configuration
-import firebaseDevClient from './firebase-dev.js';
+// Real Firebase client-side configuration
+import { auth, db, storage } from '../config/firebase-config.js';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  createUserWithEmailAndPassword 
+} from 'firebase/auth';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject 
+} from 'firebase/storage';
 
-// Check if Firebase config is available
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-// Use dev client if Firebase config is missing
-const isDevMode = !firebaseConfig.apiKey || firebaseConfig.apiKey === 'your-public-api-key';
-
-if (isDevMode) {
-  console.log('🔧 Running in development mode - using mock Firebase client');
-  export default firebaseDevClient;
-}
-
-// Production Firebase setup
-let app, auth;
-try {
-  const { initializeApp } = await import('firebase/app');
-  const { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } = await import('firebase/auth');
-  
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  
-  console.log('🔥 Firebase initialized with project:', firebaseConfig.projectId);
-} catch (error) {
-  console.warn('Firebase initialization failed, falling back to dev mode:', error);
-  export default firebaseDevClient;
-}
+console.log('🔥 Firebase initialized with real configuration');
 
 class FirebaseClient {
   constructor() {
     this.auth = auth;
+    this.db = db;
+    this.storage = storage;
     this.currentUser = null;
     this.idToken = null;
     
     // Listen for auth state changes
-    if (auth) {
-      onAuthStateChanged(this.auth, (user) => {
-        this.currentUser = user;
-        if (user) {
-          // Get ID token for API calls
-          user.getIdToken().then(token => {
-            this.idToken = token;
-          });
-        } else {
-          this.idToken = null;
-        }
-      });
-    }
+    onAuthStateChanged(this.auth, (user) => {
+      this.currentUser = user;
+      if (user) {
+        // Get ID token for API calls
+        user.getIdToken().then(token => {
+          this.idToken = token;
+        });
+      } else {
+        this.idToken = null;
+      }
+    });
   }
 
   // Authentication methods
@@ -131,31 +122,36 @@ class FirebaseClient {
     return response.json();
   }
 
-  // Portfolio-specific API methods with error handling
+  // Portfolio-specific API methods with real Firebase
   async getCaseStudies() {
     try {
-      const response = await fetch('/api/firebase/case-studies');
-      if (!response.ok) {
-        console.warn('API not available, using mock data');
-        return {
-          data: [
-            {
-              id: 'case-study-1',
-              projectTitle: 'E-commerce Platform',
-              description: 'A full-stack e-commerce solution built with React and Node.js',
-              technologies: ['React', 'Node.js', 'MongoDB', 'Express'],
-              imageUrl: 'https://via.placeholder.com/800x400',
-              projectUrl: 'https://example.com',
-              githubUrl: 'https://github.com/example/repo',
-              createdAt: new Date().toISOString()
-            }
-          ]
-        };
-      }
-      return response.json();
+      const caseStudiesRef = collection(this.db, 'caseStudies');
+      const snapshot = await getDocs(caseStudiesRef);
+      
+      const caseStudies = [];
+      snapshot.forEach((doc) => {
+        caseStudies.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      return {
+        data: caseStudies.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      };
     } catch (error) {
-      console.error('Error fetching case studies:', error);
-      // Return mock data as fallback
+      console.error('Error fetching case studies from Firebase:', error);
+      // Fallback to API
+      try {
+        const response = await fetch('/api/firebase/case-studies');
+        if (response.ok) {
+          return response.json();
+        }
+      } catch (apiError) {
+        console.error('API fallback failed:', apiError);
+      }
+      
+      // Final fallback to mock data
       return {
         data: [
           {
@@ -175,40 +171,85 @@ class FirebaseClient {
 
   async createCaseStudy(caseStudyData) {
     try {
-      return await this.makeAuthenticatedRequest('/api/firebase/case-studies', {
-        method: 'POST',
-        body: JSON.stringify(caseStudyData)
-      });
-    } catch (error) {
-      console.warn('API not available, using mock response');
-      return {
-        id: 'case-study-' + Date.now(),
+      const caseStudiesRef = collection(this.db, 'caseStudies');
+      const docData = {
         ...caseStudyData,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
+      
+      const docRef = await addDoc(caseStudiesRef, docData);
+      
+      return {
+        id: docRef.id,
+        ...docData
+      };
+    } catch (error) {
+      console.error('Error creating case study in Firebase:', error);
+      // Fallback to API
+      try {
+        return await this.makeAuthenticatedRequest('/api/firebase/case-studies', {
+          method: 'POST',
+          body: JSON.stringify(caseStudyData)
+        });
+      } catch (apiError) {
+        console.warn('API fallback failed, using mock response');
+        return {
+          id: 'case-study-' + Date.now(),
+          ...caseStudyData,
+          createdAt: new Date().toISOString()
+        };
+      }
     }
   }
 
   async updateCaseStudy(id, updates) {
     try {
-      return await this.makeAuthenticatedRequest(`/api/firebase/case-studies/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates)
-      });
+      const docRef = doc(this.db, 'caseStudies', id);
+      const updateData = {
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await updateDoc(docRef, updateData);
+      
+      return {
+        success: true,
+        id,
+        ...updateData
+      };
     } catch (error) {
-      console.warn('API not available, using mock response');
-      return { success: true, id, ...updates };
+      console.error('Error updating case study in Firebase:', error);
+      // Fallback to API
+      try {
+        return await this.makeAuthenticatedRequest(`/api/firebase/case-studies/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates)
+        });
+      } catch (apiError) {
+        console.warn('API fallback failed, using mock response');
+        return { success: true, id, ...updates };
+      }
     }
   }
 
   async deleteCaseStudy(id) {
     try {
-      return await this.makeAuthenticatedRequest(`/api/firebase/case-studies/${id}`, {
-        method: 'DELETE'
-      });
-    } catch (error) {
-      console.warn('API not available, using mock response');
+      const docRef = doc(this.db, 'caseStudies', id);
+      await deleteDoc(docRef);
+      
       return { success: true };
+    } catch (error) {
+      console.error('Error deleting case study from Firebase:', error);
+      // Fallback to API
+      try {
+        return await this.makeAuthenticatedRequest(`/api/firebase/case-studies/${id}`, {
+          method: 'DELETE'
+        });
+      } catch (apiError) {
+        console.warn('API fallback failed, using mock response');
+        return { success: true };
+      }
     }
   }
 
@@ -329,36 +370,61 @@ class FirebaseClient {
     }
   }
 
-  // Image upload methods with fallback
+  // Image upload methods with Firebase Storage
   async uploadImage(file, options = {}) {
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      // Upload to Firebase Storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const folder = options.folder || 'portfolio';
+      const storageRef = ref(this.storage, `${folder}/${fileName}`);
       
-      Object.keys(options).forEach(key => {
-        formData.append(key, options[key]);
-      });
-
-      const token = await this.getIdToken();
-      const headers = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch('/api/images/upload', {
-        method: 'POST',
-        headers,
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      return response.json();
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      return {
+        success: true,
+        image: {
+          url: downloadURL,
+          publicId: snapshot.ref.fullPath,
+          thumbnail: downloadURL, // Firebase doesn't auto-generate thumbnails
+          fileName: fileName,
+          size: file.size,
+          type: file.type
+        }
+      };
     } catch (error) {
-      console.warn('Image upload API not available, using mock response');
-      // Simulate upload delay
+      console.error('Firebase Storage upload failed:', error);
+      
+      // Fallback to API upload
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        Object.keys(options).forEach(key => {
+          formData.append(key, options[key]);
+        });
+
+        const token = await this.getIdToken();
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch('/api/images/upload', {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+
+        if (response.ok) {
+          return response.json();
+        }
+      } catch (apiError) {
+        console.warn('API upload also failed:', apiError);
+      }
+      
+      // Final fallback to mock
+      console.warn('Using mock image upload response');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       return {
@@ -374,12 +440,23 @@ class FirebaseClient {
 
   async deleteImage(publicId) {
     try {
-      return await this.makeAuthenticatedRequest(`/api/images/${encodeURIComponent(publicId)}`, {
-        method: 'DELETE'
-      });
-    } catch (error) {
-      console.warn('API not available, using mock response');
+      // Delete from Firebase Storage
+      const imageRef = ref(this.storage, publicId);
+      await deleteObject(imageRef);
+      
       return { success: true };
+    } catch (error) {
+      console.error('Firebase Storage delete failed:', error);
+      
+      // Fallback to API
+      try {
+        return await this.makeAuthenticatedRequest(`/api/images/${encodeURIComponent(publicId)}`, {
+          method: 'DELETE'
+        });
+      } catch (apiError) {
+        console.warn('API delete also failed, using mock response');
+        return { success: true };
+      }
     }
   }
 

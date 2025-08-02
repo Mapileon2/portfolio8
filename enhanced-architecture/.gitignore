@@ -129,4 +129,7 @@ coverage/
 
 # Lock files (keep package-lock.json but ignore others)
 yarn.lock
-pnpm-lock.yaml
+pnpm-lock.yaml#
+ Firebase Service Account (Security)
+firebase-service-account.json
+*.json
