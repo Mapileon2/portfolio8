@@ -25,6 +25,7 @@ import {
   X
 } from 'lucide-react';
 import firebaseClient from '../services/firebase';
+import EnhancedCaseStudyCreator from './EnhancedCaseStudyCreator';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -33,18 +34,58 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [dashboardData, setDashboardData] = useState({
     analytics: null,
     recentActivity: [],
-    systemHealth: null
+    systemHealth: null,
+    realTimeData: {},
+    frontendConnected: false
   });
+  const [livePreview, setLivePreview] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState('desktop');
 
   // Content management states
   const [caseStudies, setCaseStudies] = useState([]);
   const [carouselImages, setCarouselImages] = useState([]);
   const [sections, setSections] = useState({});
   const [projects, setProjects] = useState([]);
+  
+  // Case Study Creator states
+  const [showCaseStudyCreator, setShowCaseStudyCreator] = useState(false);
+  const [editingCaseStudy, setEditingCaseStudy] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
+    setupRealTimeUpdates();
+    testFrontendConnection();
   }, []);
+
+  const setupRealTimeUpdates = () => {
+    const interval = setInterval(async () => {
+      try {
+        const realTimeRes = await fetch('/api/analytics/realtime');
+        const realTimeData = await realTimeRes.json();
+        
+        setDashboardData(prev => ({
+          ...prev,
+          realTimeData: realTimeData.data || {}
+        }));
+      } catch (error) {
+        console.error('Error fetching real-time data:', error);
+      }
+    }, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  };
+
+  const testFrontendConnection = async () => {
+    try {
+      const response = await fetch('/frontend/case-study.html');
+      setDashboardData(prev => ({
+        ...prev,
+        frontendConnected: response.ok
+      }));
+    } catch (error) {
+      console.error('Frontend connection test failed:', error);
+    }
+  };
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -139,12 +180,20 @@ const AdminDashboard = ({ user, onLogout }) => {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">System Health</p>
-              <p className="text-2xl font-bold text-green-600">Healthy</p>
+              <p className="text-sm font-medium text-gray-600">Active Visitors</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {dashboardData.realTimeData?.activeVisitors || 0}
+              </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Activity className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <div className={`w-2 h-2 rounded-full mr-2 ${dashboardData.frontendConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className={dashboardData.frontendConnected ? 'text-green-600' : 'text-red-600'}>
+              {dashboardData.frontendConnected ? 'Frontend Connected' : 'Frontend Disconnected'}
+            </span>
           </div>
         </div>
       </div>
@@ -176,44 +225,95 @@ const AdminDashboard = ({ user, onLogout }) => {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Live Preview Panel */}
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setActiveTab('case-studies')}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <FileText className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Add Case Study</p>
-              </button>
-              <button
-                onClick={() => setActiveTab('media')}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Upload className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Upload Image</p>
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <BarChart3 className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">View Analytics</p>
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Settings className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-900">Settings</p>
-              </button>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Live Preview</h3>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={previewDevice}
+                  onChange={(e) => setPreviewDevice(e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="desktop">Desktop</option>
+                  <option value="tablet">Tablet</option>
+                  <option value="mobile">Mobile</option>
+                </select>
+                <button
+                  onClick={() => setLivePreview(!livePreview)}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    livePreview 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {livePreview ? 'Hide' : 'Show'} Preview
+                </button>
+              </div>
             </div>
           </div>
+          <div className="p-6">
+            {livePreview ? (
+              <div className="border rounded-lg overflow-hidden">
+                <iframe
+                  src="/frontend/case-study.html"
+                  className={`w-full border-0 ${
+                    previewDevice === 'mobile' ? 'h-96 max-w-sm mx-auto' :
+                    previewDevice === 'tablet' ? 'h-96 max-w-2xl mx-auto' :
+                    'h-96'
+                  }`}
+                  title="Frontend Preview"
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Eye className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>Click "Show Preview" to see your frontend live</p>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setActiveTab('case-studies')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <FileText className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-900">Add Case Study</p>
+            </button>
+            <button
+              onClick={() => setActiveTab('media')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Upload className="w-6 h-6 text-green-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-900">Upload Image</p>
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <BarChart3 className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-900">View Analytics</p>
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Settings className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-900">Settings</p>
+            </button>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );
@@ -357,48 +457,81 @@ const AdminDashboard = ({ user, onLogout }) => {
           </div>
         </div>
       </div>
+
+      {/* Enhanced Case Study Creator */}
+      <EnhancedCaseStudyCreator
+        isOpen={showCaseStudyCreator}
+        onClose={() => {
+          setShowCaseStudyCreator(false);
+          setEditingCaseStudy(null);
+        }}
+        onSave={handleSaveCaseStudy}
+        editingStudy={editingCaseStudy}
+      />
     </div>
   );
 };
 
 // Case Studies Manager Component
 const CaseStudiesManager = ({ caseStudies, setCaseStudies, showNotification }) => {
-  const [editingStudy, setEditingStudy] = useState(null);
-  const [showForm, setShowForm] = useState(false);
 
-  const handleCreateStudy = async (studyData) => {
+  const handleSaveCaseStudy = async (studyData) => {
     try {
-      const newStudy = await firebaseClient.createCaseStudy(studyData);
-      setCaseStudies(prev => [newStudy, ...prev]);
-      setShowForm(false);
-      showNotification('Case study created successfully', 'success');
+      let result;
+      if (editingCaseStudy) {
+        // Update existing case study
+        result = await firebaseClient.updateCaseStudy(editingCaseStudy.id, studyData);
+        setCaseStudies(prev => prev.map(study => 
+          study.id === editingCaseStudy.id ? { ...study, ...studyData } : study
+        ));
+        await triggerFrontendUpdate('case-studies', 'update', { id: editingCaseStudy.id, ...studyData });
+        showNotification('Case study updated and frontend synced successfully', 'success');
+      } else {
+        // Create new case study
+        result = await firebaseClient.createCaseStudy(studyData);
+        setCaseStudies(prev => [result, ...prev]);
+        await triggerFrontendUpdate('case-studies', 'create', result);
+        showNotification('Case study created and frontend updated successfully', 'success');
+      }
+      
+      setShowCaseStudyCreator(false);
+      setEditingCaseStudy(null);
     } catch (error) {
-      console.error('Error creating case study:', error);
-      showNotification('Error creating case study', 'error');
+      console.error('Error saving case study:', error);
+      showNotification('Error saving case study', 'error');
     }
   };
 
-  const handleUpdateStudy = async (id, updates) => {
+  const triggerFrontendUpdate = async (type, action, data) => {
     try {
-      await firebaseClient.updateCaseStudy(id, updates);
-      setCaseStudies(prev => prev.map(study => 
-        study.id === id ? { ...study, ...updates } : study
-      ));
-      setEditingStudy(null);
-      showNotification('Case study updated successfully', 'success');
+      await fetch('/api/frontend/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, action, data, timestamp: Date.now() })
+      });
     } catch (error) {
-      console.error('Error updating case study:', error);
-      showNotification('Error updating case study', 'error');
+      console.warn('Frontend update failed:', error);
     }
   };
 
-  const handleDeleteStudy = async (id) => {
+  const handleEditCaseStudy = (study) => {
+    setEditingCaseStudy(study);
+    setShowCaseStudyCreator(true);
+  };
+
+  const handleCreateNewCaseStudy = () => {
+    setEditingCaseStudy(null);
+    setShowCaseStudyCreator(true);
+  };
+
+  const handleDeleteCaseStudy = async (id) => {
     if (!confirm('Are you sure you want to delete this case study?')) return;
     
     try {
       await firebaseClient.deleteCaseStudy(id);
       setCaseStudies(prev => prev.filter(study => study.id !== id));
-      showNotification('Case study deleted successfully', 'success');
+      await triggerFrontendUpdate('case-studies', 'delete', { id });
+      showNotification('Case study deleted and frontend updated successfully', 'success');
     } catch (error) {
       console.error('Error deleting case study:', error);
       showNotification('Error deleting case study', 'error');
@@ -410,7 +543,7 @@ const CaseStudiesManager = ({ caseStudies, setCaseStudies, showNotification }) =
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Case Studies</h2>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={handleCreateNewCaseStudy}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
@@ -418,12 +551,7 @@ const CaseStudiesManager = ({ caseStudies, setCaseStudies, showNotification }) =
         </button>
       </div>
 
-      {showForm && (
-        <CaseStudyForm
-          onSubmit={handleCreateStudy}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {caseStudies.map((study) => (
@@ -441,13 +569,13 @@ const CaseStudiesManager = ({ caseStudies, setCaseStudies, showNotification }) =
                 </span>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => setEditingStudy(study)}
+                    onClick={() => handleEditCaseStudy(study)}
                     className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDeleteStudy(study.id)}
+                    onClick={() => handleDeleteCaseStudy(study.id)}
                     className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -459,112 +587,12 @@ const CaseStudiesManager = ({ caseStudies, setCaseStudies, showNotification }) =
         ))}
       </div>
 
-      {editingStudy && (
-        <CaseStudyForm
-          study={editingStudy}
-          onSubmit={(updates) => handleUpdateStudy(editingStudy.id, updates)}
-          onCancel={() => setEditingStudy(null)}
-        />
-      )}
+
     </div>
   );
 };
 
-// Case Study Form Component
-const CaseStudyForm = ({ study, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    projectTitle: study?.projectTitle || '',
-    description: study?.description || '',
-    technologies: study?.technologies || '',
-    challenges: study?.challenges || '',
-    solutions: study?.solutions || '',
-    results: study?.results || '',
-    imageUrl: study?.imageUrl || '',
-    projectUrl: study?.projectUrl || '',
-    githubUrl: study?.githubUrl || ''
-  });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {study ? 'Edit Case Study' : 'Create Case Study'}
-          </h3>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project Title
-            </label>
-            <input
-              type="text"
-              name="projectTitle"
-              value={formData.projectTitle}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Technologies
-            </label>
-            <input
-              type="text"
-              name="technologies"
-              value={formData.technologies}
-              onChange={handleChange}
-              placeholder="React, Node.js, MongoDB"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {study ? 'Update' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 // Media Manager Component
 const MediaManager = ({ images, setImages, showNotification }) => {
