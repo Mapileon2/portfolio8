@@ -50,6 +50,7 @@ class FirebaseClient {
   // Authentication methods
   async signIn(email, password) {
     try {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;
       
@@ -64,6 +65,45 @@ class FirebaseClient {
       };
     } catch (error) {
       console.error('Sign in error:', error);
+      throw new Error(this.getErrorMessage(error.code));
+    }
+  }
+
+  async signInWithGoogle() {
+    try {
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const provider = new GoogleAuthProvider();
+      
+      // Add additional scopes if needed
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(this.auth, provider);
+      const user = result.user;
+      
+      // Get ID token
+      this.idToken = await user.getIdToken();
+      
+      return {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        emailVerified: user.emailVerified
+      };
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      throw new Error(this.getErrorMessage(error.code));
+    }
+  }
+
+  async sendPasswordResetEmail(email) {
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(this.auth, email);
+      return { success: true };
+    } catch (error) {
+      console.error('Password reset error:', error);
       throw new Error(this.getErrorMessage(error.code));
     }
   }
@@ -469,7 +509,14 @@ class FirebaseClient {
       'auth/user-disabled': 'This account has been disabled.',
       'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
       'auth/network-request-failed': 'Network error. Please check your connection.',
-      'auth/invalid-credential': 'Invalid email or password.'
+      'auth/invalid-credential': 'Invalid email or password.',
+      'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+      'auth/popup-blocked': 'Pop-up blocked. Please allow pop-ups for this site.',
+      'auth/cancelled-popup-request': 'Google sign-in was cancelled.',
+      'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+      'auth/auth-domain-config-required': 'Google sign-in configuration error.',
+      'auth/operation-not-allowed': 'Google sign-in is not enabled for this project.',
+      'auth/unauthorized-domain': 'This domain is not authorized for Google sign-in.'
     };
 
     return errorMessages[errorCode] || 'An error occurred. Please try again.';

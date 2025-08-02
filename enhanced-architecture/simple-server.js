@@ -5,6 +5,9 @@ const PORT = 3001; // Use different port
 
 console.log('🚀 Starting Simple Development Server...');
 
+// Skip heavy initialization in fast mode
+const FAST_MODE = process.env.SKIP_FIREBASE_INIT === 'true';
+
 // Basic middleware
 app.use(express.json());
 app.use(express.static('src'));
@@ -108,6 +111,10 @@ app.listen(PORT, () => {
   console.log(`✅ Simple server running on http://localhost:${PORT}`);
   console.log(`🎯 API available at http://localhost:${PORT}/api/health`);
   console.log(`📊 Mock data loaded successfully`);
+  
+  if (FAST_MODE) {
+    console.log('⚡ FAST MODE: Server started in', process.uptime().toFixed(2), 'seconds');
+  }
 });
 
 process.on('SIGINT', () => {
