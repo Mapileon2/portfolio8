@@ -117,6 +117,7 @@ app.use('/api/contact', require('./api/contact'));
 app.use('/api/projects', require('./api/projects'));
 app.use('/api/firebase', require('./api/firebase'));
 app.use('/api/images', require('./api/images'));
+app.use('/api/frontend', require('./api/frontend-updates'));
 
 // Health check
 app.get('/api/health', async (req, res) => {

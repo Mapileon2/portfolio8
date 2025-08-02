@@ -105,9 +105,9 @@ const AdminDashboard = ({ user, onLogout }) => {
         systemHealth: { status: 'healthy', uptime: '99.9%' }
       }));
 
-      setCaseStudies(caseStudiesRes.caseStudies || []);
-      setCarouselImages(carouselRes.images || []);
-      setSections(sectionsRes || {});
+      setCaseStudies(caseStudiesRes.data || caseStudiesRes.caseStudies || []);
+      setCarouselImages(carouselRes.data || carouselRes.images || []);
+      setSections(sectionsRes.data || sectionsRes || {});
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
