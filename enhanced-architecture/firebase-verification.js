@@ -2,8 +2,6 @@
 
 // Firebase Initialization and JWT Verification Tool
 const admin = require('firebase-admin');
-const { initializeApp } = require('firebase/app');
-const { getAuth, signInWithEmailAndPassword } = require('firebase/auth');
 require('dotenv').config();
 
 console.log('🔥 Firebase Initialization and JWT Verification Tool\n');

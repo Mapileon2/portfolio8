@@ -19,7 +19,9 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "test": "echo 'Tests not configured yet'",
     "verify-firebase": "node firebase-verification.js",
-    "check-jwt": "node -e \"require('./firebase-verification.js').testJWTVerification()\""
+    "check-jwt": "node -e \"require('./firebase-verification.js').testJWTVerification()\"",
+    "quick-start": "node quick-start.js",
+    "firebase-check": "node -e \"console.log('Firebase:', process.env.FIREBASE_PROJECT_ID ? 'Configured' : 'Not configured')\""
   },
   "keywords": [
     "portfolio",
