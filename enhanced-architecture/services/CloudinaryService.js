@@ -391,18 +391,46 @@ class CloudinaryService {
   async healthCheck() {
     try {
       if (!this.isConfigured) {
-        throw new Error('Cloudinary not configured');
+        return {
+          status: 'not-configured',
+          message: 'Cloudinary credentials not set',
+          timestamp: new Date().toISOString()
+        };
       }
 
-      // Test API connection
-      await cloudinary.api.ping();
-      
-      return {
-        status: 'healthy',
-        configured: this.isConfigured,
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-        timestamp: new Date().toISOString()
-      };
+      // Test basic functionality (offline)
+      const testUrl = cloudinary.url('sample', { width: 100, height: 100 });
+      if (!testUrl) {
+        throw new Error('URL generation failed');
+      }
+
+      // Try API connection with timeout
+      try {
+        const pingPromise = cloudinary.api.ping();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        );
+        
+        await Promise.race([pingPromise, timeoutPromise]);
+        
+        return {
+          status: 'healthy',
+          configured: this.isConfigured,
+          cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+          apiConnected: true,
+          timestamp: new Date().toISOString()
+        };
+      } catch (apiError) {
+        // API not reachable, but basic functions work
+        return {
+          status: 'partial',
+          configured: this.isConfigured,
+          cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+          apiConnected: false,
+          message: 'Basic functions working, API connection issues',
+          timestamp: new Date().toISOString()
+        };
+      }
     } catch (error) {
       return {
         status: 'unhealthy',

@@ -24,7 +24,8 @@
     "firebase-check": "node -e \"console.log('Firebase:', process.env.FIREBASE_PROJECT_ID ? 'Configured' : 'Not configured')\"",
     "setup-firebase": "node setup-firebase.js",
     "dev:fast": "node start-fast.js",
-    "perf": "node check-performance.js"
+    "perf": "node check-performance.js",
+    "test-cloudinary": "node test-cloudinary.js"
   },
   "keywords": [
     "portfolio",
