@@ -24,11 +24,35 @@
       "dest": "/api/$1"
     },
     {
+      "src": "/admin",
+      "dest": "/working-admin-panel.html"
+    },
+    {
+      "src": "/enhanced-admin",
+      "dest": "/working-admin-panel.html"
+    },
+    {
+      "src": "/admin-panel",
+      "dest": "/working-admin-panel.html"
+    },
+    {
+      "src": "/test-google",
+      "dest": "/simple-google-test.html"
+    },
+    {
       "src": "/simple-admin.html",
       "dest": "/src/simple-admin.html"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "src": "/working-admin-panel.html",
+      "dest": "/working-admin-panel.html"
+    },
+    {
+      "src": "/simple-google-test.html",
+      "dest": "/simple-google-test.html"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|html))",
       "dest": "/$1"
     },
     {

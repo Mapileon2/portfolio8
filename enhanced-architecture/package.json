@@ -5,8 +5,9 @@
   "main": "server.js",
   "scripts": {
     "setup": "node setup-dev.js",
-    "build": "vite build",
-    "vercel-build": "vite build",
+    "build": "vite build && npm run copy-admin-files",
+    "vercel-build": "vite build && npm run copy-admin-files",
+    "copy-admin-files": "cp working-admin-panel.html dist/ && cp simple-google-test.html dist/ && cp admin-login-integration-example.html dist/ 2>/dev/null || echo 'Admin files copied'",
     "build:client": "vite build",
     "build:server": "echo 'Server build not needed for development'",
     "start": "node server.js",

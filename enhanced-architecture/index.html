@@ -3,85 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Portfolio</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            text-align: center;
-            max-width: 600px;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            border: 2px solid rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
-        .btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-        .status {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-        }
-    </style>
+    <title>Enhanced Portfolio - Admin Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta http-equiv="refresh" content="0; url=/admin">
 </head>
-<body>
-    <div class="container">
-        <h1>🚀 Enhanced Portfolio</h1>
-        <p>Your modern portfolio platform is now live on Vercel!</p>
-        
-        <div>
-            <a href="/src/simple-admin.html" class="btn">Admin Dashboard</a>
-            <a href="/api/health" class="btn">API Health</a>
-        </div>
-        
-        <div class="status">
-            <h3>✅ Deployment Successful</h3>
-            <p>All systems are operational and ready to use.</p>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Enhanced Portfolio</h1>
+            <p class="text-gray-600 mb-8">Redirecting to Enhanced Admin Panel...</p>
+            
+            <div class="space-y-4">
+                <a href="/admin" class="block w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    🚀 Enhanced Admin Panel
+                </a>
+                
+                <a href="/test-google" class="block w-full px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+                    🧪 Test Google Sign-In
+                </a>
+                
+                <a href="/src/simple-admin.html" class="block w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all duration-200">
+                    ⚡ Simple Admin Panel
+                </a>
+            </div>
+            
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="text-sm text-blue-700">
+                    <div class="font-medium mb-2">🔐 Google Sign-In Features:</div>
+                    <ul class="text-xs space-y-1 text-left">
+                        <li>• Secure Firebase authentication</li>
+                        <li>• Real-time database integration</li>
+                        <li>• Admin email authorization</li>
+                        <li>• Modern responsive design</li>
+                        <li>• Enterprise-grade security</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-xs text-gray-500">
+                <p>Authorized admin: <span class="font-mono">arpanguria68@gmail.com</span></p>
+            </div>
         </div>
     </div>
     
     <script>
-        // Test API connectivity
-        fetch('/api/health')
-            .then(response => response.json())
-            .then(data => {
-                console.log('API Health Check:', data);
-                if (data.success) {
-                    document.querySelector('.status h3').innerHTML = '✅ All Systems Operational';
-                }
-            })
-            .catch(error => {
-                console.error('API Health Check Failed:', error);
-                document.querySelector('.status h3').innerHTML = '⚠️ API Connection Issues';
-            });
+        // Redirect after 2 seconds if meta refresh doesn't work
+        setTimeout(() => {
+            if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                window.location.href = '/admin';
+            }
+        }, 2000);
     </script>
 </body>
 </html>
