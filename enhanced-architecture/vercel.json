@@ -25,15 +25,15 @@
     },
     {
       "src": "/admin",
-      "dest": "/working-admin-panel.html"
+      "dest": "/fixed-admin-panel.html"
     },
     {
       "src": "/enhanced-admin",
-      "dest": "/working-admin-panel.html"
+      "dest": "/fixed-admin-panel.html"
     },
     {
       "src": "/admin-panel",
-      "dest": "/working-admin-panel.html"
+      "dest": "/fixed-admin-panel.html"
     },
     {
       "src": "/test-google",
