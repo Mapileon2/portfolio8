@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Portfolio Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, set, get, push, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAep3-lFOQyG97RaYB-iozVWVzlSa_LhV0",
+            authDomain: "portfolioyt-c0193.firebaseapp.com",
+            projectId: "portfolioyt-c0193",
+            storageBucket: "portfolioyt-c0193.firebasestorage.app",
+            messagingSenderId: "473310186496",
+            appId: "1:473310186496:web:c45acce229e30723535ce5",
+            databaseURL: "https://portfolioyt-c0193-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // Admin emails
+        const ADMIN_EMAILS = ['arpanguria68@gmail.com', 'admin@example.com'];
+
+        console.log('🔥 Enhanced Admin Panel - Firebase initialized!');
+        console.log('👤 Authorized admin:', ADMIN_EMAILS[0]);
+
+        // Global state
+        let currentUser = null;
+        let currentTab = 'dashboard';
+
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Listen for auth state changes
+            onAuthStateChanged(auth, (user) => {
+                if (user && ADMIN_EMAILS.includes(user.email)) {
+                    currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName,
+                        photoURL: user.photoURL,
+                        isAdmin: true
+                    };
+                    showAdminPanel();
+                    saveUserToDatabase(currentUser);
+                } else if (user && !ADMIN_EMAILS.includes(user.email)) {
+                    showError(`Access denied. Only ${ADMIN_EMAILS[0]} can access this admin panel.`);
+                    signOut(auth);
+                } else {
+                    showLoginScreen();
+                }
+            });
+        }
+
+        async function handleGoogleSignIn() {
+            try {
+                showStatus('🔄 Signing in with Google...', 'info');
+                const result = await signInWithPopup(auth, provider);
+                console.log('✅ Google sign-in successful:', result.user.email);
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showError('Sign-in was cancelled. Please try again.');
+                } else if (error.code === 'auth/popup-blocked') {
+                    showError('Popup was blocked. Please allow popups and try again.');
+                } else {
+                    showError(`Sign-in failed: ${error.message}`);
+                }
+            }
+        }
+
+        async function handleSignOut() {
+            try {
+                await signOut(auth);
+                currentUser = null;
+                showLoginScreen();
+            } catch (error) {
+                console.error('Sign-out error:', error);
+            }
+        }
+
+        async function saveUserToDatabase(userData) {
+            try {
+                const userRef = ref(database, `users/${userData.uid}`);
+                await set(userRef, {
+                    ...userData,
+                    lastLogin: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                console.log('✅ User data saved to database');
+            } catch (error) {
+                console.error('Error saving user data:', error);
+            }
+        }
+
+        function showLoginScreen() {
+            document.body.innerHTML = `
+                <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+                        <div class="text-center mb-8">
+                            <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-4">Enhanced Admin Panel</h1>
+                            <p class="text-gray-600">Secure access for portfolio management</p>
+                        </div>
+
+                        <div id="status" class="mb-6" style="display: none;"></div>
+                        <div id="error" class="mb-6" style="display: none;"></div>
+
+                        <div class="mb-6 p-4 rounded-lg border bg-blue-50 border-blue-200">
+                            <div class="text-sm text-blue-700">
+                                <div class="font-medium mb-2">✅ Authorized Admin:</div>
+                                <div class="font-mono text-xs bg-white px-2 py-1 rounded">
+                                    ${ADMIN_EMAILS[0]}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            onclick="handleGoogleSignIn()"
+                            class="w-full bg-white border-2 border-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
+                        >
+                            <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Sign in with Google
+                        </button>
+
+                        <div class="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="text-xs text-green-700">
+                                <div class="font-medium mb-1">🚀 Enhanced Features:</div>
+                                <ul class="space-y-0.5">
+                                    <li>• Real-time analytics dashboard</li>
+                                    <li>• Advanced case study management</li>
+                                    <li>• Media upload with Cloudinary</li>
+                                    <li>• SEO optimization tools</li>
+                                    <li>• Performance monitoring</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAdminPanel() {
+            document.body.innerHTML = `
+                <div class="min-h-screen bg-gray-100">
+                    <!-- Header -->
+                    <header class="bg-white shadow-sm border-b">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div class="flex justify-between items-center py-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                        </svg>
+                                    </div>
+                                    <h1 class="text-2xl font-bold text-gray-900">Enhanced Admin Panel</h1>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-3">
+                                        <img src="${currentUser.photoURL}" alt="${currentUser.name}" class="w-8 h-8 rounded-full">
+                                        <div class="text-sm">
+                                            <div class="font-medium text-gray-900">${currentUser.name}</div>
+                                            <div class="text-gray-500">${currentUser.email}</div>
+                                        </div>
+                                    </div>
+                                    <button onclick="handleSignOut()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <!-- Navigation Tabs -->
+                        <div class="mb-8">
+                            <nav class="flex space-x-8">
+                                <button onclick="switchTab('dashboard')" class="tab-button ${currentTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
+                                    📊 Dashboard
+                                </button>
+                                <button onclick="switchTab('projects')" class="tab-button ${currentTab === 'projects' ? 'active' : ''}" data-tab="projects">
+                                    💼 Case Studies
+                                </button>
+                                <button onclick="switchTab('media')" class="tab-button ${currentTab === 'media' ? 'active' : ''}" data-tab="media">
+                                    🖼️ Media
+                                </button>
+                                <button onclick="switchTab('analytics')" class="tab-button ${currentTab === 'analytics' ? 'active' : ''}" data-tab="analytics">
+                                    📈 Analytics
+                                </button>
+                                <button onclick="switchTab('settings')" class="tab-button ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">
+                                    ⚙️ Settings
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div id="tab-content">
+                            ${getTabContent(currentTab)}
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    .tab-button {
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 0.5rem;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                        color: #6B7280;
+                        background: white;
+                        border: 1px solid #E5E7EB;
+                    }
+                    .tab-button:hover {
+                        background: #F3F4F6;
+                        color: #374151;
+                    }
+                    .tab-button.active {
+                        background: #3B82F6;
+                        color: white;
+                        border-color: #3B82F6;
+                    }
+                </style>
+            `;
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update active tab styling
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update content
+            document.getElementById('tab-content').innerHTML = getTabContent(tabName);
+        }
+
+        function getTabContent(tab) {
+            switch(tab) {
+                case 'dashboard':
+                    return `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Total Projects</p>
+                                        <p class="text-3xl font-bold text-gray-900">12</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Page Views</p>
+                                        <p class="text-3xl font-bold text-gray-900">2,847</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Visitors</p>
+                                        <p class="text-3xl font-bold text-gray-900">1,234</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Messages</p>
+                                        <p class="text-3xl font-bold text-gray-900">56</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm p-6 border">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">🎉 Welcome to Your Enhanced Admin Panel!</h3>
+                            <div class="space-y-4">
+                                <p class="text-gray-600">You're successfully authenticated as <strong>${currentUser.email}</strong> with full admin access.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                        <h4 class="font-semibold text-blue-900 mb-2">🚀 Quick Actions</h4>
+                                        <ul class="text-sm text-blue-700 space-y-1">
+                                            <li>• Create new case study</li>
+                                            <li>• Upload media files</li>
+                                            <li>• View analytics dashboard</li>
+                                            <li>• Manage SEO settings</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                                        <h4 class="font-semibold text-green-900 mb-2">✅ System Status</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Firebase: Connected</li>
+                                            <li>• Authentication: Active</li>
+                                            <li>• Database: Online</li>
+                                            <li>• Admin Access: Granted</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                case 'projects':
+                    return `
+                        <div class="bg-white rounded-xl shadow-sm p-6 border">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">💼 Case Studies Management</h3>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    + Add New Case Study
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">E-commerce Platform</h4>
+                                            <p class="text-gray-600 text-sm mt-1">Full-stack e-commerce solution with React and Node.js</p>
+                                            <div class="flex space-x-2 mt-2">
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">React</span>
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Node.js</span>
+                                                <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">MongoDB</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Edit</button>
+                                            <button class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">Portfolio Website</h4>
+                                            <p class="text-gray-600 text-sm mt-1">Modern portfolio with admin panel and analytics</p>
+                                            <div class="flex space-x-2 mt-2">
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">React</span>
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Firebase</span>
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Express</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Edit</button>
+                                            <button class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                case 'media':
+                    return `
+                        <div class="bg-white rounded-xl shadow-sm p-6 border">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">🖼️ Media Management</h3>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    📤 Upload Media
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer">
+                                    <div class="text-center">
+                                        <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        <p class="text-xs text-gray-500">Upload</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="aspect-square bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
+                                    <span class="text-white font-semibold">IMG</span>
+                                </div>
+                                
+                                <div class="aspect-square bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                                    <span class="text-white font-semibold">IMG</span>
+                                </div>
+                                
+                                <div class="aspect-square bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center">
+                                    <span class="text-white font-semibold">IMG</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <h4 class="font-semibold text-blue-900 mb-2">☁️ Cloudinary Integration</h4>
+                                <p class="text-sm text-blue-700">Images are automatically optimized and delivered via global CDN for best performance.</p>
+                            </div>
+                        </div>
+                    `;
+                
+                case 'analytics':
+                    return `
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">📈 Analytics Overview</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold text-blue-600">2,847</div>
+                                        <div class="text-sm text-gray-600">Total Page Views</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold text-green-600">1,234</div>
+                                        <div class="text-sm text-gray-600">Unique Visitors</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold text-purple-600">4.2m</div>
+                                        <div class="text-sm text-gray-600">Avg. Session Duration</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <h4 class="font-semibold text-gray-900 mb-4">🔥 Real-time Features</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                        <span class="text-green-800">Live visitor tracking</span>
+                                        <span class="px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">Active</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                                        <span class="text-blue-800">Performance monitoring</span>
+                                        <span class="px-2 py-1 bg-blue-200 text-blue-800 text-xs rounded-full">Active</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                                        <span class="text-purple-800">Event tracking</span>
+                                        <span class="px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded-full">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                case 'settings':
+                    return `
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">⚙️ Admin Settings</h3>
+                                
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Site Title</label>
+                                        <input type="text" value="Enhanced Portfolio" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Site Description</label>
+                                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">Professional portfolio with modern admin panel and real-time analytics.</textarea>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">Email Notifications</h4>
+                                            <p class="text-sm text-gray-600">Receive notifications for new messages</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                                <h4 class="font-semibold text-gray-900 mb-4">🔐 Security Information</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">Admin Email</span>
+                                        <span class="font-mono text-sm">${currentUser.email}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">Authentication</span>
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Google OAuth</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">Last Login</span>
+                                        <span class="text-sm text-gray-600">${new Date().toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                default:
+                    return '<div class="text-center py-8 text-gray-500">Content not found</div>';
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            if (!statusDiv) return;
+            
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-700',
+                error: 'bg-red-50 border-red-200 text-red-700',
+                info: 'bg-blue-50 border-blue-200 text-blue-700'
+            };
+            
+            statusDiv.className = `p-4 rounded-lg border ${colors[type]}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            if (!errorDiv) return;
+            
+            errorDiv.className = 'p-4 rounded-lg border bg-red-50 border-red-200 text-red-700';
+            errorDiv.style.whiteSpace = 'pre-line';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Make functions globally available
+        window.handleGoogleSignIn = handleGoogleSignIn;
+        window.handleSignOut = handleSignOut;
+        window.switchTab = switchTab;
+    </script>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading Enhanced Admin Panel...</p>
+        </div>
+    </div>
+</body>
+</html>
